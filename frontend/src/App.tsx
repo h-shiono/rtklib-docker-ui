@@ -19,6 +19,7 @@ import {
   Code,
   Tooltip,
   Alert,
+  SimpleGrid,
 } from '@mantine/core';
 import {
   IconSun,
@@ -27,7 +28,6 @@ import {
   IconPlayerPlay,
   IconPlayerStop,
   IconFile,
-  IconFolderOpen,
   IconRefresh,
   IconDownload,
   IconPlugConnected,
@@ -35,11 +35,12 @@ import {
   IconTestPipe,
   IconInfoCircle,
 } from '@tabler/icons-react';
-import { TerminalOutput, StatusIndicator, ConfigLoader, StreamConfiguration } from './components';
+import { TerminalOutput, StatusIndicator, StreamConfiguration, PostProcessingConfiguration } from './components';
 import type { ProcessStatus } from './components';
 import { useWebSocket } from './hooks';
 import type { LogMessage } from './hooks';
 import * as str2strApi from './api/str2str';
+import type { Rnx2RtkpConfig } from './types/rnx2rtkpConfig';
 
 function ColorSchemeToggle() {
   const { colorScheme, setColorScheme } = useMantineColorScheme();
@@ -58,209 +59,195 @@ function ColorSchemeToggle() {
 
 function PostProcessingPanel() {
   const [roverFile, setRoverFile] = useState('/workspace/rover.obs');
-  const [baseFile, setBaseFile] = useState('/workspace/base.obs');
+  const [baseFile, setBaseFile] = useState('');
   const [navFile, setNavFile] = useState('/workspace/nav.nav');
   const [outputFile, setOutputFile] = useState('/workspace/output.pos');
   const [processStatus, setProcessStatus] = useState<ProcessStatus>('idle');
   const [logLines, setLogLines] = useState<string[]>([]);
-  const [useBase, setUseBase] = useState(true);
+  const [useBase, setUseBase] = useState(false);
+  const [config, setConfig] = useState<Rnx2RtkpConfig | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Sample log data for demo (rnx2rtkp not yet implemented with WebSocket)
-  const sampleLogLines = [
-    '2026/01/01 12:00:00 RTKLIB started',
-    '2026/01/01 12:00:01 Loading configuration...',
-    '2026/01/01 12:00:02 Configuration loaded successfully',
-    '2026/01/01 12:00:03 Opening input files...',
-    `2026/01/01 12:00:04 Rover: ${roverFile}`,
-    `2026/01/01 12:00:05 Base:  ${baseFile}`,
-    `2026/01/01 12:00:06 Nav:   ${navFile}`,
-    '2026/01/01 12:00:07 Processing epoch 1/1000...',
-  ];
+  const handleStart = async () => {
+    if (!config) {
+      setError('Configuration not set');
+      return;
+    }
 
-  const handleStart = () => {
-    setProcessStatus('running');
+    setIsLoading(true);
+    setError(null);
     setLogLines([]);
+    setProcessStatus('running');
 
-    // Simulate processing (TODO: Replace with real API call)
-    let index = 0;
-    const interval = setInterval(() => {
-      if (index < sampleLogLines.length) {
-        setLogLines((prev) => [...prev, sampleLogLines[index]]);
-        index++;
-      } else {
-        setLogLines((prev) => [...prev, '2026/01/01 12:00:15 Processing completed successfully']);
-        setProcessStatus('success');
-        clearInterval(interval);
-      }
-    }, 500);
+    // TODO: Replace with real API call
+    setLogLines((prev) => [...prev, '[INFO] Starting post-processing...']);
+    setLogLines((prev) => [...prev, `[INFO] Rover: ${roverFile}`]);
+    if (useBase && baseFile) {
+      setLogLines((prev) => [...prev, `[INFO] Base: ${baseFile}`]);
+    }
+    setLogLines((prev) => [...prev, `[INFO] Nav: ${navFile}`]);
+    setLogLines((prev) => [...prev, `[INFO] Output: ${outputFile}`]);
+    setLogLines((prev) => [...prev, '[INFO] Processing...']);
+
+    setTimeout(() => {
+      setLogLines((prev) => [...prev, '[SUCCESS] Processing completed']);
+      setProcessStatus('success');
+      setIsLoading(false);
+    }, 2000);
   };
 
   const handleStop = () => {
     setProcessStatus('idle');
-    setLogLines((prev) => [...prev, '2026/01/01 12:00:10 Process stopped by user']);
-  };
-
-  const handleConfigLoad = (config: Record<string, unknown>) => {
-    console.log('Config loaded:', config);
+    setLogLines((prev) => [...prev, '[INFO] Process stopped by user']);
+    setIsLoading(false);
   };
 
   return (
-    <Grid gutter="md">
-      {/* Left Pane: Configuration & Control */}
-      <Grid.Col span={{ base: 12, md: 5 }}>
-        <Stack gap="md" h="100%">
-          <ConfigLoader onConfigLoad={handleConfigLoad} />
+    <Stack gap="xs">
+      {/* Section A: Execution Inputs */}
+      <Card withBorder p="xs">
+        <Stack gap="xs">
+          <Title order={6} size="xs">Input Files</Title>
 
-          <Card withBorder style={{ flex: 1 }}>
-            <Stack gap="sm">
-              <Title order={6}>Input Files</Title>
+          <SimpleGrid cols={2} spacing="xs">
+            <TextInput
+              size="xs"
+              label="Rover Observation (RINEX OBS)"
+              placeholder="/workspace/rover.obs"
+              value={roverFile}
+              onChange={(e) => setRoverFile(e.currentTarget.value)}
+              leftSection={<IconFile size={14} />}
+              styles={{ label: { fontSize: '10px' } }}
+              required
+            />
 
-              <TextInput
-                label="Rover Observation"
-                placeholder="/workspace/rover.obs"
-                value={roverFile}
-                onChange={(e) => setRoverFile(e.currentTarget.value)}
-                leftSection={<IconFile size={16} />}
-                rightSection={
-                  <ActionIcon variant="subtle" size="sm">
-                    <IconFolderOpen size={16} />
-                  </ActionIcon>
-                }
-              />
+            <TextInput
+              size="xs"
+              label="Navigation File (RINEX NAV)"
+              placeholder="/workspace/nav.nav"
+              value={navFile}
+              onChange={(e) => setNavFile(e.currentTarget.value)}
+              leftSection={<IconFile size={14} />}
+              styles={{ label: { fontSize: '10px' } }}
+              required
+            />
+          </SimpleGrid>
 
-              <Checkbox
-                label="Use Base Station"
-                checked={useBase}
-                onChange={(e) => setUseBase(e.currentTarget.checked)}
-              />
+          <Checkbox
+            size="xs"
+            label="Use Base Station"
+            checked={useBase}
+            onChange={(e) => setUseBase(e.currentTarget.checked)}
+            styles={{ label: { fontSize: '10px' } }}
+          />
 
-              {useBase && (
-                <TextInput
-                  label="Base Observation"
-                  placeholder="/workspace/base.obs"
-                  value={baseFile}
-                  onChange={(e) => setBaseFile(e.currentTarget.value)}
-                  leftSection={<IconFile size={16} />}
-                  rightSection={
-                    <ActionIcon variant="subtle" size="sm">
-                      <IconFolderOpen size={16} />
-                    </ActionIcon>
-                  }
-                />
-              )}
+          {useBase && (
+            <TextInput
+              size="xs"
+              label="Base Observation (RINEX OBS)"
+              placeholder="/workspace/base.obs"
+              value={baseFile}
+              onChange={(e) => setBaseFile(e.currentTarget.value)}
+              leftSection={<IconFile size={14} />}
+              styles={{ label: { fontSize: '10px' } }}
+            />
+          )}
 
-              <TextInput
-                label="Navigation File"
-                placeholder="/workspace/nav.nav"
-                value={navFile}
-                onChange={(e) => setNavFile(e.currentTarget.value)}
-                leftSection={<IconFile size={16} />}
-                rightSection={
-                  <ActionIcon variant="subtle" size="sm">
-                    <IconFolderOpen size={16} />
-                  </ActionIcon>
-                }
-              />
+          <Divider />
 
-              <Divider my="xs" />
+          <TextInput
+            size="xs"
+            label="Output File"
+            placeholder="/workspace/output.pos"
+            value={outputFile}
+            onChange={(e) => setOutputFile(e.currentTarget.value)}
+            leftSection={<IconFile size={14} />}
+            styles={{ label: { fontSize: '10px' } }}
+            required
+          />
 
-              <TextInput
-                label="Output File"
-                placeholder="/workspace/output.pos"
-                value={outputFile}
-                onChange={(e) => setOutputFile(e.currentTarget.value)}
-                leftSection={<IconFile size={16} />}
-              />
-            </Stack>
-          </Card>
+          {error && (
+            <Alert color="red" icon={<IconInfoCircle size={16} />} p="xs" withCloseButton onClose={() => setError(null)}>
+              <Text size="xs">{error}</Text>
+            </Alert>
+          )}
 
-          {/* Action Area */}
-          <Card withBorder>
-            <Group grow>
-              {processStatus === 'running' ? (
-                <Button
-                  color="red"
-                  leftSection={<IconPlayerStop size={18} />}
-                  onClick={handleStop}
-                >
-                  Stop
-                </Button>
-              ) : (
-                <Button
-                  color="green"
-                  leftSection={<IconPlayerPlay size={18} />}
-                  onClick={handleStart}
-                >
-                  Execute
-                </Button>
-              )}
-            </Group>
-          </Card>
+          <Group grow>
+            {processStatus === 'running' ? (
+              <Button
+                size="xs"
+                color="red"
+                leftSection={<IconPlayerStop size={14} />}
+                onClick={handleStop}
+                loading={isLoading}
+              >
+                Stop
+              </Button>
+            ) : (
+              <Button
+                size="xs"
+                color="green"
+                leftSection={<IconPlayerPlay size={14} />}
+                onClick={handleStart}
+                loading={isLoading}
+              >
+                Execute
+              </Button>
+            )}
+          </Group>
         </Stack>
-      </Grid.Col>
+      </Card>
 
-      {/* Right Pane: Monitor & Logs */}
-      <Grid.Col span={{ base: 12, md: 7 }}>
-        <Stack gap="md" h="100%">
-          {/* Status Bar */}
-          <Card withBorder>
+      {/* Section B: Configuration Tabs */}
+      <PostProcessingConfiguration onConfigChange={setConfig} />
+
+      {/* Log Console */}
+      <Card withBorder p={0}>
+        <Stack gap="xs">
+          <Card.Section withBorder p="xs">
             <Group justify="space-between">
-              <StatusIndicator status={processStatus} />
               <Group gap="xs">
-                <Badge variant="light" color="blue">
+                <StatusIndicator status={processStatus} />
+                <Badge variant="light" color="blue" size="sm">
                   rnx2rtkp
                 </Badge>
-                <ActionIcon variant="subtle" size="sm">
-                  <IconRefresh size={16} />
-                </ActionIcon>
               </Group>
             </Group>
-          </Card>
-
-          {/* Terminal Output */}
-          <Card withBorder style={{ flex: 1 }} p={0}>
-            <TerminalOutput
-              lines={logLines}
-              maxHeight={350}
-              onClear={() => setLogLines([])}
-            />
-          </Card>
-
-          {/* Result Card */}
-          {processStatus === 'success' && (
-            <Card withBorder>
-              <Stack gap="sm">
-                <Group justify="space-between">
-                  <Title order={6}>Result</Title>
-                  <Badge color="green">Complete</Badge>
-                </Group>
-                <Group gap="lg">
-                  <Box>
-                    <Text size="xs" c="dimmed">Output File</Text>
-                    <Code>{outputFile}</Code>
-                  </Box>
-                  <Box>
-                    <Text size="xs" c="dimmed">Solutions</Text>
-                    <Code>1,000 epochs</Code>
-                  </Box>
-                  <Box>
-                    <Text size="xs" c="dimmed">Fix Rate</Text>
-                    <Code>95.2%</Code>
-                  </Box>
-                </Group>
-                <Button
-                  variant="light"
-                  leftSection={<IconDownload size={16} />}
-                  size="sm"
-                >
-                  Download Result
-                </Button>
-              </Stack>
-            </Card>
-          )}
+          </Card.Section>
+          <TerminalOutput
+            lines={logLines}
+            maxHeight={250}
+            onClear={() => setLogLines([])}
+          />
         </Stack>
-      </Grid.Col>
-    </Grid>
+      </Card>
+
+      {/* Result Card */}
+      {processStatus === 'success' && (
+        <Card withBorder p="xs">
+          <Stack gap="xs">
+            <Group justify="space-between">
+              <Title order={6} size="xs">Result</Title>
+              <Badge color="green" size="sm">Complete</Badge>
+            </Group>
+            <Group gap="md">
+              <Box>
+                <Text size="xs" c="dimmed">Output File</Text>
+                <Code style={{ fontSize: '10px' }}>{outputFile}</Code>
+              </Box>
+            </Group>
+            <Button
+              variant="light"
+              leftSection={<IconDownload size={14} />}
+              size="xs"
+            >
+              Download Result
+            </Button>
+          </Stack>
+        </Card>
+      )}
+    </Stack>
   );
 }
 
