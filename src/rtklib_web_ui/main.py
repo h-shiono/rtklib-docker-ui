@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from rtklib_web_ui.api import files, process, config, str2str
+from rtklib_web_ui.api import files, process, config, str2str, rnx2rtkp
 from rtklib_web_ui.services import process_manager, ws_manager
 
 # Static files directory (set in Docker build)
@@ -52,6 +52,7 @@ app.include_router(files.router, prefix="/api/files", tags=["files"])
 app.include_router(process.router, prefix="/api/process", tags=["process"])
 app.include_router(config.router, prefix="/api/config", tags=["config"])
 app.include_router(str2str.router, prefix="/api/str2str", tags=["str2str"])
+app.include_router(rnx2rtkp.router, prefix="/api/rnx2rtkp", tags=["rnx2rtkp"])
 
 
 @app.get("/api/health")

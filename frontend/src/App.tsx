@@ -40,7 +40,9 @@ import type { ProcessStatus } from './components';
 import { useWebSocket } from './hooks';
 import type { LogMessage } from './hooks';
 import * as str2strApi from './api/str2str';
+import * as rnx2rtkpApi from './api/rnx2rtkp';
 import type { Rnx2RtkpConfig } from './types/rnx2rtkpConfig';
+import { DEFAULT_RNX2RTKP_CONFIG } from './types/rnx2rtkpConfig';
 
 function ColorSchemeToggle() {
   const { colorScheme, setColorScheme } = useMantineColorScheme();
@@ -65,13 +67,56 @@ function PostProcessingPanel() {
   const [processStatus, setProcessStatus] = useState<ProcessStatus>('idle');
   const [logLines, setLogLines] = useState<string[]>([]);
   const [useBase, setUseBase] = useState(false);
-  const [config, setConfig] = useState<Rnx2RtkpConfig | null>(null);
+  const [config, setConfig] = useState<Rnx2RtkpConfig>(DEFAULT_RNX2RTKP_CONFIG);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [jobId, setJobId] = useState<string | null>(null);
+
+  // WebSocket connection for real-time logs
+  const { isConnected } = useWebSocket({
+    onMessage: useCallback((message: LogMessage) => {
+      // Only process messages for our job
+      if (message.process_id === jobId) {
+        if (message.type === 'log' && message.message) {
+          setLogLines((prev) => [...prev.slice(-500), message.message!]);
+        }
+        if (message.type === 'status' && message.status) {
+          // Map backend status to UI status
+          const statusMap: Record<string, ProcessStatus> = {
+            running: 'running',
+            completed: 'success',
+            failed: 'error',
+          };
+          const newStatus = statusMap[message.status] || 'idle';
+          setProcessStatus(newStatus);
+          if (newStatus !== 'running') {
+            setIsLoading(false);
+          }
+        }
+      }
+    }, [jobId]),
+    onConnect: useCallback(() => {
+      console.log('WebSocket connected (Post-Processing)');
+    }, []),
+    onDisconnect: useCallback(() => {
+      console.log('WebSocket disconnected (Post-Processing)');
+    }, []),
+  });
 
   const handleStart = async () => {
     if (!config) {
       setError('Configuration not set');
+      return;
+    }
+
+    // Validate inputs
+    if (!roverFile || !navFile || !outputFile) {
+      setError('Please provide all required input files');
+      return;
+    }
+
+    if (useBase && !baseFile) {
+      setError('Please provide base station file or uncheck "Use Base Station"');
       return;
     }
 
@@ -80,21 +125,59 @@ function PostProcessingPanel() {
     setLogLines([]);
     setProcessStatus('running');
 
-    // TODO: Replace with real API call
-    setLogLines((prev) => [...prev, '[INFO] Starting post-processing...']);
-    setLogLines((prev) => [...prev, `[INFO] Rover: ${roverFile}`]);
-    if (useBase && baseFile) {
-      setLogLines((prev) => [...prev, `[INFO] Base: ${baseFile}`]);
-    }
-    setLogLines((prev) => [...prev, `[INFO] Nav: ${navFile}`]);
-    setLogLines((prev) => [...prev, `[INFO] Output: ${outputFile}`]);
-    setLogLines((prev) => [...prev, '[INFO] Processing...']);
+    try {
+      // Convert frontend config to backend format (camelCase -> snake_case)
+      const backendConfig = {
+        setting1: {
+          positioning_mode: config.setting1.positioningMode,
+          frequency: config.setting1.frequency,
+          elevation_mask: config.setting1.elevationMask,
+          snr_mask: config.setting1.snrMask,
+        },
+        setting2: {
+          ar_mode: config.setting2.arMode,
+          min_ratio_to_fix: config.setting2.minRatioToFix,
+          min_fix_samples: config.setting2.minFixSamples,
+          min_hold_samples: config.setting2.minHoldSamples,
+        },
+        output: {
+          solution_format: config.output.solutionFormat,
+          output_header: config.output.outputHeader,
+          output_velocity: config.output.outputVelocity,
+        },
+        base_position: {
+          latitude: config.basePosition.latitude,
+          longitude: config.basePosition.longitude,
+          height: config.basePosition.height,
+          use_rinex_header: config.basePosition.useRinexHeader,
+        },
+        files: config.files,
+        misc: {
+          time_system: config.misc.timeSystem,
+          ionosphere_correction: config.misc.ionosphereCorrection,
+          troposphere_correction: config.misc.troposphereCorrection,
+        },
+      };
 
-    setTimeout(() => {
-      setLogLines((prev) => [...prev, '[SUCCESS] Processing completed']);
-      setProcessStatus('success');
+      const response = await rnx2rtkpApi.executeRnx2Rtkp({
+        input_files: {
+          roverObsFile: roverFile,
+          baseObsFile: useBase ? baseFile : undefined,
+          navFile: navFile,
+          outputFile: outputFile,
+        },
+        config: backendConfig as any,
+      });
+
+      setJobId(response.job_id);
+      setLogLines((prev) => [...prev, `[INFO] Job started: ${response.job_id}`]);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to start processing';
+      setError(message);
+      setLogLines((prev) => [...prev, `[ERROR] ${message}`]);
+      setProcessStatus('error');
       setIsLoading(false);
-    }, 2000);
+    }
   };
 
   const handleStop = () => {
@@ -104,150 +187,158 @@ function PostProcessingPanel() {
   };
 
   return (
-    <Stack gap="xs">
-      {/* Section A: Execution Inputs */}
-      <Card withBorder p="xs">
+    <Grid gutter="md">
+      {/* Left Column: Configuration & Control */}
+      <Grid.Col span={{ base: 12, md: 6 }}>
         <Stack gap="xs">
-          <Title order={6} size="xs">Input Files</Title>
+          {/* Execution Inputs */}
+          <Card withBorder p="xs">
+            <Stack gap="xs">
+              <Title order={6} size="xs">Input Files</Title>
 
-          <SimpleGrid cols={2} spacing="xs">
-            <TextInput
-              size="xs"
-              label="Rover Observation (RINEX OBS)"
-              placeholder="/workspace/rover.obs"
-              value={roverFile}
-              onChange={(e) => setRoverFile(e.currentTarget.value)}
-              leftSection={<IconFile size={14} />}
-              styles={{ label: { fontSize: '10px' } }}
-              required
-            />
+              <SimpleGrid cols={2} spacing="xs">
+                <TextInput
+                  size="xs"
+                  label="Rover OBS"
+                  placeholder="/workspace/rover.obs"
+                  value={roverFile}
+                  onChange={(e) => setRoverFile(e.currentTarget.value)}
+                  leftSection={<IconFile size={12} />}
+                  styles={{ label: { fontSize: '10px' } }}
+                  required
+                />
 
-            <TextInput
-              size="xs"
-              label="Navigation File (RINEX NAV)"
-              placeholder="/workspace/nav.nav"
-              value={navFile}
-              onChange={(e) => setNavFile(e.currentTarget.value)}
-              leftSection={<IconFile size={14} />}
-              styles={{ label: { fontSize: '10px' } }}
-              required
-            />
-          </SimpleGrid>
+                <TextInput
+                  size="xs"
+                  label="Navigation"
+                  placeholder="/workspace/nav.nav"
+                  value={navFile}
+                  onChange={(e) => setNavFile(e.currentTarget.value)}
+                  leftSection={<IconFile size={12} />}
+                  styles={{ label: { fontSize: '10px' } }}
+                  required
+                />
+              </SimpleGrid>
 
-          <Checkbox
-            size="xs"
-            label="Use Base Station"
-            checked={useBase}
-            onChange={(e) => setUseBase(e.currentTarget.checked)}
-            styles={{ label: { fontSize: '10px' } }}
-          />
+              <Checkbox
+                size="xs"
+                label="Use Base Station"
+                checked={useBase}
+                onChange={(e) => setUseBase(e.currentTarget.checked)}
+                styles={{ label: { fontSize: '10px' } }}
+              />
 
-          {useBase && (
-            <TextInput
-              size="xs"
-              label="Base Observation (RINEX OBS)"
-              placeholder="/workspace/base.obs"
-              value={baseFile}
-              onChange={(e) => setBaseFile(e.currentTarget.value)}
-              leftSection={<IconFile size={14} />}
-              styles={{ label: { fontSize: '10px' } }}
-            />
-          )}
+              {useBase && (
+                <TextInput
+                  size="xs"
+                  label="Base OBS"
+                  placeholder="/workspace/base.obs"
+                  value={baseFile}
+                  onChange={(e) => setBaseFile(e.currentTarget.value)}
+                  leftSection={<IconFile size={12} />}
+                  styles={{ label: { fontSize: '10px' } }}
+                />
+              )}
 
-          <Divider />
+              <TextInput
+                size="xs"
+                label="Output"
+                placeholder="/workspace/output.pos"
+                value={outputFile}
+                onChange={(e) => setOutputFile(e.currentTarget.value)}
+                leftSection={<IconFile size={12} />}
+                styles={{ label: { fontSize: '10px' } }}
+                required
+              />
+            </Stack>
+          </Card>
 
-          <TextInput
-            size="xs"
-            label="Output File"
-            placeholder="/workspace/output.pos"
-            value={outputFile}
-            onChange={(e) => setOutputFile(e.currentTarget.value)}
-            leftSection={<IconFile size={14} />}
-            styles={{ label: { fontSize: '10px' } }}
-            required
-          />
+          {/* Configuration Tabs */}
+          <PostProcessingConfiguration onConfigChange={setConfig} />
 
+          {/* Error Display */}
           {error && (
-            <Alert color="red" icon={<IconInfoCircle size={16} />} p="xs" withCloseButton onClose={() => setError(null)}>
+            <Alert color="red" icon={<IconInfoCircle size={14} />} p="xs" withCloseButton onClose={() => setError(null)}>
               <Text size="xs">{error}</Text>
             </Alert>
           )}
 
-          <Group grow>
-            {processStatus === 'running' ? (
-              <Button
-                size="xs"
-                color="red"
-                leftSection={<IconPlayerStop size={14} />}
-                onClick={handleStop}
-                loading={isLoading}
-              >
-                Stop
-              </Button>
-            ) : (
-              <Button
-                size="xs"
-                color="green"
-                leftSection={<IconPlayerPlay size={14} />}
-                onClick={handleStart}
-                loading={isLoading}
-              >
-                Execute
-              </Button>
-            )}
-          </Group>
+          {/* Execute Button */}
+          <Card withBorder p="xs">
+            <Group grow>
+              {processStatus === 'running' ? (
+                <Button
+                  size="xs"
+                  color="red"
+                  leftSection={<IconPlayerStop size={12} />}
+                  onClick={handleStop}
+                  loading={isLoading}
+                >
+                  Stop
+                </Button>
+              ) : (
+                <Button
+                  size="xs"
+                  color="green"
+                  leftSection={<IconPlayerPlay size={12} />}
+                  onClick={handleStart}
+                  loading={isLoading}
+                >
+                  Execute
+                </Button>
+              )}
+            </Group>
+          </Card>
         </Stack>
-      </Card>
+      </Grid.Col>
 
-      {/* Section B: Configuration Tabs */}
-      <PostProcessingConfiguration onConfigChange={setConfig} />
-
-      {/* Log Console */}
-      <Card withBorder p={0}>
-        <Stack gap="xs">
-          <Card.Section withBorder p="xs">
+      {/* Right Column: Monitoring */}
+      <Grid.Col span={{ base: 12, md: 6 }}>
+        <Stack gap="xs" style={{ height: '100%' }}>
+          {/* Status Bar */}
+          <Card withBorder p="xs">
             <Group justify="space-between">
-              <Group gap="xs">
-                <StatusIndicator status={processStatus} />
-                <Badge variant="light" color="blue" size="sm">
-                  rnx2rtkp
-                </Badge>
-              </Group>
+              <StatusIndicator status={processStatus} />
+              <Badge variant="light" color="blue" size="sm">
+                rnx2rtkp
+              </Badge>
             </Group>
-          </Card.Section>
-          <TerminalOutput
-            lines={logLines}
-            maxHeight={250}
-            onClear={() => setLogLines([])}
-          />
+          </Card>
+
+          {/* Terminal Output - Full Height */}
+          <Card withBorder p={0} style={{ flex: 1 }}>
+            <TerminalOutput
+              lines={logLines}
+              maxHeight={600}
+              onClear={() => setLogLines([])}
+            />
+          </Card>
+
+          {/* Result Card */}
+          {processStatus === 'success' && (
+            <Card withBorder p="xs">
+              <Stack gap="xs">
+                <Group justify="space-between">
+                  <Title order={6} size="xs">Result</Title>
+                  <Badge color="green" size="sm">Complete</Badge>
+                </Group>
+                <Box>
+                  <Text size="xs" c="dimmed">Output File</Text>
+                  <Code style={{ fontSize: '10px' }}>{outputFile}</Code>
+                </Box>
+                <Button
+                  variant="light"
+                  leftSection={<IconDownload size={12} />}
+                  size="xs"
+                >
+                  Download Result
+                </Button>
+              </Stack>
+            </Card>
+          )}
         </Stack>
-      </Card>
-
-      {/* Result Card */}
-      {processStatus === 'success' && (
-        <Card withBorder p="xs">
-          <Stack gap="xs">
-            <Group justify="space-between">
-              <Title order={6} size="xs">Result</Title>
-              <Badge color="green" size="sm">Complete</Badge>
-            </Group>
-            <Group gap="md">
-              <Box>
-                <Text size="xs" c="dimmed">Output File</Text>
-                <Code style={{ fontSize: '10px' }}>{outputFile}</Code>
-              </Box>
-            </Group>
-            <Button
-              variant="light"
-              leftSection={<IconDownload size={14} />}
-              size="xs"
-            >
-              Download Result
-            </Button>
-          </Stack>
-        </Card>
-      )}
-    </Stack>
+      </Grid.Col>
+    </Grid>
   );
 }
 
