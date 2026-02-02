@@ -97,7 +97,7 @@ COPY --from=rtklib-builder /rtklib-bin/rnx2rtkp /usr/local/bin/rnx2rtkp
 RUN chmod +x /usr/local/bin/str2str /usr/local/bin/convbin /usr/local/bin/rnx2rtkp
 
 # Verify binaries are installed
-RUN ls -la /usr/local/bin/str2str && /usr/local/bin/str2str 2>&1 | head -5 || true
+RUN ls -la /usr/local/bin/str2str /usr/local/bin/convbin /usr/local/bin/rnx2rtkp
 
 # Copy virtual environment from backend builder
 COPY --from=backend-builder /app/.venv /app/.venv
