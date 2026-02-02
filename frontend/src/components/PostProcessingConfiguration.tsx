@@ -16,7 +16,6 @@ import {
   TextInput,
   Checkbox,
   Button,
-  Badge,
 } from '@mantine/core';
 import type {
   Rnx2RtkpConfig,
@@ -52,15 +51,6 @@ export function PostProcessingConfiguration({
   const handleConfigChange = (newConfig: Rnx2RtkpConfig) => {
     setConfig(newConfig);
     onConfigChange(newConfig);
-  };
-
-  const getSnrMaskStatus = () => {
-    const { enableRover, enableBase } = config.setting1.snrMask;
-    if (!enableRover && !enableBase) return 'Disabled';
-    const parts = [];
-    if (enableRover) parts.push('Rover: ON');
-    if (enableBase) parts.push('Base: ON');
-    return parts.join(', ');
   };
 
   return (
@@ -190,24 +180,14 @@ export function PostProcessingConfiguration({
                     <Text size="xs" style={{ fontSize: '10px', marginBottom: '4px' }}>
                       SNR Mask
                     </Text>
-                    <Group gap="xs">
-                      <Button
-                        size="xs"
-                        variant="light"
-                        onClick={() => setSnrMaskModalOpened(true)}
-                        style={{ flex: 1 }}
-                      >
-                        Edit SNR Mask...
-                      </Button>
-                      <Badge
-                        size="md"
-                        variant="dot"
-                        color={config.setting1.snrMask.enableRover || config.setting1.snrMask.enableBase ? 'green' : 'gray'}
-                        styles={{ root: { fontSize: '11px', padding: '4px 8px' } }}
-                      >
-                        {getSnrMaskStatus()}
-                      </Badge>
-                    </Group>
+                    <Button
+                      size="xs"
+                      variant="light"
+                      onClick={() => setSnrMaskModalOpened(true)}
+                      fullWidth
+                    >
+                      Edit SNR Mask...
+                    </Button>
                   </div>
 
                   <Select
