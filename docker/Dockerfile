@@ -91,10 +91,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy RTKLIB binaries from builder
-COPY --from=rtklib-builder /rtklib-bin/* /usr/local/bin/
-RUN chmod +x /usr/local/bin/str2str \
-    /usr/local/bin/convbin \
-    /usr/local/bin/rnx2rtkp
+COPY --from=rtklib-builder /rtklib-bin/str2str /usr/local/bin/str2str
+COPY --from=rtklib-builder /rtklib-bin/convbin /usr/local/bin/convbin
+COPY --from=rtklib-builder /rtklib-bin/rnx2rtkp /usr/local/bin/rnx2rtkp
+RUN chmod +x /usr/local/bin/str2str /usr/local/bin/convbin /usr/local/bin/rnx2rtkp
+
+# Verify binaries are installed
+RUN ls -la /usr/local/bin/str2str && /usr/local/bin/str2str 2>&1 | head -5 || true
 
 # Copy virtual environment from backend builder
 COPY --from=backend-builder /app/.venv /app/.venv
