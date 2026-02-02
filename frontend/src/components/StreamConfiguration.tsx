@@ -727,27 +727,61 @@ function renderOutputFields(
     case 'file': {
       const p = params as FileParams;
       return (
-        <TextInput
-          size="xs"
-          label="File Path"
-          placeholder="/workspace/output.ubx"
-          value={p.path}
-          onChange={(e) => onChange('path', e.currentTarget.value)}
-          rightSection={
-            <FileNamingHelper
-              onKeywordClick={(keyword) => {
-                const input = document.activeElement as HTMLInputElement;
-                if (input && input.type === 'text') {
-                  const start = input.selectionStart || p.path.length;
-                  const newValue =
-                    p.path.slice(0, start) + keyword + p.path.slice(start);
-                  onChange('path', newValue);
-                }
-              }}
+        <Stack gap="xs">
+          <TextInput
+            size="xs"
+            label="File Path"
+            placeholder="/workspace/output.ubx"
+            value={p.path}
+            onChange={(e) => onChange('path', e.currentTarget.value)}
+            rightSection={
+              <FileNamingHelper
+                onKeywordClick={(keyword) => {
+                  const input = document.activeElement as HTMLInputElement;
+                  if (input && input.type === 'text') {
+                    const start = input.selectionStart || p.path.length;
+                    const newValue =
+                      p.path.slice(0, start) + keyword + p.path.slice(start);
+                    onChange('path', newValue);
+                  }
+                }}
+              />
+            }
+            styles={{ label: { fontSize: '10px' } }}
+          />
+          <SimpleGrid cols={2} spacing="xs">
+            <Select
+              size="xs"
+              label="Swap Interval"
+              placeholder="None"
+              value={p.swapInterval ? String(p.swapInterval) : ''}
+              onChange={(value) => onChange('swapInterval', value ? parseFloat(value) : undefined)}
+              data={[
+                { value: '', label: 'None' },
+                { value: '0.25', label: '0.25H (15min)' },
+                { value: '0.5', label: '0.5H (30min)' },
+                { value: '1', label: '1H' },
+                { value: '2', label: '2H' },
+                { value: '3', label: '3H' },
+                { value: '6', label: '6H' },
+                { value: '12', label: '12H' },
+                { value: '24', label: '24H' },
+              ]}
+              styles={{ label: { fontSize: '10px' } }}
             />
-          }
-          styles={{ label: { fontSize: '10px' } }}
-        />
+            <Select
+              size="xs"
+              label="Timetag"
+              value={p.timetag === undefined ? 'off' : p.timetag ? 'on' : 'off'}
+              onChange={(value) => onChange('timetag', value === 'on')}
+              data={[
+                { value: 'off', label: 'Off' },
+                { value: 'on', label: 'On' },
+              ]}
+              styles={{ label: { fontSize: '10px' } }}
+            />
+          </SimpleGrid>
+        </Stack>
       );
     }
   }

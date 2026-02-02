@@ -39,7 +39,21 @@ function generateStreamArg(stream: StreamConfig): string {
     }
     case 'file': {
       const params = stream.params as FileParams;
-      return `file://${params.path}`;
+      let arg = `file://${params.path}`;
+
+      // Add swap interval option if specified
+      if (params.swapInterval !== undefined) {
+        arg += `::S=${params.swapInterval}`;
+      }
+
+      // Add timetag option if specified
+      if (params.timetag === true) {
+        arg += `::T=on`;
+      } else if (params.timetag === false) {
+        arg += `::T=off`;
+      }
+
+      return arg;
     }
     default:
       return '';
