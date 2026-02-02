@@ -21,3 +21,6 @@ frontend/dist/
 
 # uv
 uv.lock
+
+# Workspace (bind mount for data)
+workspace/
