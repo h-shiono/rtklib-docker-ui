@@ -1004,7 +1004,7 @@ export function PostProcessingConfiguration({
 
                     <div>
                       <Text size="xs" style={{ fontSize: '10px', marginBottom: '4px' }}>
-                        Header / Options
+                        Header / Options / Velocity
                       </Text>
                       <Group gap="xs">
                         <Switch
@@ -1032,6 +1032,21 @@ export function PostProcessingConfiguration({
                               output: {
                                 ...config.output,
                                 outputProcessingOptions: e.currentTarget.checked,
+                              },
+                            })
+                          }
+                          styles={{ label: { fontSize: '10px' } }}
+                        />
+                        <Switch
+                          size="xs"
+                          label="Velocity"
+                          checked={config.output.outputVelocity}
+                          onChange={(e: any) =>
+                            handleConfigChange({
+                              ...config,
+                              output: {
+                                ...config.output,
+                                outputVelocity: e.currentTarget.checked,
                               },
                             })
                           }
@@ -1109,22 +1124,6 @@ export function PostProcessingConfiguration({
                       styles={{ label: { fontSize: '10px' } }}
                     />
                   </SimpleGrid>
-
-                  <Switch
-                    size="xs"
-                    label="Output Velocity"
-                    checked={config.output.outputVelocity}
-                    onChange={(e: any) =>
-                      handleConfigChange({
-                        ...config,
-                        output: {
-                          ...config.output,
-                          outputVelocity: e.currentTarget.checked,
-                        },
-                      })
-                    }
-                    styles={{ label: { fontSize: '10px' } }}
-                  />
                 </Stack>
               </Fieldset>
 
