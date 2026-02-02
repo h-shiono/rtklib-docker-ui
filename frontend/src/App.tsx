@@ -35,7 +35,8 @@ import {
   IconTestPipe,
 } from '@tabler/icons-react';
 import { TerminalOutput, StatusIndicator, ConfigLoader, ProcessStatus } from './components';
-import { useWebSocket, LogMessage } from './hooks/useWebSocket';
+import { useWebSocket } from './hooks';
+import type { LogMessage } from './hooks';
 import * as str2strApi from './api/str2str';
 
 function ColorSchemeToggle() {

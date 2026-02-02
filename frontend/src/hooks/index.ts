@@ -1,1 +1,2 @@
-export { useWebSocket, type LogMessage, type UseWebSocketOptions, type UseWebSocketReturn } from './useWebSocket';
+export { useWebSocket } from './useWebSocket';
+export type { LogMessage, UseWebSocketOptions, UseWebSocketReturn } from './useWebSocket';
