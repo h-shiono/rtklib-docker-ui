@@ -199,7 +199,12 @@ export function PostProcessingConfiguration({
                       >
                         Edit SNR Mask...
                       </Button>
-                      <Badge size="sm" variant="dot" color={config.setting1.snrMask.enableRover || config.setting1.snrMask.enableBase ? 'green' : 'gray'}>
+                      <Badge
+                        size="md"
+                        variant="dot"
+                        color={config.setting1.snrMask.enableRover || config.setting1.snrMask.enableBase ? 'green' : 'gray'}
+                        styles={{ root: { fontSize: '11px', padding: '4px 8px' } }}
+                      >
                         {getSnrMaskStatus()}
                       </Badge>
                     </Group>

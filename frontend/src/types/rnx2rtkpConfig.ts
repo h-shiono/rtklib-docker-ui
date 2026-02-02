@@ -151,9 +151,9 @@ export const DEFAULT_SETTING1: Setting1Config = {
     enableBase: false,
     // Default mask values: 3 frequencies (L1, L2, L5) × 9 elevation bins
     mask: [
-      [35, 35, 35, 35, 35, 35, 35, 35, 35], // L1
-      [35, 35, 35, 35, 35, 35, 35, 35, 35], // L2
-      [35, 35, 35, 35, 35, 35, 35, 35, 35], // L5
+      [0, 0, 0, 0, 0, 0, 0, 0, 0], // L1
+      [0, 0, 0, 0, 0, 0, 0, 0, 0], // L2
+      [0, 0, 0, 0, 0, 0, 0, 0, 0], // L5
     ],
   },
   ionosphereCorrection: 'broadcast',

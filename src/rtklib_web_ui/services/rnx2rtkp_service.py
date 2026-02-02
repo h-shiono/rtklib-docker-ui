@@ -36,9 +36,9 @@ class SnrMaskConfig(BaseModel):
     # Elevation bins: <5, 15, 25, 35, 45, 55, 65, 75, >85 (9 bins)
     mask: list[list[float]] = Field(
         default=[
-            [35.0] * 9,  # L1
-            [35.0] * 9,  # L2
-            [35.0] * 9,  # L5
+            [0.0] * 9,  # L1
+            [0.0] * 9,  # L2
+            [0.0] * 9,  # L5
         ]
     )
 
