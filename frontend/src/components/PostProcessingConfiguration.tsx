@@ -1041,44 +1041,41 @@ export function PostProcessingConfiguration({
                     </div>
                   </SimpleGrid>
 
-                  <div>
-                    <Text size="xs" style={{ fontSize: '10px', marginBottom: '4px' }}>
-                      Time Format / # of Decimals
-                    </Text>
-                    <Group gap="xs" grow>
-                      <Select
-                        size="xs"
-                        value={config.output.timeFormat}
-                        onChange={(value: any) =>
-                          handleConfigChange({
-                            ...config,
-                            output: { ...config.output, timeFormat: value as TimeFormat },
-                          })
-                        }
-                        data={[
-                          { value: 'gpst', label: 'ww:ssss GPST' },
-                          { value: 'utc', label: 'hh:mm:ss UTC' },
-                          { value: 'jst', label: 'hh:mm:ss JST' },
-                          { value: 'tow', label: 'TOW' },
-                        ]}
-                        styles={{ input: { fontSize: '10px' } }}
-                      />
-                      <NumberInput
-                        size="xs"
-                        value={config.output.numDecimals}
-                        onChange={(value: any) =>
-                          handleConfigChange({
-                            ...config,
-                            output: { ...config.output, numDecimals: Number(value) },
-                          })
-                        }
-                        min={0}
-                        max={12}
-                        hideControls
-                        styles={{ input: { fontSize: '10px' } }}
-                      />
-                    </Group>
-                  </div>
+                  <SimpleGrid cols={2} spacing="xs">
+                    <Select
+                      size="xs"
+                      label="Time Format"
+                      value={config.output.timeFormat}
+                      onChange={(value: any) =>
+                        handleConfigChange({
+                          ...config,
+                          output: { ...config.output, timeFormat: value as TimeFormat },
+                        })
+                      }
+                      data={[
+                        { value: 'gpst', label: 'ww:ssss GPST' },
+                        { value: 'utc', label: 'hh:mm:ss UTC' },
+                        { value: 'jst', label: 'hh:mm:ss JST' },
+                        { value: 'tow', label: 'TOW' },
+                      ]}
+                      styles={{ label: { fontSize: '10px' } }}
+                    />
+                    <NumberInput
+                      size="xs"
+                      label="# of Decimals"
+                      value={config.output.numDecimals}
+                      onChange={(value: any) =>
+                        handleConfigChange({
+                          ...config,
+                          output: { ...config.output, numDecimals: Number(value) },
+                        })
+                      }
+                      min={0}
+                      max={12}
+                      hideControls
+                      styles={{ label: { fontSize: '10px' } }}
+                    />
+                  </SimpleGrid>
 
                   <SimpleGrid cols={2} spacing="xs">
                     <Select
@@ -1134,44 +1131,41 @@ export function PostProcessingConfiguration({
               {/* Group B: Datum & Geoid */}
               <Fieldset legend="Datum & Geoid" style={{ fontSize: '10px' }}>
                 <Stack gap="xs">
-                  <div>
-                    <Text size="xs" style={{ fontSize: '10px', marginBottom: '4px' }}>
-                      Datum / Height
-                    </Text>
-                    <Group gap="xs" grow>
-                      <Select
-                        size="xs"
-                        value={config.output.datum}
-                        onChange={(value: any) =>
-                          handleConfigChange({
-                            ...config,
-                            output: { ...config.output, datum: value as Datum },
-                          })
-                        }
-                        data={[
-                          { value: 'wgs84', label: 'WGS84' },
-                          { value: 'tokyo', label: 'Tokyo' },
-                          { value: 'pz90.11', label: 'PZ-90.11' },
-                        ]}
-                        styles={{ input: { fontSize: '10px' } }}
-                      />
-                      <Select
-                        size="xs"
-                        value={config.output.height}
-                        onChange={(value: any) =>
-                          handleConfigChange({
-                            ...config,
-                            output: { ...config.output, height: value as HeightType },
-                          })
-                        }
-                        data={[
-                          { value: 'ellipsoidal', label: 'Ellipsoidal' },
-                          { value: 'geodetic', label: 'Geodetic' },
-                        ]}
-                        styles={{ input: { fontSize: '10px' } }}
-                      />
-                    </Group>
-                  </div>
+                  <SimpleGrid cols={2} spacing="xs">
+                    <Select
+                      size="xs"
+                      label="Datum"
+                      value={config.output.datum}
+                      onChange={(value: any) =>
+                        handleConfigChange({
+                          ...config,
+                          output: { ...config.output, datum: value as Datum },
+                        })
+                      }
+                      data={[
+                        { value: 'wgs84', label: 'WGS84' },
+                        { value: 'tokyo', label: 'Tokyo' },
+                        { value: 'pz90.11', label: 'PZ-90.11' },
+                      ]}
+                      styles={{ label: { fontSize: '10px' } }}
+                    />
+                    <Select
+                      size="xs"
+                      label="Height"
+                      value={config.output.height}
+                      onChange={(value: any) =>
+                        handleConfigChange({
+                          ...config,
+                          output: { ...config.output, height: value as HeightType },
+                        })
+                      }
+                      data={[
+                        { value: 'ellipsoidal', label: 'Ellipsoidal' },
+                        { value: 'geodetic', label: 'Geodetic' },
+                      ]}
+                      styles={{ label: { fontSize: '10px' } }}
+                    />
+                  </SimpleGrid>
 
                   <Select
                     size="xs"
@@ -1215,84 +1209,78 @@ export function PostProcessingConfiguration({
                     styles={{ label: { fontSize: '10px' } }}
                   />
 
-                  <div>
-                    <Text size="xs" style={{ fontSize: '10px', marginBottom: '4px' }}>
-                      NMEA Interval (s) - RMC/GGA / GSA/GSV
-                    </Text>
-                    <Group gap="xs" grow>
-                      <NumberInput
-                        size="xs"
-                        value={config.output.nmeaIntervalRmcGga}
-                        onChange={(value: any) =>
-                          handleConfigChange({
-                            ...config,
-                            output: { ...config.output, nmeaIntervalRmcGga: Number(value) },
-                          })
-                        }
-                        min={0}
-                        step={1}
-                        hideControls
-                        styles={{ input: { fontSize: '10px' } }}
-                      />
-                      <NumberInput
-                        size="xs"
-                        value={config.output.nmeaIntervalGsaGsv}
-                        onChange={(value: any) =>
-                          handleConfigChange({
-                            ...config,
-                            output: { ...config.output, nmeaIntervalGsaGsv: Number(value) },
-                          })
-                        }
-                        min={0}
-                        step={1}
-                        hideControls
-                        styles={{ input: { fontSize: '10px' } }}
-                      />
-                    </Group>
-                  </div>
+                  <SimpleGrid cols={2} spacing="xs">
+                    <NumberInput
+                      size="xs"
+                      label="NMEA Interval (s) - RMC/GGA"
+                      value={config.output.nmeaIntervalRmcGga}
+                      onChange={(value: any) =>
+                        handleConfigChange({
+                          ...config,
+                          output: { ...config.output, nmeaIntervalRmcGga: Number(value) },
+                        })
+                      }
+                      min={0}
+                      step={1}
+                      hideControls
+                      styles={{ label: { fontSize: '10px' } }}
+                    />
+                    <NumberInput
+                      size="xs"
+                      label="GSA/GSV"
+                      value={config.output.nmeaIntervalGsaGsv}
+                      onChange={(value: any) =>
+                        handleConfigChange({
+                          ...config,
+                          output: { ...config.output, nmeaIntervalGsaGsv: Number(value) },
+                        })
+                      }
+                      min={0}
+                      step={1}
+                      hideControls
+                      styles={{ label: { fontSize: '10px' } }}
+                    />
+                  </SimpleGrid>
 
-                  <div>
-                    <Text size="xs" style={{ fontSize: '10px', marginBottom: '4px' }}>
-                      Output Sol Status / Debug Trace
-                    </Text>
-                    <Group gap="xs" grow>
-                      <Select
-                        size="xs"
-                        value={config.output.outputSolutionStatus}
-                        onChange={(value: any) =>
-                          handleConfigChange({
-                            ...config,
-                            output: { ...config.output, outputSolutionStatus: value as DebugTraceLevel },
-                          })
-                        }
-                        data={[
-                          { value: 'off', label: 'OFF' },
-                          { value: 'level1', label: 'State' },
-                          { value: 'level2', label: 'Residual' },
-                        ]}
-                        styles={{ input: { fontSize: '10px' } }}
-                      />
-                      <Select
-                        size="xs"
-                        value={config.output.debugTrace}
-                        onChange={(value: any) =>
-                          handleConfigChange({
-                            ...config,
-                            output: { ...config.output, debugTrace: value as DebugTraceLevel },
-                          })
-                        }
-                        data={[
-                          { value: 'off', label: 'OFF' },
-                          { value: 'level1', label: 'Level 1' },
-                          { value: 'level2', label: 'Level 2' },
-                          { value: 'level3', label: 'Level 3' },
-                          { value: 'level4', label: 'Level 4' },
-                          { value: 'level5', label: 'Level 5' },
-                        ]}
-                        styles={{ input: { fontSize: '10px' } }}
-                      />
-                    </Group>
-                  </div>
+                  <SimpleGrid cols={2} spacing="xs">
+                    <Select
+                      size="xs"
+                      label="Output Sol Status"
+                      value={config.output.outputSolutionStatus}
+                      onChange={(value: any) =>
+                        handleConfigChange({
+                          ...config,
+                          output: { ...config.output, outputSolutionStatus: value as DebugTraceLevel },
+                        })
+                      }
+                      data={[
+                        { value: 'off', label: 'OFF' },
+                        { value: 'level1', label: 'State' },
+                        { value: 'level2', label: 'Residual' },
+                      ]}
+                      styles={{ label: { fontSize: '10px' } }}
+                    />
+                    <Select
+                      size="xs"
+                      label="Debug Trace"
+                      value={config.output.debugTrace}
+                      onChange={(value: any) =>
+                        handleConfigChange({
+                          ...config,
+                          output: { ...config.output, debugTrace: value as DebugTraceLevel },
+                        })
+                      }
+                      data={[
+                        { value: 'off', label: 'OFF' },
+                        { value: 'level1', label: 'Level 1' },
+                        { value: 'level2', label: 'Level 2' },
+                        { value: 'level3', label: 'Level 3' },
+                        { value: 'level4', label: 'Level 4' },
+                        { value: 'level5', label: 'Level 5' },
+                      ]}
+                      styles={{ label: { fontSize: '10px' } }}
+                    />
+                  </SimpleGrid>
                 </Stack>
               </Fieldset>
             </Stack>
