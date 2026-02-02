@@ -19,10 +19,9 @@ import {
 } from '@mantine/core';
 import {
   IconAdjustments,
-  IconChartHistogram,
   IconDatabaseExport,
   IconDots,
-  IconEqualizer,
+  IconSliders,
   IconFolderOpen,
   IconMapPin,
 } from '@tabler/icons-react';
@@ -77,7 +76,7 @@ export function PostProcessingConfiguration({
             <Tabs.Tab value="setting1" style={{ fontSize: '11px', padding: '6px 12px' }} leftSection={<IconAdjustments size={14} />}>
               Setting 1
             </Tabs.Tab>
-            <Tabs.Tab value="setting2" style={{ fontSize: '11px', padding: '6px 12px' }} leftSection={<IconEqualizer size={14} />}>
+            <Tabs.Tab value="setting2" style={{ fontSize: '11px', padding: '6px 12px' }} leftSection={<IconSliders size={14} />}>
               Setting 2
             </Tabs.Tab>
             <Tabs.Tab value="output" style={{ fontSize: '11px', padding: '6px 12px' }} leftSection={<IconDatabaseExport size={14} />}>
