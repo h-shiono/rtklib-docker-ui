@@ -349,7 +349,8 @@ function StreamServerPanel({
     setLogLines([]);
 
     try {
-      const result = await str2strApi.testStr2Str();
+      // Use -h argument to show help
+      const result = await str2strApi.startStr2Str({ args: ['-h'] });
       setProcessId(result.id);
       setProcessState('running');
     } catch (err) {
