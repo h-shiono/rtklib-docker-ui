@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   AppShell,
   Box,
@@ -17,6 +17,8 @@ import {
   Checkbox,
   Divider,
   Code,
+  Tooltip,
+  Textarea,
 } from '@mantine/core';
 import {
   IconSun,
@@ -28,20 +30,13 @@ import {
   IconFolderOpen,
   IconRefresh,
   IconDownload,
+  IconPlugConnected,
+  IconPlugConnectedX,
+  IconTestPipe,
 } from '@tabler/icons-react';
 import { TerminalOutput, StatusIndicator, ConfigLoader, ProcessStatus } from './components';
-
-// Sample log data for demo
-const sampleLogLines = [
-  '2026/01/01 12:00:00 RTKLIB started',
-  '2026/01/01 12:00:01 Loading configuration...',
-  '2026/01/01 12:00:02 Configuration loaded successfully',
-  '2026/01/01 12:00:03 Opening input files...',
-  '2026/01/01 12:00:04 Rover: /workspace/rover.obs',
-  '2026/01/01 12:00:05 Base:  /workspace/base.obs',
-  '2026/01/01 12:00:06 Nav:   /workspace/nav.nav',
-  '2026/01/01 12:00:07 Processing epoch 1/1000...',
-];
+import { useWebSocket, LogMessage } from './hooks/useWebSocket';
+import * as str2strApi from './api/str2str';
 
 function ColorSchemeToggle() {
   const { colorScheme, setColorScheme } = useMantineColorScheme();
@@ -67,11 +62,23 @@ function PostProcessingPanel() {
   const [logLines, setLogLines] = useState<string[]>([]);
   const [useBase, setUseBase] = useState(true);
 
+  // Sample log data for demo (rnx2rtkp not yet implemented with WebSocket)
+  const sampleLogLines = [
+    '2026/01/01 12:00:00 RTKLIB started',
+    '2026/01/01 12:00:01 Loading configuration...',
+    '2026/01/01 12:00:02 Configuration loaded successfully',
+    '2026/01/01 12:00:03 Opening input files...',
+    `2026/01/01 12:00:04 Rover: ${roverFile}`,
+    `2026/01/01 12:00:05 Base:  ${baseFile}`,
+    `2026/01/01 12:00:06 Nav:   ${navFile}`,
+    '2026/01/01 12:00:07 Processing epoch 1/1000...',
+  ];
+
   const handleStart = () => {
     setProcessStatus('running');
     setLogLines([]);
 
-    // Simulate processing
+    // Simulate processing (TODO: Replace with real API call)
     let index = 0;
     const interval = setInterval(() => {
       if (index < sampleLogLines.length) {
@@ -164,7 +171,7 @@ function PostProcessingPanel() {
             </Stack>
           </Card>
 
-          {/* Action Area - Sticky Bottom */}
+          {/* Action Area */}
           <Card withBorder>
             <Group grow>
               {processStatus === 'running' ? (
@@ -216,7 +223,7 @@ function PostProcessingPanel() {
             />
           </Card>
 
-          {/* Result Card (shown after completion) */}
+          {/* Result Card */}
           {processStatus === 'success' && (
             <Card withBorder>
               <Stack gap="sm">
@@ -255,15 +262,218 @@ function PostProcessingPanel() {
 }
 
 function StreamServerPanel() {
+  const [processId, setProcessId] = useState<string | null>(null);
+  const [processState, setProcessState] = useState<ProcessStatus>('idle');
+  const [logLines, setLogLines] = useState<string[]>([]);
+  const [argsInput, setArgsInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // WebSocket connection for real-time logs
+  const { isConnected, clearMessages } = useWebSocket({
+    onMessage: useCallback((message: LogMessage) => {
+      if (message.type === 'log' && message.message) {
+        setLogLines((prev) => [...prev.slice(-500), message.message!]);
+      }
+      if (message.type === 'status' && message.status) {
+        // Map backend status to UI status
+        const statusMap: Record<string, ProcessStatus> = {
+          idle: 'idle',
+          starting: 'running',
+          running: 'running',
+          stopping: 'running',
+          stopped: 'idle',
+          error: 'error',
+        };
+        setProcessState(statusMap[message.status] || 'idle');
+      }
+    }, []),
+    onConnect: useCallback(() => {
+      setLogLines((prev) => [...prev, '[WS] Connected to log stream']);
+    }, []),
+    onDisconnect: useCallback(() => {
+      setLogLines((prev) => [...prev, '[WS] Disconnected from log stream']);
+    }, []),
+  });
+
+  const handleStart = async () => {
+    setIsLoading(true);
+    setError(null);
+    setLogLines([]);
+
+    try {
+      // Parse args from input (simple space-separated)
+      const args = argsInput.trim() ? argsInput.trim().split(/\s+/) : [];
+
+      const result = await str2strApi.startStr2Str({ args });
+      setProcessId(result.id);
+      setProcessState('running');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to start process');
+      setProcessState('error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleStop = async () => {
+    if (!processId) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      await str2strApi.stopStr2Str({ process_id: processId });
+      setProcessState('idle');
+      setProcessId(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to stop process');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleTest = async () => {
+    setIsLoading(true);
+    setError(null);
+    setLogLines([]);
+
+    try {
+      const result = await str2strApi.testStr2Str();
+      setProcessId(result.id);
+      setProcessState('running');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to run test');
+      setProcessState('error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleClear = () => {
+    setLogLines([]);
+    clearMessages();
+  };
+
   return (
-    <Card withBorder>
-      <Stack gap="md" align="center" py="xl">
-        <IconSatellite size={48} opacity={0.5} />
-        <Title order={4} c="dimmed">Stream Server</Title>
-        <Text size="sm" c="dimmed">Real-time GNSS data streaming with str2str</Text>
-        <Badge>Coming Soon</Badge>
-      </Stack>
-    </Card>
+    <Grid gutter="md">
+      {/* Left Pane: Configuration */}
+      <Grid.Col span={{ base: 12, md: 5 }}>
+        <Stack gap="md">
+          <Card withBorder>
+            <Stack gap="sm">
+              <Group justify="space-between">
+                <Title order={6}>Stream Configuration</Title>
+                <Tooltip label={isConnected ? 'WebSocket connected' : 'WebSocket disconnected'}>
+                  {isConnected ? (
+                    <IconPlugConnected size={18} color="var(--mantine-color-green-6)" />
+                  ) : (
+                    <IconPlugConnectedX size={18} color="var(--mantine-color-red-6)" />
+                  )}
+                </Tooltip>
+              </Group>
+
+              <Textarea
+                label="str2str Arguments"
+                placeholder="-in serial://ttyUSB0:115200 -out file:///workspace/output.ubx"
+                description="Enter command line arguments for str2str"
+                value={argsInput}
+                onChange={(e) => setArgsInput(e.currentTarget.value)}
+                minRows={3}
+                autosize
+              />
+
+              <Text size="xs" c="dimmed">
+                Examples:
+              </Text>
+              <Code block style={{ fontSize: '11px' }}>
+{`# Serial to file
+-in serial://ttyUSB0:115200 -out file:///workspace/out.ubx
+
+# TCP client to file
+-in tcpcli://192.168.1.100:2101 -out file:///workspace/out.ubx
+
+# NTRIP to file
+-in ntrip://user:pass@host:2101/mountpoint -out file:///workspace/out.rtcm`}
+              </Code>
+
+              {error && (
+                <Text size="sm" c="red">
+                  {error}
+                </Text>
+              )}
+            </Stack>
+          </Card>
+
+          {/* Action Area */}
+          <Card withBorder>
+            <Stack gap="sm">
+              <Group grow>
+                {processState === 'running' ? (
+                  <Button
+                    color="red"
+                    leftSection={<IconPlayerStop size={18} />}
+                    onClick={handleStop}
+                    loading={isLoading}
+                  >
+                    Stop
+                  </Button>
+                ) : (
+                  <Button
+                    color="green"
+                    leftSection={<IconPlayerPlay size={18} />}
+                    onClick={handleStart}
+                    loading={isLoading}
+                  >
+                    Start Stream
+                  </Button>
+                )}
+              </Group>
+              <Button
+                variant="light"
+                leftSection={<IconTestPipe size={18} />}
+                onClick={handleTest}
+                loading={isLoading}
+                disabled={processState === 'running'}
+              >
+                Test (Show Help)
+              </Button>
+            </Stack>
+          </Card>
+        </Stack>
+      </Grid.Col>
+
+      {/* Right Pane: Monitor */}
+      <Grid.Col span={{ base: 12, md: 7 }}>
+        <Stack gap="md" h="100%">
+          {/* Status Bar */}
+          <Card withBorder>
+            <Group justify="space-between">
+              <StatusIndicator status={processState} />
+              <Group gap="xs">
+                <Badge variant="light" color="blue">
+                  str2str
+                </Badge>
+                {processId && (
+                  <Badge variant="outline" size="sm">
+                    ID: {processId}
+                  </Badge>
+                )}
+              </Group>
+            </Group>
+          </Card>
+
+          {/* Terminal Output */}
+          <Card withBorder style={{ flex: 1 }} p={0}>
+            <TerminalOutput
+              lines={logLines}
+              maxHeight={400}
+              onClear={handleClear}
+            />
+          </Card>
+        </Stack>
+      </Grid.Col>
+    </Grid>
   );
 }
 
@@ -281,10 +491,12 @@ function ConversionPanel() {
 }
 
 function App() {
-  const [activeTab, setActiveTab] = useState<string | null>('post-processing');
+  const [activeTab, setActiveTab] = useState<string | null>('stream-server');
   const [healthStatus, setHealthStatus] = useState<'loading' | 'ok' | 'error'>('loading');
+  const [rtklibVersion, setRtklibVersion] = useState<string>('');
 
   useEffect(() => {
+    // Check API health
     fetch('/api/health')
       .then((res) => res.json())
       .then((data) => {
@@ -292,6 +504,16 @@ function App() {
       })
       .catch(() => {
         setHealthStatus('error');
+      });
+
+    // Get RTKLIB version
+    fetch('/api/rtklib/version')
+      .then((res) => res.json())
+      .then((data) => {
+        setRtklibVersion(data.version || 'unknown');
+      })
+      .catch(() => {
+        setRtklibVersion('unavailable');
       });
   }, []);
 
@@ -302,7 +524,12 @@ function App() {
           {/* Logo & Title */}
           <Group gap="sm">
             <IconSatellite size={28} />
-            <Title order={4} visibleFrom="sm">RTKLIB Web UI</Title>
+            <Stack gap={0}>
+              <Title order={4} visibleFrom="sm">RTKLIB Web UI</Title>
+              {rtklibVersion && (
+                <Text size="xs" c="dimmed" visibleFrom="md">{rtklibVersion}</Text>
+              )}
+            </Stack>
           </Group>
 
           {/* Tabs - Center */}

@@ -4,12 +4,13 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import AsyncGenerator
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from rtklib_web_ui.api import files, process, config
+from rtklib_web_ui.api import files, process, config, str2str
+from rtklib_web_ui.services import process_manager, ws_manager
 
 # Static files directory (set in Docker build)
 STATIC_DIR = Path("/app/static")
@@ -18,9 +19,16 @@ STATIC_DIR = Path("/app/static")
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan handler."""
-    # Startup
+    # Startup: Wire up process manager to WebSocket manager
+    process_manager.set_log_callback(ws_manager.broadcast_log)
     yield
-    # Shutdown
+    # Shutdown: Stop all running processes
+    for proc_info in process_manager.get_all_processes():
+        if proc_info.state.value == "running":
+            try:
+                await process_manager.stop(proc_info.id, timeout=2.0)
+            except Exception:
+                pass
 
 
 app = FastAPI(
@@ -43,12 +51,77 @@ app.add_middleware(
 app.include_router(files.router, prefix="/api/files", tags=["files"])
 app.include_router(process.router, prefix="/api/process", tags=["process"])
 app.include_router(config.router, prefix="/api/config", tags=["config"])
+app.include_router(str2str.router, prefix="/api/str2str", tags=["str2str"])
 
 
 @app.get("/api/health")
 async def health_check() -> dict[str, str]:
     """Health check endpoint."""
     return {"status": "ok"}
+
+
+@app.get("/api/rtklib/version")
+async def rtklib_version() -> dict[str, str | list[str]]:
+    """Get RTKLIB version and available binaries."""
+    import asyncio
+    import shutil
+
+    binaries = []
+    for cmd in ["str2str", "convbin", "rnx2rtkp", "rtkrcv"]:
+        if shutil.which(cmd) or Path(f"/usr/local/bin/{cmd}").exists():
+            binaries.append(cmd)
+
+    # Try to get version from str2str
+    version = "unknown"
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            "/usr/local/bin/str2str",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        _, stderr = await asyncio.wait_for(proc.communicate(), timeout=5.0)
+        # Parse version from help output
+        output = stderr.decode("utf-8", errors="replace")
+        for line in output.split("\n"):
+            if "ver." in line.lower() or "version" in line.lower():
+                version = line.strip()
+                break
+    except Exception:
+        pass
+
+    return {
+        "version": version,
+        "binaries": binaries,
+    }
+
+
+# WebSocket endpoint for real-time logs
+@app.websocket("/ws/logs")
+async def websocket_logs(websocket: WebSocket) -> None:
+    """WebSocket endpoint for real-time log streaming.
+
+    Clients connect here to receive process logs in real-time.
+    Messages are JSON formatted with structure:
+    {
+        "type": "log" | "status" | "connected",
+        "process_id": "...",
+        "message": "...",
+        "timestamp": "..."
+    }
+    """
+    await ws_manager.connect(websocket)
+    try:
+        # Keep connection alive and handle client messages
+        while True:
+            try:
+                # Wait for client messages (ping/pong or commands)
+                data = await websocket.receive_text()
+                # Echo back acknowledgment
+                await websocket.send_text(f'{{"type":"ack","received":"{data}"}}')
+            except WebSocketDisconnect:
+                break
+    finally:
+        await ws_manager.disconnect(websocket)
 
 
 # Serve static files in production
