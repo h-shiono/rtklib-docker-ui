@@ -18,7 +18,6 @@ import {
   Divider,
   Code,
   Tooltip,
-  Textarea,
   Alert,
 } from '@mantine/core';
 import {
@@ -34,6 +33,7 @@ import {
   IconPlugConnected,
   IconPlugConnectedX,
   IconTestPipe,
+  IconInfoCircle,
 } from '@tabler/icons-react';
 import { TerminalOutput, StatusIndicator, ConfigLoader, StreamConfiguration } from './components';
 import type { ProcessStatus } from './components';
