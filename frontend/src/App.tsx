@@ -264,9 +264,19 @@ function PostProcessingPanel() {
   );
 }
 
-function StreamServerPanel() {
-  const [processId, setProcessId] = useState<string | null>(null);
-  const [processState, setProcessState] = useState<ProcessStatus>('idle');
+interface StreamServerPanelProps {
+  processId: string | null;
+  setProcessId: (id: string | null) => void;
+  processState: ProcessStatus;
+  setProcessState: (state: ProcessStatus) => void;
+}
+
+function StreamServerPanel({
+  processId,
+  setProcessId,
+  processState,
+  setProcessState,
+}: StreamServerPanelProps) {
   const [logLines, setLogLines] = useState<string[]>([]);
   const [currentArgs, setCurrentArgs] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -476,6 +486,23 @@ function App() {
   const [healthStatus, setHealthStatus] = useState<'loading' | 'ok' | 'error'>('loading');
   const [rtklibVersion, setRtklibVersion] = useState<string>('');
 
+  // Stream process state (lifted to App level for persistence across tabs)
+  const [streamProcessId, setStreamProcessId] = useState<string | null>(null);
+  const [streamProcessState, setStreamProcessState] = useState<ProcessStatus>('idle');
+
+  // Global stop handler for stream process
+  const handleStopStream = async () => {
+    if (!streamProcessId) return;
+
+    try {
+      await str2strApi.stopStr2Str({ process_id: streamProcessId });
+      setStreamProcessState('idle');
+      setStreamProcessId(null);
+    } catch (err) {
+      console.error('Failed to stop stream:', err);
+    }
+  };
+
   useEffect(() => {
     // Check API health
     fetch('/api/health')
@@ -522,13 +549,41 @@ function App() {
           >
             <Tabs.List>
               <Tabs.Tab value="post-processing">Post Processing</Tabs.Tab>
-              <Tabs.Tab value="stream-server">Stream Server</Tabs.Tab>
+              <Tabs.Tab
+                value="stream-server"
+                rightSection={
+                  streamProcessState === 'running' ? (
+                    <Badge color="green" size="xs" circle>
+                      1
+                    </Badge>
+                  ) : null
+                }
+              >
+                Stream Server
+              </Tabs.Tab>
               <Tabs.Tab value="conversion">Conversion</Tabs.Tab>
             </Tabs.List>
           </Tabs>
 
           {/* Right Controls */}
           <Group gap="sm">
+            {/* Global Stream Process Indicator */}
+            {streamProcessState === 'running' && (
+              <Group gap="xs">
+                <Badge color="green" variant="dot" size="sm">
+                  Stream Running
+                </Badge>
+                <ActionIcon
+                  variant="filled"
+                  color="red"
+                  size="sm"
+                  onClick={handleStopStream}
+                  title="Stop stream"
+                >
+                  <IconPlayerStop size={14} />
+                </ActionIcon>
+              </Group>
+            )}
             <Badge
               color={healthStatus === 'ok' ? 'green' : healthStatus === 'error' ? 'red' : 'gray'}
               variant="dot"
@@ -553,14 +608,32 @@ function App() {
         >
           <Tabs.List grow>
             <Tabs.Tab value="post-processing">Post</Tabs.Tab>
-            <Tabs.Tab value="stream-server">Stream</Tabs.Tab>
+            <Tabs.Tab
+              value="stream-server"
+              rightSection={
+                streamProcessState === 'running' ? (
+                  <Badge color="green" size="xs" circle>
+                    1
+                  </Badge>
+                ) : null
+              }
+            >
+              Stream
+            </Tabs.Tab>
             <Tabs.Tab value="conversion">Convert</Tabs.Tab>
           </Tabs.List>
         </Tabs>
 
         {/* Tab Content */}
         {activeTab === 'post-processing' && <PostProcessingPanel />}
-        {activeTab === 'stream-server' && <StreamServerPanel />}
+        {activeTab === 'stream-server' && (
+          <StreamServerPanel
+            processId={streamProcessId}
+            setProcessId={setStreamProcessId}
+            processState={streamProcessState}
+            setProcessState={setStreamProcessState}
+          />
+        )}
         {activeTab === 'conversion' && <ConversionPanel />}
       </AppShell.Main>
     </AppShell>
