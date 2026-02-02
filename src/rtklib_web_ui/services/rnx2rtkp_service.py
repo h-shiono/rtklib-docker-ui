@@ -111,9 +111,27 @@ class Setting2Config(BaseModel):
 class OutputConfig(BaseModel):
     """Output format configuration."""
 
+    # Group A: Format Configuration
     solution_format: str = Field(default="llh")
     output_header: bool = Field(default=True)
+    output_processing_options: bool = Field(default=False)
+    time_format: str = Field(default="gpst")
+    num_decimals: int = Field(default=3)
+    lat_lon_format: str = Field(default="ddd.ddddddd")
+    field_separator: str = Field(default="")
     output_velocity: bool = Field(default=False)
+
+    # Group B: Datum & Geoid
+    datum: str = Field(default="wgs84")
+    height: str = Field(default="ellipsoidal")
+    geoid_model: str = Field(default="internal")
+
+    # Group C: Output Control
+    static_solution_mode: str = Field(default="all")
+    nmea_interval_rmc_gga: int = Field(default=0)
+    nmea_interval_gsa_gsv: int = Field(default=0)
+    output_solution_status: str = Field(default="off")
+    debug_trace: str = Field(default="off")
 
 
 class BasePositionConfig(BaseModel):

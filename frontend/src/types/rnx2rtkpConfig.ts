@@ -38,7 +38,25 @@ export interface ConstellationSelection {
 
 export type ARMode = 'off' | 'continuous' | 'instantaneous' | 'fix-and-hold';
 
-export type SolutionFormat = 'llh' | 'xyz' | 'enu' | 'nmea';
+export type SolutionFormat = 'llh' | 'xyz' | 'enu' | 'nmea' | 'solution-status';
+
+export type TimeFormat =
+  | 'gpst'
+  | 'utc'
+  | 'jst'
+  | 'tow';
+
+export type LatLonFormat = 'ddd.ddddddd' | 'ddd-mm-ss.sss';
+
+export type Datum = 'wgs84' | 'tokyo' | 'pz90.11';
+
+export type HeightType = 'ellipsoidal' | 'geodetic';
+
+export type GeoidModel = 'internal' | 'egm96' | 'egm08' | 'gsi2000';
+
+export type StaticSolutionMode = 'all' | 'single' | 'fixed';
+
+export type DebugTraceLevel = 'off' | 'level1' | 'level2' | 'level3' | 'level4' | 'level5';
 
 export interface SnrMaskConfig {
   enableRover: boolean;
@@ -113,9 +131,27 @@ export interface Setting2Config {
 }
 
 export interface OutputConfig {
+  // Group A: Format Configuration
   solutionFormat: SolutionFormat;
   outputHeader: boolean;
+  outputProcessingOptions: boolean;
+  timeFormat: TimeFormat;
+  numDecimals: number;
+  latLonFormat: LatLonFormat;
+  fieldSeparator: string;
   outputVelocity: boolean;
+
+  // Group B: Datum & Geoid
+  datum: Datum;
+  height: HeightType;
+  geoidModel: GeoidModel;
+
+  // Group C: Output Control
+  staticSolutionMode: StaticSolutionMode;
+  nmeaIntervalRmcGga: number; // seconds
+  nmeaIntervalGsaGsv: number; // seconds
+  outputSolutionStatus: DebugTraceLevel;
+  debugTrace: DebugTraceLevel;
 }
 
 export interface BasePositionConfig {
@@ -242,9 +278,27 @@ export const DEFAULT_SETTING2: Setting2Config = {
 };
 
 export const DEFAULT_OUTPUT: OutputConfig = {
+  // Group A: Format Configuration
   solutionFormat: 'llh',
   outputHeader: true,
+  outputProcessingOptions: false,
+  timeFormat: 'gpst',
+  numDecimals: 3,
+  latLonFormat: 'ddd.ddddddd',
+  fieldSeparator: '',
   outputVelocity: false,
+
+  // Group B: Datum & Geoid
+  datum: 'wgs84',
+  height: 'ellipsoidal',
+  geoidModel: 'internal',
+
+  // Group C: Output Control
+  staticSolutionMode: 'all',
+  nmeaIntervalRmcGga: 0,
+  nmeaIntervalGsaGsv: 0,
+  outputSolutionStatus: 'off',
+  debugTrace: 'off',
 };
 
 export const DEFAULT_BASE_POSITION: BasePositionConfig = {

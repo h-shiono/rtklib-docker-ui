@@ -175,9 +175,25 @@ function PostProcessingPanel() {
           },
         },
         output: {
+          // Group A: Format Configuration
           solution_format: config.output.solutionFormat,
           output_header: config.output.outputHeader,
+          output_processing_options: config.output.outputProcessingOptions,
+          time_format: config.output.timeFormat,
+          num_decimals: config.output.numDecimals,
+          lat_lon_format: config.output.latLonFormat,
+          field_separator: config.output.fieldSeparator,
           output_velocity: config.output.outputVelocity,
+          // Group B: Datum & Geoid
+          datum: config.output.datum,
+          height: config.output.height,
+          geoid_model: config.output.geoidModel,
+          // Group C: Output Control
+          static_solution_mode: config.output.staticSolutionMode,
+          nmea_interval_rmc_gga: config.output.nmeaIntervalRmcGga,
+          nmea_interval_gsa_gsv: config.output.nmeaIntervalGsaGsv,
+          output_solution_status: config.output.outputSolutionStatus,
+          debug_trace: config.output.debugTrace,
         },
         base_position: {
           latitude: config.basePosition.latitude,

@@ -39,6 +39,13 @@ import type {
   GloArMode,
   BdsArMode,
   SolutionFormat,
+  TimeFormat,
+  LatLonFormat,
+  Datum,
+  HeightType,
+  GeoidModel,
+  StaticSolutionMode,
+  DebugTraceLevel,
   SnrMaskConfig,
 } from '../types/rnx2rtkpConfig';
 import { DEFAULT_RNX2RTKP_CONFIG } from '../types/rnx2rtkpConfig';
@@ -52,7 +59,7 @@ export function PostProcessingConfiguration({
   onConfigChange,
 }: PostProcessingConfigurationProps) {
   const [config, setConfig] = useLocalStorage<Rnx2RtkpConfig>({
-    key: 'rtklib-web-ui-rnx2rtkp-config-v4', // v4: Setting 2 expanded + tab icons
+    key: 'rtklib-web-ui-rnx2rtkp-config-v5', // v5: Output tab expanded
     defaultValue: DEFAULT_RNX2RTKP_CONFIG,
   });
 
@@ -968,67 +975,326 @@ export function PostProcessingConfiguration({
           {/* Tab 3: Output */}
           <Tabs.Panel value="output" pt="xs">
             <Stack gap="xs">
-              <SimpleGrid cols={2} spacing="xs">
-                <Select
-                  size="xs"
-                  label="Solution Format"
-                  value={config.output.solutionFormat}
-                  onChange={(value) =>
-                    handleConfigChange({
-                      ...config,
-                      output: {
-                        ...config.output,
-                        solutionFormat: value as SolutionFormat,
-                      },
-                    })
-                  }
-                  data={[
-                    { value: 'llh', label: 'Lat/Lon/Height' },
-                    { value: 'xyz', label: 'X/Y/Z-ECEF' },
-                    { value: 'enu', label: 'E/N/U-Baseline' },
-                    { value: 'nmea', label: 'NMEA-0183' },
-                  ]}
-                  styles={{ label: { fontSize: '10px' } }}
-                />
+              {/* Group A: Format Configuration */}
+              <Fieldset legend="Format Configuration" style={{ fontSize: '10px' }}>
+                <Stack gap="xs">
+                  <SimpleGrid cols={2} spacing="xs">
+                    <Select
+                      size="xs"
+                      label="Solution Format"
+                      value={config.output.solutionFormat}
+                      onChange={(value: any) =>
+                        handleConfigChange({
+                          ...config,
+                          output: {
+                            ...config.output,
+                            solutionFormat: value as SolutionFormat,
+                          },
+                        })
+                      }
+                      data={[
+                        { value: 'llh', label: 'Lat/Lon/Height' },
+                        { value: 'xyz', label: 'X/Y/Z-ECEF' },
+                        { value: 'enu', label: 'E/N/U-Baseline' },
+                        { value: 'nmea', label: 'NMEA-0183' },
+                        { value: 'solution-status', label: 'Solution Status' },
+                      ]}
+                      styles={{ label: { fontSize: '10px' } }}
+                    />
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <Text size="xs" style={{ fontSize: '10px' }}>
-                    Options
-                  </Text>
-                  <Group gap="xs">
-                    <Switch
+                    <div>
+                      <Text size="xs" style={{ fontSize: '10px', marginBottom: '4px' }}>
+                        Header / Options
+                      </Text>
+                      <Group gap="xs">
+                        <Switch
+                          size="xs"
+                          label="Header"
+                          checked={config.output.outputHeader}
+                          onChange={(e: any) =>
+                            handleConfigChange({
+                              ...config,
+                              output: {
+                                ...config.output,
+                                outputHeader: e.currentTarget.checked,
+                              },
+                            })
+                          }
+                          styles={{ label: { fontSize: '10px' } }}
+                        />
+                        <Switch
+                          size="xs"
+                          label="Options"
+                          checked={config.output.outputProcessingOptions}
+                          onChange={(e: any) =>
+                            handleConfigChange({
+                              ...config,
+                              output: {
+                                ...config.output,
+                                outputProcessingOptions: e.currentTarget.checked,
+                              },
+                            })
+                          }
+                          styles={{ label: { fontSize: '10px' } }}
+                        />
+                      </Group>
+                    </div>
+                  </SimpleGrid>
+
+                  <div>
+                    <Text size="xs" style={{ fontSize: '10px', marginBottom: '4px' }}>
+                      Time Format / # of Decimals
+                    </Text>
+                    <Group gap="xs" grow>
+                      <Select
+                        size="xs"
+                        value={config.output.timeFormat}
+                        onChange={(value: any) =>
+                          handleConfigChange({
+                            ...config,
+                            output: { ...config.output, timeFormat: value as TimeFormat },
+                          })
+                        }
+                        data={[
+                          { value: 'gpst', label: 'ww:ssss GPST' },
+                          { value: 'utc', label: 'hh:mm:ss UTC' },
+                          { value: 'jst', label: 'hh:mm:ss JST' },
+                          { value: 'tow', label: 'TOW' },
+                        ]}
+                        styles={{ input: { fontSize: '10px' } }}
+                      />
+                      <NumberInput
+                        size="xs"
+                        value={config.output.numDecimals}
+                        onChange={(value: any) =>
+                          handleConfigChange({
+                            ...config,
+                            output: { ...config.output, numDecimals: Number(value) },
+                          })
+                        }
+                        min={0}
+                        max={12}
+                        hideControls
+                        styles={{ input: { fontSize: '10px' } }}
+                      />
+                    </Group>
+                  </div>
+
+                  <SimpleGrid cols={2} spacing="xs">
+                    <Select
                       size="xs"
-                      label="Header"
-                      checked={config.output.outputHeader}
-                      onChange={(e) =>
+                      label="Latitude / Longitude Format"
+                      value={config.output.latLonFormat}
+                      onChange={(value: any) =>
                         handleConfigChange({
                           ...config,
-                          output: {
-                            ...config.output,
-                            outputHeader: e.currentTarget.checked,
-                          },
+                          output: { ...config.output, latLonFormat: value as LatLonFormat },
+                        })
+                      }
+                      data={[
+                        { value: 'ddd.ddddddd', label: 'ddd.ddddddd' },
+                        { value: 'ddd-mm-ss.sss', label: 'ddd mm ss.sss' },
+                      ]}
+                      styles={{ label: { fontSize: '10px' } }}
+                    />
+
+                    <TextInput
+                      size="xs"
+                      label="Field Separator"
+                      placeholder="Space (default)"
+                      value={config.output.fieldSeparator}
+                      onChange={(e: any) =>
+                        handleConfigChange({
+                          ...config,
+                          output: { ...config.output, fieldSeparator: e.currentTarget.value },
                         })
                       }
                       styles={{ label: { fontSize: '10px' } }}
                     />
-                    <Switch
-                      size="xs"
-                      label="Velocity"
-                      checked={config.output.outputVelocity}
-                      onChange={(e) =>
-                        handleConfigChange({
-                          ...config,
-                          output: {
-                            ...config.output,
-                            outputVelocity: e.currentTarget.checked,
-                          },
-                        })
-                      }
-                      styles={{ label: { fontSize: '10px' } }}
-                    />
-                  </Group>
-                </div>
-              </SimpleGrid>
+                  </SimpleGrid>
+
+                  <Switch
+                    size="xs"
+                    label="Output Velocity"
+                    checked={config.output.outputVelocity}
+                    onChange={(e: any) =>
+                      handleConfigChange({
+                        ...config,
+                        output: {
+                          ...config.output,
+                          outputVelocity: e.currentTarget.checked,
+                        },
+                      })
+                    }
+                    styles={{ label: { fontSize: '10px' } }}
+                  />
+                </Stack>
+              </Fieldset>
+
+              {/* Group B: Datum & Geoid */}
+              <Fieldset legend="Datum & Geoid" style={{ fontSize: '10px' }}>
+                <Stack gap="xs">
+                  <div>
+                    <Text size="xs" style={{ fontSize: '10px', marginBottom: '4px' }}>
+                      Datum / Height
+                    </Text>
+                    <Group gap="xs" grow>
+                      <Select
+                        size="xs"
+                        value={config.output.datum}
+                        onChange={(value: any) =>
+                          handleConfigChange({
+                            ...config,
+                            output: { ...config.output, datum: value as Datum },
+                          })
+                        }
+                        data={[
+                          { value: 'wgs84', label: 'WGS84' },
+                          { value: 'tokyo', label: 'Tokyo' },
+                          { value: 'pz90.11', label: 'PZ-90.11' },
+                        ]}
+                        styles={{ input: { fontSize: '10px' } }}
+                      />
+                      <Select
+                        size="xs"
+                        value={config.output.height}
+                        onChange={(value: any) =>
+                          handleConfigChange({
+                            ...config,
+                            output: { ...config.output, height: value as HeightType },
+                          })
+                        }
+                        data={[
+                          { value: 'ellipsoidal', label: 'Ellipsoidal' },
+                          { value: 'geodetic', label: 'Geodetic' },
+                        ]}
+                        styles={{ input: { fontSize: '10px' } }}
+                      />
+                    </Group>
+                  </div>
+
+                  <Select
+                    size="xs"
+                    label="Geoid Model"
+                    value={config.output.geoidModel}
+                    onChange={(value: any) =>
+                      handleConfigChange({
+                        ...config,
+                        output: { ...config.output, geoidModel: value as GeoidModel },
+                      })
+                    }
+                    data={[
+                      { value: 'internal', label: 'Internal' },
+                      { value: 'egm96', label: 'EGM96' },
+                      { value: 'egm08', label: 'Earth Grav Model 2008' },
+                      { value: 'gsi2000', label: 'GSI2000 (Japan)' },
+                    ]}
+                    styles={{ label: { fontSize: '10px' } }}
+                  />
+                </Stack>
+              </Fieldset>
+
+              {/* Group C: Output Control */}
+              <Fieldset legend="Output Control" style={{ fontSize: '10px' }}>
+                <Stack gap="xs">
+                  <Select
+                    size="xs"
+                    label="Solution for Static Mode"
+                    value={config.output.staticSolutionMode}
+                    onChange={(value: any) =>
+                      handleConfigChange({
+                        ...config,
+                        output: { ...config.output, staticSolutionMode: value as StaticSolutionMode },
+                      })
+                    }
+                    data={[
+                      { value: 'all', label: 'All' },
+                      { value: 'single', label: 'Single' },
+                      { value: 'fixed', label: 'Fixed' },
+                    ]}
+                    styles={{ label: { fontSize: '10px' } }}
+                  />
+
+                  <div>
+                    <Text size="xs" style={{ fontSize: '10px', marginBottom: '4px' }}>
+                      NMEA Interval (s) - RMC/GGA / GSA/GSV
+                    </Text>
+                    <Group gap="xs" grow>
+                      <NumberInput
+                        size="xs"
+                        value={config.output.nmeaIntervalRmcGga}
+                        onChange={(value: any) =>
+                          handleConfigChange({
+                            ...config,
+                            output: { ...config.output, nmeaIntervalRmcGga: Number(value) },
+                          })
+                        }
+                        min={0}
+                        step={1}
+                        hideControls
+                        styles={{ input: { fontSize: '10px' } }}
+                      />
+                      <NumberInput
+                        size="xs"
+                        value={config.output.nmeaIntervalGsaGsv}
+                        onChange={(value: any) =>
+                          handleConfigChange({
+                            ...config,
+                            output: { ...config.output, nmeaIntervalGsaGsv: Number(value) },
+                          })
+                        }
+                        min={0}
+                        step={1}
+                        hideControls
+                        styles={{ input: { fontSize: '10px' } }}
+                      />
+                    </Group>
+                  </div>
+
+                  <div>
+                    <Text size="xs" style={{ fontSize: '10px', marginBottom: '4px' }}>
+                      Output Sol Status / Debug Trace
+                    </Text>
+                    <Group gap="xs" grow>
+                      <Select
+                        size="xs"
+                        value={config.output.outputSolutionStatus}
+                        onChange={(value: any) =>
+                          handleConfigChange({
+                            ...config,
+                            output: { ...config.output, outputSolutionStatus: value as DebugTraceLevel },
+                          })
+                        }
+                        data={[
+                          { value: 'off', label: 'OFF' },
+                          { value: 'level1', label: 'State' },
+                          { value: 'level2', label: 'Residual' },
+                        ]}
+                        styles={{ input: { fontSize: '10px' } }}
+                      />
+                      <Select
+                        size="xs"
+                        value={config.output.debugTrace}
+                        onChange={(value: any) =>
+                          handleConfigChange({
+                            ...config,
+                            output: { ...config.output, debugTrace: value as DebugTraceLevel },
+                          })
+                        }
+                        data={[
+                          { value: 'off', label: 'OFF' },
+                          { value: 'level1', label: 'Level 1' },
+                          { value: 'level2', label: 'Level 2' },
+                          { value: 'level3', label: 'Level 3' },
+                          { value: 'level4', label: 'Level 4' },
+                          { value: 'level5', label: 'Level 5' },
+                        ]}
+                        styles={{ input: { fontSize: '10px' } }}
+                      />
+                    </Group>
+                  </div>
+                </Stack>
+              </Fieldset>
             </Stack>
           </Tabs.Panel>
 
