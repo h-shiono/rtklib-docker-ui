@@ -22,6 +22,10 @@ WORKDIR /build
 # Clone official RTKLIB (tomojitakasu) rtklib_2.4.3 branch
 RUN git clone --depth 1 --branch rtklib_2.4.3 https://github.com/tomojitakasu/RTKLIB.git
 
+# Build IERS library (required for rnx2rtkp)
+WORKDIR /build/RTKLIB/lib/iers/gcc
+RUN make
+
 # Build str2str
 WORKDIR /build/RTKLIB/app/consapp/str2str/gcc
 RUN make && strip str2str
