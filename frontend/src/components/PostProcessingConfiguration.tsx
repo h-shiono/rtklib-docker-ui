@@ -10,11 +10,21 @@ import {
   Switch,
   Title,
   Group,
+  Accordion,
+  Fieldset,
+  TextInput,
+  Checkbox,
 } from '@mantine/core';
 import type {
   Rnx2RtkpConfig,
   PositioningMode,
   Frequency,
+  FilterType,
+  IonosphereCorrection,
+  TroposphereCorrection,
+  EphemerisOption,
+  EarthTidesCorrection,
+  ReceiverDynamics,
   ARMode,
   SolutionFormat,
 } from '../types/rnx2rtkpConfig';
@@ -69,86 +79,473 @@ export function PostProcessingConfiguration({
           {/* Tab 1: Setting 1 */}
           <Tabs.Panel value="setting1" pt="xs">
             <Stack gap="xs">
-              <SimpleGrid cols={2} spacing="xs">
-                <Select
-                  size="xs"
-                  label="Positioning Mode"
-                  value={config.setting1.positioningMode}
-                  onChange={(value) =>
-                    handleConfigChange({
-                      ...config,
-                      setting1: {
-                        ...config.setting1,
-                        positioningMode: value as PositioningMode,
-                      },
-                    })
-                  }
-                  data={[
-                    { value: 'single', label: 'Single' },
-                    { value: 'dgps', label: 'DGPS' },
-                    { value: 'kinematic', label: 'Kinematic' },
-                    { value: 'static', label: 'Static' },
-                    { value: 'moving-base', label: 'Moving-Base' },
-                    { value: 'fixed', label: 'Fixed' },
-                    { value: 'ppp-kinematic', label: 'PPP-Kinematic' },
-                    { value: 'ppp-static', label: 'PPP-Static' },
-                  ]}
-                  styles={{ label: { fontSize: '10px' } }}
-                />
+              {/* Group A: Basic Strategy */}
+              <Fieldset legend="Basic Strategy" style={{ fontSize: '10px' }}>
+                <SimpleGrid cols={3} spacing="xs">
+                  <Select
+                    size="xs"
+                    label="Positioning Mode"
+                    value={config.setting1.positioningMode}
+                    onChange={(value) =>
+                      handleConfigChange({
+                        ...config,
+                        setting1: {
+                          ...config.setting1,
+                          positioningMode: value as PositioningMode,
+                        },
+                      })
+                    }
+                    data={[
+                      { value: 'single', label: 'Single' },
+                      { value: 'dgps', label: 'DGPS' },
+                      { value: 'kinematic', label: 'Kinematic' },
+                      { value: 'static', label: 'Static' },
+                      { value: 'moving-base', label: 'Moving-Base' },
+                      { value: 'fixed', label: 'Fixed' },
+                      { value: 'ppp-kinematic', label: 'PPP-Kinematic' },
+                      { value: 'ppp-static', label: 'PPP-Static' },
+                    ]}
+                    styles={{ label: { fontSize: '10px' } }}
+                  />
 
-                <Select
-                  size="xs"
-                  label="Frequencies"
-                  value={config.setting1.frequency}
-                  onChange={(value) =>
-                    handleConfigChange({
-                      ...config,
-                      setting1: { ...config.setting1, frequency: value as Frequency },
-                    })
-                  }
-                  data={[
-                    { value: 'l1', label: 'L1' },
-                    { value: 'l1+l2', label: 'L1+L2' },
-                    { value: 'l1+l2+l5', label: 'L1+L2+L5' },
-                    { value: 'l1+l2+l5+l6', label: 'L1+L2+L5+L6' },
-                    { value: 'l1+l2+l5+l6+l7', label: 'L1+L2+L5+L6+L7' },
-                  ]}
-                  styles={{ label: { fontSize: '10px' } }}
-                />
+                  <Select
+                    size="xs"
+                    label="Frequencies"
+                    value={config.setting1.frequency}
+                    onChange={(value) =>
+                      handleConfigChange({
+                        ...config,
+                        setting1: { ...config.setting1, frequency: value as Frequency },
+                      })
+                    }
+                    data={[
+                      { value: 'l1', label: 'L1' },
+                      { value: 'l1+l2', label: 'L1+L2' },
+                      { value: 'l1+l2+l5', label: 'L1+L2+L5' },
+                      { value: 'l1+l2+l5+l6', label: 'L1+L2+L5+L6' },
+                      { value: 'l1+l2+l5+l6+l7', label: 'L1+L2+L5+L6+L7' },
+                    ]}
+                    styles={{ label: { fontSize: '10px' } }}
+                  />
 
-                <NumberInput
-                  size="xs"
-                  label="Elevation Mask (deg)"
-                  value={config.setting1.elevationMask}
-                  onChange={(value) =>
-                    handleConfigChange({
-                      ...config,
-                      setting1: {
-                        ...config.setting1,
-                        elevationMask: Number(value),
-                      },
-                    })
-                  }
-                  min={0}
-                  max={90}
-                  styles={{ label: { fontSize: '10px' } }}
-                />
+                  <Select
+                    size="xs"
+                    label="Filter Type"
+                    value={config.setting1.filterType}
+                    onChange={(value) =>
+                      handleConfigChange({
+                        ...config,
+                        setting1: { ...config.setting1, filterType: value as FilterType },
+                      })
+                    }
+                    data={[
+                      { value: 'forward', label: 'Forward' },
+                      { value: 'backward', label: 'Backward' },
+                      { value: 'combined', label: 'Combined' },
+                    ]}
+                    styles={{ label: { fontSize: '10px' } }}
+                  />
+                </SimpleGrid>
+              </Fieldset>
 
-                <NumberInput
-                  size="xs"
-                  label="SNR Mask (dB-Hz)"
-                  value={config.setting1.snrMask}
-                  onChange={(value) =>
-                    handleConfigChange({
-                      ...config,
-                      setting1: { ...config.setting1, snrMask: Number(value) },
-                    })
-                  }
-                  min={0}
-                  max={60}
-                  styles={{ label: { fontSize: '10px' } }}
-                />
-              </SimpleGrid>
+              {/* Group B: Satellite Selection */}
+              <Fieldset legend="Satellite Selection" style={{ fontSize: '10px' }}>
+                <Stack gap="xs">
+                  <Text size="xs" style={{ fontSize: '10px' }}>
+                    Constellations
+                  </Text>
+                  <Group gap="xs">
+                    <Checkbox
+                      size="xs"
+                      label="GPS"
+                      checked={config.setting1.constellations.gps}
+                      onChange={(e) =>
+                        handleConfigChange({
+                          ...config,
+                          setting1: {
+                            ...config.setting1,
+                            constellations: {
+                              ...config.setting1.constellations,
+                              gps: e.currentTarget.checked,
+                            },
+                          },
+                        })
+                      }
+                      styles={{ label: { fontSize: '10px' } }}
+                    />
+                    <Checkbox
+                      size="xs"
+                      label="GLONASS"
+                      checked={config.setting1.constellations.glonass}
+                      onChange={(e) =>
+                        handleConfigChange({
+                          ...config,
+                          setting1: {
+                            ...config.setting1,
+                            constellations: {
+                              ...config.setting1.constellations,
+                              glonass: e.currentTarget.checked,
+                            },
+                          },
+                        })
+                      }
+                      styles={{ label: { fontSize: '10px' } }}
+                    />
+                    <Checkbox
+                      size="xs"
+                      label="Galileo"
+                      checked={config.setting1.constellations.galileo}
+                      onChange={(e) =>
+                        handleConfigChange({
+                          ...config,
+                          setting1: {
+                            ...config.setting1,
+                            constellations: {
+                              ...config.setting1.constellations,
+                              galileo: e.currentTarget.checked,
+                            },
+                          },
+                        })
+                      }
+                      styles={{ label: { fontSize: '10px' } }}
+                    />
+                    <Checkbox
+                      size="xs"
+                      label="QZSS"
+                      checked={config.setting1.constellations.qzss}
+                      onChange={(e) =>
+                        handleConfigChange({
+                          ...config,
+                          setting1: {
+                            ...config.setting1,
+                            constellations: {
+                              ...config.setting1.constellations,
+                              qzss: e.currentTarget.checked,
+                            },
+                          },
+                        })
+                      }
+                      styles={{ label: { fontSize: '10px' } }}
+                    />
+                    <Checkbox
+                      size="xs"
+                      label="SBAS"
+                      checked={config.setting1.constellations.sbas}
+                      onChange={(e) =>
+                        handleConfigChange({
+                          ...config,
+                          setting1: {
+                            ...config.setting1,
+                            constellations: {
+                              ...config.setting1.constellations,
+                              sbas: e.currentTarget.checked,
+                            },
+                          },
+                        })
+                      }
+                      styles={{ label: { fontSize: '10px' } }}
+                    />
+                    <Checkbox
+                      size="xs"
+                      label="BeiDou"
+                      checked={config.setting1.constellations.beidou}
+                      onChange={(e) =>
+                        handleConfigChange({
+                          ...config,
+                          setting1: {
+                            ...config.setting1,
+                            constellations: {
+                              ...config.setting1.constellations,
+                              beidou: e.currentTarget.checked,
+                            },
+                          },
+                        })
+                      }
+                      styles={{ label: { fontSize: '10px' } }}
+                    />
+                    <Checkbox
+                      size="xs"
+                      label="IRNSS"
+                      checked={config.setting1.constellations.irnss}
+                      onChange={(e) =>
+                        handleConfigChange({
+                          ...config,
+                          setting1: {
+                            ...config.setting1,
+                            constellations: {
+                              ...config.setting1.constellations,
+                              irnss: e.currentTarget.checked,
+                            },
+                          },
+                        })
+                      }
+                      styles={{ label: { fontSize: '10px' } }}
+                    />
+                  </Group>
+
+                  <TextInput
+                    size="xs"
+                    label="Excluded Satellites"
+                    placeholder="e.g., G04 G05 R09"
+                    value={config.setting1.excludedSatellites}
+                    onChange={(e: any) =>
+                      handleConfigChange({
+                        ...config,
+                        setting1: {
+                          ...config.setting1,
+                          excludedSatellites: e.currentTarget.value,
+                        },
+                      })
+                    }
+                    styles={{ label: { fontSize: '10px' } }}
+                  />
+                </Stack>
+              </Fieldset>
+
+              {/* Group C: Masks & Environment */}
+              <Fieldset legend="Masks & Environment" style={{ fontSize: '10px' }}>
+                <SimpleGrid cols={2} spacing="xs">
+                  <NumberInput
+                    size="xs"
+                    label="Elevation Mask (deg)"
+                    value={config.setting1.elevationMask}
+                    onChange={(value) =>
+                      handleConfigChange({
+                        ...config,
+                        setting1: {
+                          ...config.setting1,
+                          elevationMask: Number(value),
+                        },
+                      })
+                    }
+                    min={0}
+                    max={90}
+                    styles={{ label: { fontSize: '10px' } }}
+                  />
+
+                  <NumberInput
+                    size="xs"
+                    label="SNR Mask (dBHz)"
+                    value={config.setting1.snrMask}
+                    onChange={(value) =>
+                      handleConfigChange({
+                        ...config,
+                        setting1: { ...config.setting1, snrMask: Number(value) },
+                      })
+                    }
+                    min={0}
+                    max={60}
+                    styles={{ label: { fontSize: '10px' } }}
+                  />
+
+                  <Select
+                    size="xs"
+                    label="Ionosphere Correction"
+                    value={config.setting1.ionosphereCorrection}
+                    onChange={(value) =>
+                      handleConfigChange({
+                        ...config,
+                        setting1: {
+                          ...config.setting1,
+                          ionosphereCorrection: value as IonosphereCorrection,
+                        },
+                      })
+                    }
+                    data={[
+                      { value: 'off', label: 'OFF' },
+                      { value: 'broadcast', label: 'Broadcast' },
+                      { value: 'sbas', label: 'SBAS' },
+                      { value: 'dual-freq', label: 'Dual-Frequency' },
+                      { value: 'est-stec', label: 'Estimate STEC' },
+                      { value: 'ionex-tec', label: 'IONEX TEC' },
+                    ]}
+                    styles={{ label: { fontSize: '10px' } }}
+                  />
+
+                  <Select
+                    size="xs"
+                    label="Troposphere Correction"
+                    value={config.setting1.troposphereCorrection}
+                    onChange={(value) =>
+                      handleConfigChange({
+                        ...config,
+                        setting1: {
+                          ...config.setting1,
+                          troposphereCorrection: value as TroposphereCorrection,
+                        },
+                      })
+                    }
+                    data={[
+                      { value: 'off', label: 'OFF' },
+                      { value: 'saastamoinen', label: 'Saastamoinen' },
+                      { value: 'sbas', label: 'SBAS' },
+                      { value: 'est-ztd', label: 'Estimate ZTD' },
+                      { value: 'est-ztd-grad', label: 'Estimate ZTD+Grad' },
+                    ]}
+                    styles={{ label: { fontSize: '10px' } }}
+                  />
+
+                  <Select
+                    size="xs"
+                    label="Satellite Ephemeris"
+                    value={config.setting1.ephemerisOption}
+                    onChange={(value) =>
+                      handleConfigChange({
+                        ...config,
+                        setting1: {
+                          ...config.setting1,
+                          ephemerisOption: value as EphemerisOption,
+                        },
+                      })
+                    }
+                    data={[
+                      { value: 'broadcast', label: 'Broadcast' },
+                      { value: 'precise', label: 'Precise' },
+                      { value: 'broadcast+sbas', label: 'Broadcast+SBAS' },
+                      { value: 'broadcast+ssrapc', label: 'Broadcast+SSR APC' },
+                      { value: 'broadcast+ssrcom', label: 'Broadcast+SSR CoM' },
+                    ]}
+                    styles={{ label: { fontSize: '10px' } }}
+                  />
+                </SimpleGrid>
+              </Fieldset>
+
+              {/* Group D: Advanced Options */}
+              <Accordion variant="contained">
+                <Accordion.Item value="advanced">
+                  <Accordion.Control style={{ fontSize: '10px', padding: '6px 12px' }}>
+                    Advanced Settings & Corrections
+                  </Accordion.Control>
+                  <Accordion.Panel>
+                    <Stack gap="xs">
+                      <SimpleGrid cols={2} spacing="xs">
+                        <Select
+                          size="xs"
+                          label="Earth Tides Correction"
+                          value={config.setting1.earthTidesCorrection}
+                          onChange={(value: any) =>
+                            handleConfigChange({
+                              ...config,
+                              setting1: {
+                                ...config.setting1,
+                                earthTidesCorrection: value as EarthTidesCorrection,
+                              },
+                            })
+                          }
+                          data={[
+                            { value: 'off', label: 'OFF' },
+                            { value: 'solid', label: 'Solid' },
+                            { value: 'solid+otl', label: 'Solid+OTL' },
+                            { value: 'solid+otl+pole', label: 'Solid+OTL+Pole' },
+                          ]}
+                          styles={{ label: { fontSize: '10px' } }}
+                        />
+
+                        <Select
+                          size="xs"
+                          label="Receiver Dynamics"
+                          value={config.setting1.receiverDynamics}
+                          onChange={(value: any) =>
+                            handleConfigChange({
+                              ...config,
+                              setting1: {
+                                ...config.setting1,
+                                receiverDynamics: value as ReceiverDynamics,
+                              },
+                            })
+                          }
+                          data={[
+                            { value: 'off', label: 'OFF' },
+                            { value: 'on', label: 'ON' },
+                          ]}
+                          styles={{ label: { fontSize: '10px' } }}
+                        />
+                      </SimpleGrid>
+
+                      <Text size="xs" style={{ fontSize: '10px' }}>
+                        Corrections & Options
+                      </Text>
+                      <Group gap="xs">
+                        <Switch
+                          size="xs"
+                          label="Satellite PCV"
+                          checked={config.setting1.satellitePcv}
+                          onChange={(e: any) =>
+                            handleConfigChange({
+                              ...config,
+                              setting1: {
+                                ...config.setting1,
+                                satellitePcv: e.currentTarget.checked,
+                              },
+                            })
+                          }
+                          styles={{ label: { fontSize: '10px' } }}
+                        />
+                        <Switch
+                          size="xs"
+                          label="Receiver PCV"
+                          checked={config.setting1.receiverPcv}
+                          onChange={(e: any) =>
+                            handleConfigChange({
+                              ...config,
+                              setting1: {
+                                ...config.setting1,
+                                receiverPcv: e.currentTarget.checked,
+                              },
+                            })
+                          }
+                          styles={{ label: { fontSize: '10px' } }}
+                        />
+                        <Switch
+                          size="xs"
+                          label="Phase Windup"
+                          checked={config.setting1.phaseWindup}
+                          onChange={(e: any) =>
+                            handleConfigChange({
+                              ...config,
+                              setting1: {
+                                ...config.setting1,
+                                phaseWindup: e.currentTarget.checked,
+                              },
+                            })
+                          }
+                          styles={{ label: { fontSize: '10px' } }}
+                        />
+                        <Switch
+                          size="xs"
+                          label="Reject Eclipse"
+                          checked={config.setting1.rejectEclipse}
+                          onChange={(e: any) =>
+                            handleConfigChange({
+                              ...config,
+                              setting1: {
+                                ...config.setting1,
+                                rejectEclipse: e.currentTarget.checked,
+                              },
+                            })
+                          }
+                          styles={{ label: { fontSize: '10px' } }}
+                        />
+                        <Switch
+                          size="xs"
+                          label="RAIM FDE"
+                          checked={config.setting1.raimFde}
+                          onChange={(e: any) =>
+                            handleConfigChange({
+                              ...config,
+                              setting1: {
+                                ...config.setting1,
+                                raimFde: e.currentTarget.checked,
+                              },
+                            })
+                          }
+                          styles={{ label: { fontSize: '10px' } }}
+                        />
+                      </Group>
+                    </Stack>
+                  </Accordion.Panel>
+                </Accordion.Item>
+              </Accordion>
             </Stack>
           </Tabs.Panel>
 

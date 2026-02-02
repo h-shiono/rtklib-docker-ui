@@ -14,13 +14,45 @@ from pydantic import BaseModel, Field
 logger = logging.getLogger(__name__)
 
 
+class ConstellationSelection(BaseModel):
+    """Satellite constellation selection."""
+
+    gps: bool = Field(default=True)
+    glonass: bool = Field(default=True)
+    galileo: bool = Field(default=True)
+    qzss: bool = Field(default=True)
+    sbas: bool = Field(default=True)
+    beidou: bool = Field(default=True)
+    irnss: bool = Field(default=False)
+
+
 class Setting1Config(BaseModel):
     """Setting 1: Basic positioning parameters."""
 
+    # Group A: Basic Strategy
     positioning_mode: str = Field(default="kinematic")
     frequency: str = Field(default="l1+l2")
+    filter_type: str = Field(default="forward")
+
+    # Group B: Satellite Selection
+    constellations: ConstellationSelection = Field(default_factory=ConstellationSelection)
+    excluded_satellites: str = Field(default="")
+
+    # Group C: Masks & Environment
     elevation_mask: float = Field(default=15.0)
     snr_mask: float = Field(default=35.0)
+    ionosphere_correction: str = Field(default="broadcast")
+    troposphere_correction: str = Field(default="saastamoinen")
+    ephemeris_option: str = Field(default="broadcast")
+
+    # Group D: Advanced Options
+    earth_tides_correction: str = Field(default="off")
+    receiver_dynamics: str = Field(default="off")
+    satellite_pcv: bool = Field(default=False)
+    receiver_pcv: bool = Field(default=False)
+    phase_windup: bool = Field(default=False)
+    reject_eclipse: bool = Field(default=False)
+    raim_fde: bool = Field(default=False)
 
 
 class Setting2Config(BaseModel):

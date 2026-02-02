@@ -14,15 +14,57 @@ export type PositioningMode =
 
 export type Frequency = 'l1' | 'l1+l2' | 'l1+l2+l5' | 'l1+l2+l5+l6' | 'l1+l2+l5+l6+l7';
 
+export type FilterType = 'forward' | 'backward' | 'combined';
+
+export type IonosphereCorrection = 'off' | 'broadcast' | 'sbas' | 'dual-freq' | 'est-stec' | 'ionex-tec';
+
+export type TroposphereCorrection = 'off' | 'saastamoinen' | 'sbas' | 'est-ztd' | 'est-ztd-grad';
+
+export type EphemerisOption = 'broadcast' | 'precise' | 'broadcast+sbas' | 'broadcast+ssrapc' | 'broadcast+ssrcom';
+
+export type EarthTidesCorrection = 'off' | 'solid' | 'solid+otl' | 'solid+otl+pole';
+
+export type ReceiverDynamics = 'off' | 'on';
+
+export interface ConstellationSelection {
+  gps: boolean;
+  glonass: boolean;
+  galileo: boolean;
+  qzss: boolean;
+  sbas: boolean;
+  beidou: boolean;
+  irnss: boolean;
+}
+
 export type ARMode = 'off' | 'continuous' | 'instantaneous' | 'fix-and-hold';
 
 export type SolutionFormat = 'llh' | 'xyz' | 'enu' | 'nmea';
 
 export interface Setting1Config {
+  // Group A: Basic Strategy
   positioningMode: PositioningMode;
   frequency: Frequency;
+  filterType: FilterType;
+
+  // Group B: Satellite Selection
+  constellations: ConstellationSelection;
+  excludedSatellites: string;
+
+  // Group C: Masks & Environment
   elevationMask: number; // degrees
   snrMask: number; // dB-Hz
+  ionosphereCorrection: IonosphereCorrection;
+  troposphereCorrection: TroposphereCorrection;
+  ephemerisOption: EphemerisOption;
+
+  // Group D: Advanced Options
+  earthTidesCorrection: EarthTidesCorrection;
+  receiverDynamics: ReceiverDynamics;
+  satellitePcv: boolean;
+  receiverPcv: boolean;
+  phaseWindup: boolean;
+  rejectEclipse: boolean;
+  raimFde: boolean;
 }
 
 export interface Setting2Config {
@@ -88,10 +130,38 @@ export interface Rnx2RtkpJob {
 
 // Default configurations
 export const DEFAULT_SETTING1: Setting1Config = {
+  // Group A: Basic Strategy
   positioningMode: 'kinematic',
   frequency: 'l1+l2',
+  filterType: 'forward',
+
+  // Group B: Satellite Selection
+  constellations: {
+    gps: true,
+    glonass: true,
+    galileo: true,
+    qzss: true,
+    sbas: true,
+    beidou: true,
+    irnss: false,
+  },
+  excludedSatellites: '',
+
+  // Group C: Masks & Environment
   elevationMask: 15,
   snrMask: 35,
+  ionosphereCorrection: 'broadcast',
+  troposphereCorrection: 'saastamoinen',
+  ephemerisOption: 'broadcast',
+
+  // Group D: Advanced Options
+  earthTidesCorrection: 'off',
+  receiverDynamics: 'off',
+  satellitePcv: false,
+  receiverPcv: false,
+  phaseWindup: false,
+  rejectEclipse: false,
+  raimFde: false,
 };
 
 export const DEFAULT_SETTING2: Setting2Config = {
