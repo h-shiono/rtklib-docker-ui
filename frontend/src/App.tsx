@@ -15,7 +15,6 @@ import {
   ActionIcon,
   Badge,
   Checkbox,
-  Divider,
   Code,
   Tooltip,
   Alert,
@@ -73,7 +72,7 @@ function PostProcessingPanel() {
   const [jobId, setJobId] = useState<string | null>(null);
 
   // WebSocket connection for real-time logs
-  const { isConnected } = useWebSocket({
+  useWebSocket({
     onMessage: useCallback((message: LogMessage) => {
       // Only process messages for our job
       if (message.process_id === jobId) {
