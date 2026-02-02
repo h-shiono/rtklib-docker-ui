@@ -154,6 +154,24 @@ export interface OutputConfig {
   debugTrace: DebugTraceLevel;
 }
 
+export interface StatsConfig {
+  // Group A: Measurement Errors (1-sigma)
+  codePhaseRatioL1: number;
+  codePhaseRatioL2: number;
+  phaseErrorA: number; // meters
+  phaseErrorB: number; // meters
+  phaseErrorBaseline: number; // m/10km
+  dopplerFrequency: number; // Hz
+
+  // Group B: Process Noises (1-sigma/sqrt(s))
+  receiverAccelHoriz: number; // m/s²
+  receiverAccelVert: number; // m/s²
+  carrierPhaseBias: number; // cycle
+  ionosphericDelay: number; // m/10km
+  troposphericDelay: number; // m
+  satelliteClockStability: number; // s/s
+}
+
 export interface BasePositionConfig {
   latitude: number;
   longitude: number;
@@ -178,6 +196,7 @@ export interface Rnx2RtkpConfig {
   setting1: Setting1Config;
   setting2: Setting2Config;
   output: OutputConfig;
+  stats: StatsConfig;
   basePosition: BasePositionConfig;
   files: FilesConfig;
   misc: MiscConfig;
@@ -301,6 +320,24 @@ export const DEFAULT_OUTPUT: OutputConfig = {
   debugTrace: 'off',
 };
 
+export const DEFAULT_STATS: StatsConfig = {
+  // Group A: Measurement Errors (1-sigma)
+  codePhaseRatioL1: 100.0,
+  codePhaseRatioL2: 100.0,
+  phaseErrorA: 0.003,
+  phaseErrorB: 0.003,
+  phaseErrorBaseline: 0.0,
+  dopplerFrequency: 1.0,
+
+  // Group B: Process Noises (1-sigma/sqrt(s))
+  receiverAccelHoriz: 1.0,
+  receiverAccelVert: 0.1,
+  carrierPhaseBias: 0.0001,
+  ionosphericDelay: 0.001,
+  troposphericDelay: 0.0001,
+  satelliteClockStability: 5e-12,
+};
+
 export const DEFAULT_BASE_POSITION: BasePositionConfig = {
   latitude: 0,
   longitude: 0,
@@ -320,6 +357,7 @@ export const DEFAULT_RNX2RTKP_CONFIG: Rnx2RtkpConfig = {
   setting1: DEFAULT_SETTING1,
   setting2: DEFAULT_SETTING2,
   output: DEFAULT_OUTPUT,
+  stats: DEFAULT_STATS,
   basePosition: DEFAULT_BASE_POSITION,
   files: DEFAULT_FILES,
   misc: DEFAULT_MISC,

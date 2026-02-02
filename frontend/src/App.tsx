@@ -195,6 +195,22 @@ function PostProcessingPanel() {
           output_solution_status: config.output.outputSolutionStatus,
           debug_trace: config.output.debugTrace,
         },
+        stats: {
+          // Group A: Measurement Errors (1-sigma)
+          code_phase_ratio_l1: config.stats.codePhaseRatioL1,
+          code_phase_ratio_l2: config.stats.codePhaseRatioL2,
+          phase_error_a: config.stats.phaseErrorA,
+          phase_error_b: config.stats.phaseErrorB,
+          phase_error_baseline: config.stats.phaseErrorBaseline,
+          doppler_frequency: config.stats.dopplerFrequency,
+          // Group B: Process Noises (1-sigma/sqrt(s))
+          receiver_accel_horiz: config.stats.receiverAccelHoriz,
+          receiver_accel_vert: config.stats.receiverAccelVert,
+          carrier_phase_bias: config.stats.carrierPhaseBias,
+          ionospheric_delay: config.stats.ionosphericDelay,
+          tropospheric_delay: config.stats.troposphericDelay,
+          satellite_clock_stability: config.stats.satelliteClockStability,
+        },
         base_position: {
           latitude: config.basePosition.latitude,
           longitude: config.basePosition.longitude,

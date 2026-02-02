@@ -20,6 +20,7 @@ import {
 import {
   IconAdjustments,
   IconAdjustmentsHorizontal,
+  IconChartLine,
   IconDatabaseExport,
   IconDots,
   IconFolderOpen,
@@ -59,7 +60,7 @@ export function PostProcessingConfiguration({
   onConfigChange,
 }: PostProcessingConfigurationProps) {
   const [config, setConfig] = useLocalStorage<Rnx2RtkpConfig>({
-    key: 'rtklib-web-ui-rnx2rtkp-config-v5', // v5: Output tab expanded
+    key: 'rtklib-web-ui-rnx2rtkp-config-v6', // v6: Stats tab added
     defaultValue: DEFAULT_RNX2RTKP_CONFIG,
   });
 
@@ -88,6 +89,9 @@ export function PostProcessingConfiguration({
             </Tabs.Tab>
             <Tabs.Tab value="output" style={{ fontSize: '11px', padding: '6px 12px' }} leftSection={<IconDatabaseExport size={14} />}>
               Output
+            </Tabs.Tab>
+            <Tabs.Tab value="stats" style={{ fontSize: '11px', padding: '6px 12px' }} leftSection={<IconChartLine size={14} />}>
+              Stats
             </Tabs.Tab>
             <Tabs.Tab value="positions" style={{ fontSize: '11px', padding: '6px 12px' }} leftSection={<IconMapPin size={14} />}>
               Positions
@@ -1260,7 +1264,223 @@ export function PostProcessingConfiguration({
             </Stack>
           </Tabs.Panel>
 
-          {/* Tab 4: Positions */}
+          {/* Tab 4: Stats */}
+          <Tabs.Panel value="stats" pt="xs">
+            <Stack gap="xs">
+              {/* Group A: Measurement Errors (1-sigma) */}
+              <Fieldset legend="Measurement Errors (1-sigma)" style={{ fontSize: '10px' }}>
+                <Stack gap="xs">
+                  <SimpleGrid cols={2} spacing="xs">
+                    <NumberInput
+                      size="xs"
+                      label="Code/Phase Ratio L1"
+                      value={config.stats.codePhaseRatioL1}
+                      onChange={(value: any) =>
+                        handleConfigChange({
+                          ...config,
+                          stats: { ...config.stats, codePhaseRatioL1: Number(value) },
+                        })
+                      }
+                      min={0}
+                      step={1}
+                      decimalScale={1}
+                      hideControls
+                      styles={{ label: { fontSize: '10px' } }}
+                    />
+                    <NumberInput
+                      size="xs"
+                      label="L2"
+                      value={config.stats.codePhaseRatioL2}
+                      onChange={(value: any) =>
+                        handleConfigChange({
+                          ...config,
+                          stats: { ...config.stats, codePhaseRatioL2: Number(value) },
+                        })
+                      }
+                      min={0}
+                      step={1}
+                      decimalScale={1}
+                      hideControls
+                      styles={{ label: { fontSize: '10px' } }}
+                    />
+                  </SimpleGrid>
+
+                  <SimpleGrid cols={2} spacing="xs">
+                    <NumberInput
+                      size="xs"
+                      label="Phase Error a (m)"
+                      value={config.stats.phaseErrorA}
+                      onChange={(value: any) =>
+                        handleConfigChange({
+                          ...config,
+                          stats: { ...config.stats, phaseErrorA: Number(value) },
+                        })
+                      }
+                      min={0}
+                      step={0.001}
+                      decimalScale={3}
+                      hideControls
+                      styles={{ label: { fontSize: '10px' } }}
+                    />
+                    <NumberInput
+                      size="xs"
+                      label="b/sinEl (m)"
+                      value={config.stats.phaseErrorB}
+                      onChange={(value: any) =>
+                        handleConfigChange({
+                          ...config,
+                          stats: { ...config.stats, phaseErrorB: Number(value) },
+                        })
+                      }
+                      min={0}
+                      step={0.001}
+                      decimalScale={3}
+                      hideControls
+                      styles={{ label: { fontSize: '10px' } }}
+                    />
+                  </SimpleGrid>
+
+                  <NumberInput
+                    size="xs"
+                    label="Phase Error/Baseline (m/10km)"
+                    value={config.stats.phaseErrorBaseline}
+                    onChange={(value: any) =>
+                      handleConfigChange({
+                        ...config,
+                        stats: { ...config.stats, phaseErrorBaseline: Number(value) },
+                      })
+                    }
+                    min={0}
+                    step={0.001}
+                    decimalScale={3}
+                    styles={{ label: { fontSize: '10px' } }}
+                  />
+
+                  <NumberInput
+                    size="xs"
+                    label="Doppler Frequency (Hz)"
+                    value={config.stats.dopplerFrequency}
+                    onChange={(value: any) =>
+                      handleConfigChange({
+                        ...config,
+                        stats: { ...config.stats, dopplerFrequency: Number(value) },
+                      })
+                    }
+                    min={0}
+                    step={0.1}
+                    decimalScale={1}
+                    styles={{ label: { fontSize: '10px' } }}
+                  />
+                </Stack>
+              </Fieldset>
+
+              {/* Group B: Process Noises (1-sigma/sqrt(s)) */}
+              <Fieldset legend="Process Noises (1-sigma/sqrt(s))" style={{ fontSize: '10px' }}>
+                <Stack gap="xs">
+                  <SimpleGrid cols={2} spacing="xs">
+                    <NumberInput
+                      size="xs"
+                      label="Receiver Accel Horiz (m/s²)"
+                      value={config.stats.receiverAccelHoriz}
+                      onChange={(value: any) =>
+                        handleConfigChange({
+                          ...config,
+                          stats: { ...config.stats, receiverAccelHoriz: Number(value) },
+                        })
+                      }
+                      min={0}
+                      step={0.1}
+                      decimalScale={1}
+                      hideControls
+                      styles={{ label: { fontSize: '10px' } }}
+                    />
+                    <NumberInput
+                      size="xs"
+                      label="Vertical (m/s²)"
+                      value={config.stats.receiverAccelVert}
+                      onChange={(value: any) =>
+                        handleConfigChange({
+                          ...config,
+                          stats: { ...config.stats, receiverAccelVert: Number(value) },
+                        })
+                      }
+                      min={0}
+                      step={0.01}
+                      decimalScale={2}
+                      hideControls
+                      styles={{ label: { fontSize: '10px' } }}
+                    />
+                  </SimpleGrid>
+
+                  <NumberInput
+                    size="xs"
+                    label="Carrier-Phase Bias (cycle)"
+                    value={config.stats.carrierPhaseBias}
+                    onChange={(value: any) =>
+                      handleConfigChange({
+                        ...config,
+                        stats: { ...config.stats, carrierPhaseBias: Number(value) },
+                      })
+                    }
+                    min={0}
+                    step={0.0001}
+                    decimalScale={4}
+                    styles={{ label: { fontSize: '10px' } }}
+                  />
+
+                  <NumberInput
+                    size="xs"
+                    label="Vertical Ionospheric Delay (m/10km)"
+                    value={config.stats.ionosphericDelay}
+                    onChange={(value: any) =>
+                      handleConfigChange({
+                        ...config,
+                        stats: { ...config.stats, ionosphericDelay: Number(value) },
+                      })
+                    }
+                    min={0}
+                    step={0.001}
+                    decimalScale={3}
+                    styles={{ label: { fontSize: '10px' } }}
+                  />
+
+                  <NumberInput
+                    size="xs"
+                    label="Zenith Tropospheric Delay (m)"
+                    value={config.stats.troposphericDelay}
+                    onChange={(value: any) =>
+                      handleConfigChange({
+                        ...config,
+                        stats: { ...config.stats, troposphericDelay: Number(value) },
+                      })
+                    }
+                    min={0}
+                    step={0.0001}
+                    decimalScale={4}
+                    styles={{ label: { fontSize: '10px' } }}
+                  />
+
+                  <NumberInput
+                    size="xs"
+                    label="Satellite Clock Stability (s/s)"
+                    value={config.stats.satelliteClockStability}
+                    onChange={(value: any) =>
+                      handleConfigChange({
+                        ...config,
+                        stats: { ...config.stats, satelliteClockStability: Number(value) },
+                      })
+                    }
+                    min={0}
+                    step={1e-12}
+                    decimalScale={12}
+                    styles={{ label: { fontSize: '10px' } }}
+                  />
+                </Stack>
+              </Fieldset>
+            </Stack>
+          </Tabs.Panel>
+
+          {/* Tab 5: Positions */}
           <Tabs.Panel value="positions" pt="xs">
             <Stack gap="xs">
               <Switch

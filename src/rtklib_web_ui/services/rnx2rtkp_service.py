@@ -134,6 +134,26 @@ class OutputConfig(BaseModel):
     debug_trace: str = Field(default="off")
 
 
+class StatsConfig(BaseModel):
+    """Error models and process noises configuration."""
+
+    # Group A: Measurement Errors (1-sigma)
+    code_phase_ratio_l1: float = Field(default=100.0)
+    code_phase_ratio_l2: float = Field(default=100.0)
+    phase_error_a: float = Field(default=0.003)
+    phase_error_b: float = Field(default=0.003)
+    phase_error_baseline: float = Field(default=0.0)
+    doppler_frequency: float = Field(default=1.0)
+
+    # Group B: Process Noises (1-sigma/sqrt(s))
+    receiver_accel_horiz: float = Field(default=1.0)
+    receiver_accel_vert: float = Field(default=0.1)
+    carrier_phase_bias: float = Field(default=0.0001)
+    ionospheric_delay: float = Field(default=0.001)
+    tropospheric_delay: float = Field(default=0.0001)
+    satellite_clock_stability: float = Field(default=5e-12)
+
+
 class BasePositionConfig(BaseModel):
     """Base station position configuration."""
 
@@ -166,6 +186,7 @@ class Rnx2RtkpConfig(BaseModel):
     setting1: Setting1Config = Field(default_factory=Setting1Config)
     setting2: Setting2Config = Field(default_factory=Setting2Config)
     output: OutputConfig = Field(default_factory=OutputConfig)
+    stats: StatsConfig = Field(default_factory=StatsConfig)
     base_position: BasePositionConfig = Field(default_factory=BasePositionConfig)
     files: FilesConfig = Field(default_factory=FilesConfig)
     misc: MiscConfig = Field(default_factory=MiscConfig)
