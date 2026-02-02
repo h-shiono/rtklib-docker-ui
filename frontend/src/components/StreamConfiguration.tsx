@@ -292,7 +292,7 @@ export function StreamConfiguration({ onArgsChange }: StreamConfigurationProps) 
           <Tabs.Panel value="builder" pt="xs">
             <Stack gap="xs">
               {/* Input Stream */}
-              <Card withBorder p="xs" style={{ backgroundColor: 'var(--mantine-color-gray-0)' }}>
+              <Card withBorder p="xs">
                 <Stack gap="xs">
                   <Group gap="xs" justify="space-between">
                     <Text size="xs" fw={600}>Input Stream</Text>
@@ -318,7 +318,7 @@ export function StreamConfiguration({ onArgsChange }: StreamConfigurationProps) 
               </Card>
 
               {/* Output Streams */}
-              <Card withBorder p="xs" style={{ backgroundColor: 'var(--mantine-color-gray-0)' }}>
+              <Card withBorder p="xs">
                 <Stack gap="xs">
                   <Group gap="xs" justify="space-between">
                     <Text size="xs" fw={600}>Output Streams</Text>
