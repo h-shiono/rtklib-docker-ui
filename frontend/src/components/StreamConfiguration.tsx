@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
+import { useRef, useEffect } from 'react';
+import { useLocalStorage } from '@mantine/hooks';
 import {
   Card,
   Stack,
@@ -12,10 +13,10 @@ import {
   Text,
   Textarea,
   Code,
-  Divider,
   Title,
   PasswordInput,
   Alert,
+  SimpleGrid,
 } from '@mantine/core';
 import {
   IconPlus,
@@ -63,13 +64,28 @@ const DEFAULT_OUTPUT: OutputStream = {
   } as FileParams,
 };
 
+const DEFAULT_CONFIG: BuilderConfig = {
+  input: DEFAULT_INPUT,
+  outputs: [DEFAULT_OUTPUT],
+};
+
 export function StreamConfiguration({ onArgsChange }: StreamConfigurationProps) {
-  const [mode, setMode] = useState<'builder' | 'raw'>('builder');
-  const [builderConfig, setBuilderConfig] = useState<BuilderConfig>({
-    input: DEFAULT_INPUT,
-    outputs: [DEFAULT_OUTPUT],
+  // Persistent state using localStorage
+  const [mode, setMode] = useLocalStorage<'builder' | 'raw'>({
+    key: 'rtklib-web-ui-str2str-mode',
+    defaultValue: 'builder',
   });
-  const [rawCommand, setRawCommand] = useState('');
+
+  const [builderConfig, setBuilderConfig] = useLocalStorage<BuilderConfig>({
+    key: 'rtklib-web-ui-str2str-config',
+    defaultValue: DEFAULT_CONFIG,
+  });
+
+  const [rawCommand, setRawCommand] = useLocalStorage<string>({
+    key: 'rtklib-web-ui-str2str-raw',
+    defaultValue: '',
+  });
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Update args when config changes
@@ -231,23 +247,23 @@ export function StreamConfiguration({ onArgsChange }: StreamConfigurationProps) 
   const commandPreview = generateCommandString(builderConfig);
 
   return (
-    <Card withBorder>
-      <Stack gap="md">
+    <Card withBorder p="xs">
+      <Stack gap="xs">
         <Group justify="space-between">
-          <Title order={6}>Stream Configuration</Title>
-          <Group gap="xs">
+          <Title order={6} size="xs">Stream Configuration</Title>
+          <Group gap={4}>
             <Button
               variant="subtle"
-              size="xs"
-              leftSection={<IconUpload size={14} />}
+              size="compact-xs"
+              leftSection={<IconUpload size={12} />}
               onClick={handleImportProfile}
             >
               Import
             </Button>
             <Button
               variant="subtle"
-              size="xs"
-              leftSection={<IconDownload size={14} />}
+              size="compact-xs"
+              leftSection={<IconDownload size={12} />}
               onClick={handleExportProfile}
             >
               Export
@@ -265,155 +281,152 @@ export function StreamConfiguration({ onArgsChange }: StreamConfigurationProps) 
 
         <Tabs value={mode} onChange={(value) => setMode(value as 'builder' | 'raw')}>
           <Tabs.List>
-            <Tabs.Tab value="builder">Form Builder</Tabs.Tab>
-            <Tabs.Tab value="raw">Raw Command</Tabs.Tab>
+            <Tabs.Tab value="builder" style={{ fontSize: '11px', padding: '6px 12px' }}>
+              Form Builder
+            </Tabs.Tab>
+            <Tabs.Tab value="raw" style={{ fontSize: '11px', padding: '6px 12px' }}>
+              Raw Command
+            </Tabs.Tab>
           </Tabs.List>
 
-          <Tabs.Panel value="builder" pt="md">
-            <Stack gap="md">
+          <Tabs.Panel value="builder" pt="xs">
+            <Stack gap="xs">
               {/* Input Stream */}
-              <div>
-                <Group gap="xs" mb="xs">
-                  <Text size="sm" fw={600}>
-                    Input Stream
-                  </Text>
-                  <ActionIcon variant="subtle" size="xs" disabled>
-                    <IconInfoCircle size={14} />
-                  </ActionIcon>
-                </Group>
+              <Card withBorder p="xs" style={{ backgroundColor: 'var(--mantine-color-gray-0)' }}>
+                <Stack gap="xs">
+                  <Group gap="xs" justify="space-between">
+                    <Text size="xs" fw={600}>Input Stream</Text>
+                  </Group>
 
-                <Stack gap="sm">
                   <Select
+                    size="xs"
                     label="Type"
                     value={builderConfig.input.type}
                     onChange={(value) => handleInputTypeChange(value as StreamType)}
                     data={[
-                      { value: 'serial', label: 'Serial Port' },
+                      { value: 'serial', label: 'Serial' },
                       { value: 'tcpcli', label: 'TCP Client' },
                       { value: 'tcpsvr', label: 'TCP Server' },
-                      { value: 'ntripcli', label: 'NTRIP Client' },
+                      { value: 'ntripcli', label: 'NTRIP' },
                       { value: 'file', label: 'File' },
                     ]}
+                    styles={{ label: { fontSize: '10px' } }}
                   />
 
                   {renderInputFields(builderConfig.input, handleInputChange)}
                 </Stack>
-              </div>
-
-              <Divider />
+              </Card>
 
               {/* Output Streams */}
-              <div>
-                <Group gap="xs" mb="xs" justify="space-between">
-                  <Group gap="xs">
-                    <Text size="sm" fw={600}>
-                      Output Streams
-                    </Text>
-                    <ActionIcon variant="subtle" size="xs" disabled>
-                      <IconInfoCircle size={14} />
+              <Card withBorder p="xs" style={{ backgroundColor: 'var(--mantine-color-gray-0)' }}>
+                <Stack gap="xs">
+                  <Group gap="xs" justify="space-between">
+                    <Text size="xs" fw={600}>Output Streams</Text>
+                    <ActionIcon
+                      variant="light"
+                      color="blue"
+                      size="xs"
+                      onClick={handleOutputAdd}
+                    >
+                      <IconPlus size={12} />
                     </ActionIcon>
                   </Group>
-                  <ActionIcon
-                    variant="light"
-                    color="blue"
-                    size="sm"
-                    onClick={handleOutputAdd}
-                  >
-                    <IconPlus size={16} />
-                  </ActionIcon>
-                </Group>
 
-                {builderConfig.outputs.length === 0 && (
-                  <Alert color="yellow" icon={<IconInfoCircle size={16} />}>
-                    At least one output stream is required
-                  </Alert>
-                )}
+                  {builderConfig.outputs.length === 0 && (
+                    <Alert color="yellow" icon={<IconInfoCircle size={14} />} p="xs">
+                      <Text size="xs">At least one output stream is required</Text>
+                    </Alert>
+                  )}
 
-                <Stack gap="md">
-                  {builderConfig.outputs.map((output, index) => (
-                    <Card key={output.id} withBorder padding="sm">
-                      <Stack gap="sm">
-                        <Group justify="space-between">
-                          <Text size="sm" fw={500}>
-                            Output #{index + 1}
-                          </Text>
-                          {builderConfig.outputs.length > 1 && (
-                            <ActionIcon
-                              variant="subtle"
-                              color="red"
-                              size="sm"
-                              onClick={() => handleOutputRemove(output.id)}
-                            >
-                              <IconTrash size={16} />
-                            </ActionIcon>
+                  <Stack gap="xs">
+                    {builderConfig.outputs.map((output, index) => (
+                      <Card key={output.id} withBorder p="xs">
+                        <Stack gap="xs">
+                          <Group justify="space-between">
+                            <Text size="xs" fw={500}>
+                              Output #{index + 1}
+                            </Text>
+                            {builderConfig.outputs.length > 1 && (
+                              <ActionIcon
+                                variant="subtle"
+                                color="red"
+                                size="xs"
+                                onClick={() => handleOutputRemove(output.id)}
+                              >
+                                <IconTrash size={12} />
+                              </ActionIcon>
+                            )}
+                          </Group>
+
+                          <Select
+                            size="xs"
+                            label="Type"
+                            value={output.type}
+                            onChange={(value) =>
+                              handleOutputTypeChange(output.id, value as StreamType)
+                            }
+                            data={[
+                              { value: 'serial', label: 'Serial' },
+                              { value: 'tcpcli', label: 'TCP Client' },
+                              { value: 'tcpsvr', label: 'TCP Server' },
+                              { value: 'ntripcli', label: 'NTRIP' },
+                              { value: 'file', label: 'File' },
+                            ]}
+                            styles={{ label: { fontSize: '10px' } }}
+                          />
+
+                          {renderOutputFields(
+                            output,
+                            (field, value) => handleOutputChange(output.id, field, value)
                           )}
-                        </Group>
-
-                        <Select
-                          label="Type"
-                          value={output.type}
-                          onChange={(value) =>
-                            handleOutputTypeChange(output.id, value as StreamType)
-                          }
-                          data={[
-                            { value: 'serial', label: 'Serial Port' },
-                            { value: 'tcpcli', label: 'TCP Client' },
-                            { value: 'tcpsvr', label: 'TCP Server' },
-                            { value: 'ntripcli', label: 'NTRIP Client' },
-                            { value: 'file', label: 'File' },
-                          ]}
-                        />
-
-                        {renderOutputFields(
-                          output,
-                          (field, value) => handleOutputChange(output.id, field, value)
-                        )}
-                      </Stack>
-                    </Card>
-                  ))}
+                        </Stack>
+                      </Card>
+                    ))}
+                  </Stack>
                 </Stack>
-              </div>
+              </Card>
 
               {/* Command Preview */}
               <div>
-                <Text size="sm" fw={600} mb="xs">
-                  Command Preview
-                </Text>
-                <Code block style={{ fontSize: '11px', whiteSpace: 'pre-wrap' }}>
+                <Text size="xs" fw={600} mb={4}>Command Preview</Text>
+                <Code block style={{ fontSize: '10px', whiteSpace: 'pre-wrap', padding: '6px' }}>
                   {commandPreview}
                 </Code>
               </div>
             </Stack>
           </Tabs.Panel>
 
-          <Tabs.Panel value="raw" pt="md">
-            <Stack gap="md">
+          <Tabs.Panel value="raw" pt="xs">
+            <Stack gap="xs">
               <Textarea
+                size="xs"
                 label="Raw Command Arguments"
                 description="Enter str2str command line arguments directly"
                 placeholder="-in serial://ttyUSB0:115200 -out file:///workspace/output.ubx"
                 value={rawCommand}
                 onChange={(e) => setRawCommand(e.currentTarget.value)}
-                minRows={6}
+                minRows={5}
                 autosize
                 styles={{
                   input: {
                     fontFamily: 'monospace',
-                    fontSize: '12px',
+                    fontSize: '11px',
                   },
+                  label: { fontSize: '10px' },
+                  description: { fontSize: '10px' },
                 }}
               />
 
-              <Alert color="blue" icon={<IconInfoCircle size={16} />}>
-                When in Raw mode, this command string takes precedence over the Form Builder
-                configuration.
+              <Alert color="blue" icon={<IconInfoCircle size={14} />} p="xs">
+                <Text size="xs">
+                  When in Raw mode, this command string takes precedence over the Form Builder
+                  configuration.
+                </Text>
               </Alert>
 
               <div>
-                <Text size="xs" c="dimmed" mb="xs">
-                  Examples:
-                </Text>
-                <Code block style={{ fontSize: '11px' }}>
+                <Text size="xs" c="dimmed" mb={4}>Examples:</Text>
+                <Code block style={{ fontSize: '10px', padding: '6px' }}>
                   {`# Serial to file
 -in serial://ttyUSB0:115200 -out file:///workspace/out_%Y%m%d.ubx
 
@@ -442,127 +455,152 @@ function renderInputFields(
     case 'serial': {
       const p = params as SerialParams;
       return (
-        <>
+        <SimpleGrid cols={2} spacing="xs">
           <TextInput
+            size="xs"
             label="Port"
             placeholder="/dev/ttyUSB0"
             value={p.port}
             onChange={(e) => onChange('port', e.currentTarget.value)}
+            styles={{ label: { fontSize: '10px' } }}
           />
           <NumberInput
+            size="xs"
             label="Baudrate"
             value={p.baudrate}
             onChange={(value) => onChange('baudrate', value)}
             min={1200}
             max={921600}
+            styles={{ label: { fontSize: '10px' } }}
           />
-          <Group grow>
-            <Select
-              label="Byte Size"
-              value={String(p.bytesize || 8)}
-              onChange={(value) => onChange('bytesize', parseInt(value!))}
-              data={[
-                { value: '7', label: '7' },
-                { value: '8', label: '8' },
-              ]}
-            />
-            <Select
-              label="Parity"
-              value={p.parity || 'N'}
-              onChange={(value) => onChange('parity', value)}
-              data={[
-                { value: 'N', label: 'None' },
-                { value: 'E', label: 'Even' },
-                { value: 'O', label: 'Odd' },
-              ]}
-            />
-            <Select
-              label="Stop Bits"
-              value={String(p.stopbits || 1)}
-              onChange={(value) => onChange('stopbits', parseInt(value!))}
-              data={[
-                { value: '1', label: '1' },
-                { value: '2', label: '2' },
-              ]}
-            />
-          </Group>
-        </>
+          <Select
+            size="xs"
+            label="Byte Size"
+            value={String(p.bytesize || 8)}
+            onChange={(value) => onChange('bytesize', parseInt(value!))}
+            data={[
+              { value: '7', label: '7' },
+              { value: '8', label: '8' },
+            ]}
+            styles={{ label: { fontSize: '10px' } }}
+          />
+          <Select
+            size="xs"
+            label="Parity"
+            value={p.parity || 'N'}
+            onChange={(value) => onChange('parity', value)}
+            data={[
+              { value: 'N', label: 'None' },
+              { value: 'E', label: 'Even' },
+              { value: 'O', label: 'Odd' },
+            ]}
+            styles={{ label: { fontSize: '10px' } }}
+          />
+          <Select
+            size="xs"
+            label="Stop Bits"
+            value={String(p.stopbits || 1)}
+            onChange={(value) => onChange('stopbits', parseInt(value!))}
+            data={[
+              { value: '1', label: '1' },
+              { value: '2', label: '2' },
+            ]}
+            styles={{ label: { fontSize: '10px' } }}
+          />
+        </SimpleGrid>
       );
     }
     case 'tcpcli': {
       const p = params as TcpClientParams;
       return (
-        <>
+        <SimpleGrid cols={2} spacing="xs">
           <TextInput
+            size="xs"
             label="Host"
             placeholder="192.168.1.100"
             value={p.host}
             onChange={(e) => onChange('host', e.currentTarget.value)}
+            styles={{ label: { fontSize: '10px' } }}
           />
           <NumberInput
+            size="xs"
             label="Port"
             value={p.port}
             onChange={(value) => onChange('port', value)}
             min={1}
             max={65535}
+            styles={{ label: { fontSize: '10px' } }}
           />
-        </>
+        </SimpleGrid>
       );
     }
     case 'tcpsvr': {
       const p = params as TcpServerParams;
       return (
         <NumberInput
+          size="xs"
           label="Port"
           value={p.port}
           onChange={(value) => onChange('port', value)}
           min={1}
           max={65535}
+          styles={{ label: { fontSize: '10px' } }}
         />
       );
     }
     case 'ntripcli': {
       const p = params as NtripClientParams;
       return (
-        <>
+        <SimpleGrid cols={2} spacing="xs">
           <TextInput
+            size="xs"
             label="Host"
             placeholder="rtk2go.com"
             value={p.host}
             onChange={(e) => onChange('host', e.currentTarget.value)}
+            styles={{ label: { fontSize: '10px' } }}
           />
           <NumberInput
+            size="xs"
             label="Port"
             value={p.port}
             onChange={(value) => onChange('port', value)}
             min={1}
             max={65535}
+            styles={{ label: { fontSize: '10px' } }}
           />
           <TextInput
+            size="xs"
             label="Mountpoint"
             placeholder="MOUNT"
             value={p.mountpoint}
             onChange={(e) => onChange('mountpoint', e.currentTarget.value)}
+            styles={{ label: { fontSize: '10px' } }}
           />
           <TextInput
-            label="Username (optional)"
+            size="xs"
+            label="Username"
             placeholder="username"
             value={p.username || ''}
             onChange={(e) => onChange('username', e.currentTarget.value)}
+            styles={{ label: { fontSize: '10px' } }}
           />
           <PasswordInput
-            label="Password (optional)"
+            size="xs"
+            label="Password"
             placeholder="password"
             value={p.password || ''}
             onChange={(e) => onChange('password', e.currentTarget.value)}
+            styles={{ label: { fontSize: '10px' } }}
           />
-        </>
+        </SimpleGrid>
       );
     }
     case 'file': {
       const p = params as FileParams;
       return (
         <TextInput
+          size="xs"
           label="File Path"
           placeholder="/workspace/input.ubx"
           value={p.path}
@@ -580,6 +618,7 @@ function renderInputFields(
               }}
             />
           }
+          styles={{ label: { fontSize: '10px' } }}
         />
       );
     }
@@ -596,85 +635,102 @@ function renderOutputFields(
     case 'serial': {
       const p = params as SerialParams;
       return (
-        <>
+        <SimpleGrid cols={2} spacing="xs">
           <TextInput
+            size="xs"
             label="Port"
             placeholder="/dev/ttyUSB1"
             value={p.port}
             onChange={(e) => onChange('port', e.currentTarget.value)}
+            styles={{ label: { fontSize: '10px' } }}
           />
           <NumberInput
+            size="xs"
             label="Baudrate"
             value={p.baudrate}
             onChange={(value) => onChange('baudrate', value)}
             min={1200}
             max={921600}
+            styles={{ label: { fontSize: '10px' } }}
           />
-        </>
+        </SimpleGrid>
       );
     }
     case 'tcpcli': {
       const p = params as TcpClientParams;
       return (
-        <>
+        <SimpleGrid cols={2} spacing="xs">
           <TextInput
+            size="xs"
             label="Host"
             placeholder="192.168.1.100"
             value={p.host}
             onChange={(e) => onChange('host', e.currentTarget.value)}
+            styles={{ label: { fontSize: '10px' } }}
           />
           <NumberInput
+            size="xs"
             label="Port"
             value={p.port}
             onChange={(value) => onChange('port', value)}
             min={1}
             max={65535}
+            styles={{ label: { fontSize: '10px' } }}
           />
-        </>
+        </SimpleGrid>
       );
     }
     case 'tcpsvr': {
       const p = params as TcpServerParams;
       return (
         <NumberInput
+          size="xs"
           label="Port"
           value={p.port}
           onChange={(value) => onChange('port', value)}
           min={1}
           max={65535}
+          styles={{ label: { fontSize: '10px' } }}
         />
       );
     }
     case 'ntripcli': {
       const p = params as NtripClientParams;
       return (
-        <>
+        <SimpleGrid cols={2} spacing="xs">
           <TextInput
+            size="xs"
             label="Host"
             placeholder="rtk2go.com"
             value={p.host}
             onChange={(e) => onChange('host', e.currentTarget.value)}
+            styles={{ label: { fontSize: '10px' } }}
           />
           <NumberInput
+            size="xs"
             label="Port"
             value={p.port}
             onChange={(value) => onChange('port', value)}
             min={1}
             max={65535}
+            styles={{ label: { fontSize: '10px' } }}
           />
           <TextInput
+            size="xs"
             label="Mountpoint"
             placeholder="MOUNT"
             value={p.mountpoint}
             onChange={(e) => onChange('mountpoint', e.currentTarget.value)}
+            styles={{ label: { fontSize: '10px' } }}
           />
-        </>
+        </SimpleGrid>
       );
     }
     case 'file': {
       const p = params as FileParams;
       return (
         <TextInput
+          size="xs"
           label="File Path"
           placeholder="/workspace/output.ubx"
           value={p.path}
@@ -692,6 +748,7 @@ function renderOutputFields(
               }}
             />
           }
+          styles={{ label: { fontSize: '10px' } }}
         />
       );
     }
