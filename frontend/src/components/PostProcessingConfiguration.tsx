@@ -17,6 +17,15 @@ import {
   Checkbox,
   Button,
 } from '@mantine/core';
+import {
+  IconAdjustments,
+  IconChartHistogram,
+  IconDatabaseExport,
+  IconDots,
+  IconEqualizer,
+  IconFolderOpen,
+  IconMapPin,
+} from '@tabler/icons-react';
 import type {
   Rnx2RtkpConfig,
   PositioningMode,
@@ -27,7 +36,9 @@ import type {
   EphemerisOption,
   EarthTidesCorrection,
   ReceiverDynamics,
-  ARMode,
+  GpsArMode,
+  GloArMode,
+  BdsArMode,
   SolutionFormat,
   SnrMaskConfig,
 } from '../types/rnx2rtkpConfig';
@@ -42,7 +53,7 @@ export function PostProcessingConfiguration({
   onConfigChange,
 }: PostProcessingConfigurationProps) {
   const [config, setConfig] = useLocalStorage<Rnx2RtkpConfig>({
-    key: 'rtklib-web-ui-rnx2rtkp-config-v3', // v3: SNR Mask modal implementation
+    key: 'rtklib-web-ui-rnx2rtkp-config-v4', // v4: Setting 2 expanded + tab icons
     defaultValue: DEFAULT_RNX2RTKP_CONFIG,
   });
 
@@ -63,22 +74,22 @@ export function PostProcessingConfiguration({
 
         <Tabs defaultValue="setting1">
           <Tabs.List>
-            <Tabs.Tab value="setting1" style={{ fontSize: '11px', padding: '6px 12px' }}>
+            <Tabs.Tab value="setting1" style={{ fontSize: '11px', padding: '6px 12px' }} leftSection={<IconAdjustments size={14} />}>
               Setting 1
             </Tabs.Tab>
-            <Tabs.Tab value="setting2" style={{ fontSize: '11px', padding: '6px 12px' }}>
+            <Tabs.Tab value="setting2" style={{ fontSize: '11px', padding: '6px 12px' }} leftSection={<IconEqualizer size={14} />}>
               Setting 2
             </Tabs.Tab>
-            <Tabs.Tab value="output" style={{ fontSize: '11px', padding: '6px 12px' }}>
+            <Tabs.Tab value="output" style={{ fontSize: '11px', padding: '6px 12px' }} leftSection={<IconDatabaseExport size={14} />}>
               Output
             </Tabs.Tab>
-            <Tabs.Tab value="positions" style={{ fontSize: '11px', padding: '6px 12px' }}>
+            <Tabs.Tab value="positions" style={{ fontSize: '11px', padding: '6px 12px' }} leftSection={<IconMapPin size={14} />}>
               Positions
             </Tabs.Tab>
-            <Tabs.Tab value="files" style={{ fontSize: '11px', padding: '6px 12px' }}>
+            <Tabs.Tab value="files" style={{ fontSize: '11px', padding: '6px 12px' }} leftSection={<IconFolderOpen size={14} />}>
               Files
             </Tabs.Tab>
-            <Tabs.Tab value="misc" style={{ fontSize: '11px', padding: '6px 12px' }}>
+            <Tabs.Tab value="misc" style={{ fontSize: '11px', padding: '6px 12px' }} leftSection={<IconDots size={14} />}>
               Misc
             </Tabs.Tab>
           </Tabs.List>
@@ -558,82 +569,400 @@ export function PostProcessingConfiguration({
           {/* Tab 2: Setting 2 */}
           <Tabs.Panel value="setting2" pt="xs">
             <Stack gap="xs">
-              <SimpleGrid cols={2} spacing="xs">
-                <Select
-                  size="xs"
-                  label="Integer Ambiguity Resolution"
-                  value={config.setting2.arMode}
-                  onChange={(value) =>
-                    handleConfigChange({
-                      ...config,
-                      setting2: { ...config.setting2, arMode: value as ARMode },
-                    })
-                  }
-                  data={[
-                    { value: 'off', label: 'Off' },
-                    { value: 'continuous', label: 'Continuous' },
-                    { value: 'instantaneous', label: 'Instantaneous' },
-                    { value: 'fix-and-hold', label: 'Fix and Hold' },
-                  ]}
-                  styles={{ label: { fontSize: '10px' } }}
-                />
+              {/* Section A: Ambiguity Resolution Strategy */}
+              <Fieldset legend="Ambiguity Resolution Strategy" style={{ fontSize: '10px' }}>
+                <Stack gap="xs">
+                  <Text size="xs" style={{ fontSize: '10px' }}>
+                    Integer Ambiguity Res (GPS/GLO/BDS)
+                  </Text>
+                  <SimpleGrid cols={3} spacing="xs">
+                    <Select
+                      size="xs"
+                      label="GPS"
+                      value={config.setting2.gpsArMode}
+                      onChange={(value: any) =>
+                        handleConfigChange({
+                          ...config,
+                          setting2: { ...config.setting2, gpsArMode: value as GpsArMode },
+                        })
+                      }
+                      data={[
+                        { value: 'off', label: 'OFF' },
+                        { value: 'continuous', label: 'Continuous' },
+                        { value: 'instantaneous', label: 'Instantaneous' },
+                        { value: 'fix-and-hold', label: 'Fix and Hold' },
+                        { value: 'ppp-ar', label: 'PPP-AR' },
+                      ]}
+                      styles={{ label: { fontSize: '10px' } }}
+                    />
 
-                <NumberInput
-                  size="xs"
-                  label="Min Ratio to Fix Ambiguity"
-                  value={config.setting2.minRatioToFix}
-                  onChange={(value) =>
-                    handleConfigChange({
-                      ...config,
-                      setting2: {
-                        ...config.setting2,
-                        minRatioToFix: Number(value),
-                      },
-                    })
-                  }
-                  min={1}
-                  max={10}
-                  step={0.1}
-                  decimalScale={1}
-                  styles={{ label: { fontSize: '10px' } }}
-                />
+                    <Select
+                      size="xs"
+                      label="GLO"
+                      value={config.setting2.gloArMode}
+                      onChange={(value: any) =>
+                        handleConfigChange({
+                          ...config,
+                          setting2: { ...config.setting2, gloArMode: value as GloArMode },
+                        })
+                      }
+                      data={[
+                        { value: 'off', label: 'OFF' },
+                        { value: 'on', label: 'ON' },
+                        { value: 'autocal', label: 'Autocal' },
+                      ]}
+                      styles={{ label: { fontSize: '10px' } }}
+                    />
 
-                <NumberInput
-                  size="xs"
-                  label="Min Fix Samples"
-                  value={config.setting2.minFixSamples}
-                  onChange={(value) =>
-                    handleConfigChange({
-                      ...config,
-                      setting2: {
-                        ...config.setting2,
-                        minFixSamples: Number(value),
-                      },
-                    })
-                  }
-                  min={0}
-                  max={100}
-                  styles={{ label: { fontSize: '10px' } }}
-                />
+                    <Select
+                      size="xs"
+                      label="BDS"
+                      value={config.setting2.bdsArMode}
+                      onChange={(value: any) =>
+                        handleConfigChange({
+                          ...config,
+                          setting2: { ...config.setting2, bdsArMode: value as BdsArMode },
+                        })
+                      }
+                      data={[
+                        { value: 'off', label: 'OFF' },
+                        { value: 'on', label: 'ON' },
+                      ]}
+                      styles={{ label: { fontSize: '10px' } }}
+                    />
+                  </SimpleGrid>
 
-                <NumberInput
-                  size="xs"
-                  label="Min Hold Samples"
-                  value={config.setting2.minHoldSamples}
-                  onChange={(value) =>
-                    handleConfigChange({
-                      ...config,
-                      setting2: {
-                        ...config.setting2,
-                        minHoldSamples: Number(value),
-                      },
-                    })
-                  }
-                  min={0}
-                  max={100}
-                  styles={{ label: { fontSize: '10px' } }}
-                />
-              </SimpleGrid>
+                  <NumberInput
+                    size="xs"
+                    label="Min Ratio to Fix Ambiguity"
+                    value={config.setting2.minRatioToFix}
+                    onChange={(value: any) =>
+                      handleConfigChange({
+                        ...config,
+                        setting2: { ...config.setting2, minRatioToFix: Number(value) },
+                      })
+                    }
+                    min={1}
+                    max={10}
+                    step={0.1}
+                    decimalScale={1}
+                    styles={{ label: { fontSize: '10px' } }}
+                  />
+                </Stack>
+              </Fieldset>
+
+              {/* Section B: Thresholds & Validation */}
+              <Fieldset legend="Thresholds & Validation" style={{ fontSize: '10px' }}>
+                <Stack gap="xs">
+                  {/* Min Confidence / Max FCB */}
+                  <div>
+                    <Text size="xs" style={{ fontSize: '10px', marginBottom: '4px' }}>
+                      Min Confidence / Max FCB
+                    </Text>
+                    <Group gap="xs" grow>
+                      <NumberInput
+                        size="xs"
+                        value={config.setting2.minConfidence}
+                        onChange={(value: any) =>
+                          handleConfigChange({
+                            ...config,
+                            setting2: { ...config.setting2, minConfidence: Number(value) },
+                          })
+                        }
+                        min={0}
+                        max={1}
+                        step={0.0001}
+                        decimalScale={4}
+                        hideControls
+                        styles={{ input: { fontSize: '10px' } }}
+                      />
+                      <NumberInput
+                        size="xs"
+                        value={config.setting2.maxFcb}
+                        onChange={(value: any) =>
+                          handleConfigChange({
+                            ...config,
+                            setting2: { ...config.setting2, maxFcb: Number(value) },
+                          })
+                        }
+                        min={0}
+                        step={0.01}
+                        decimalScale={2}
+                        hideControls
+                        styles={{ input: { fontSize: '10px' } }}
+                      />
+                    </Group>
+                  </div>
+
+                  {/* Min Lock / Elevation to Fix Amb */}
+                  <div>
+                    <Text size="xs" style={{ fontSize: '10px', marginBottom: '4px' }}>
+                      Min Lock / Elevation (°) to Fix Amb
+                    </Text>
+                    <Group gap="xs" grow>
+                      <NumberInput
+                        size="xs"
+                        value={config.setting2.minLockToFix}
+                        onChange={(value: any) =>
+                          handleConfigChange({
+                            ...config,
+                            setting2: { ...config.setting2, minLockToFix: Number(value) },
+                          })
+                        }
+                        min={0}
+                        hideControls
+                        styles={{ input: { fontSize: '10px' } }}
+                      />
+                      <NumberInput
+                        size="xs"
+                        value={config.setting2.minElevationToFix}
+                        onChange={(value: any) =>
+                          handleConfigChange({
+                            ...config,
+                            setting2: { ...config.setting2, minElevationToFix: Number(value) },
+                          })
+                        }
+                        min={0}
+                        max={90}
+                        hideControls
+                        styles={{ input: { fontSize: '10px' } }}
+                      />
+                    </Group>
+                  </div>
+
+                  {/* Min Fix / Elevation to Hold Amb */}
+                  <div>
+                    <Text size="xs" style={{ fontSize: '10px', marginBottom: '4px' }}>
+                      Min Fix / Elevation (°) to Hold Amb
+                    </Text>
+                    <Group gap="xs" grow>
+                      <NumberInput
+                        size="xs"
+                        value={config.setting2.minFixToHold}
+                        onChange={(value: any) =>
+                          handleConfigChange({
+                            ...config,
+                            setting2: { ...config.setting2, minFixToHold: Number(value) },
+                          })
+                        }
+                        min={0}
+                        hideControls
+                        styles={{ input: { fontSize: '10px' } }}
+                      />
+                      <NumberInput
+                        size="xs"
+                        value={config.setting2.minElevationToHold}
+                        onChange={(value: any) =>
+                          handleConfigChange({
+                            ...config,
+                            setting2: { ...config.setting2, minElevationToHold: Number(value) },
+                          })
+                        }
+                        min={0}
+                        max={90}
+                        hideControls
+                        styles={{ input: { fontSize: '10px' } }}
+                      />
+                    </Group>
+                  </div>
+
+                  {/* Outage to Reset / Slip Thres */}
+                  <div>
+                    <Text size="xs" style={{ fontSize: '10px', marginBottom: '4px' }}>
+                      Outage to Reset Amb / Slip Thres (m)
+                    </Text>
+                    <Group gap="xs" grow>
+                      <NumberInput
+                        size="xs"
+                        value={config.setting2.outageToReset}
+                        onChange={(value: any) =>
+                          handleConfigChange({
+                            ...config,
+                            setting2: { ...config.setting2, outageToReset: Number(value) },
+                          })
+                        }
+                        min={0}
+                        step={1}
+                        hideControls
+                        styles={{ input: { fontSize: '10px' } }}
+                      />
+                      <NumberInput
+                        size="xs"
+                        value={config.setting2.slipThreshold}
+                        onChange={(value: any) =>
+                          handleConfigChange({
+                            ...config,
+                            setting2: { ...config.setting2, slipThreshold: Number(value) },
+                          })
+                        }
+                        min={0}
+                        step={0.001}
+                        decimalScale={3}
+                        hideControls
+                        styles={{ input: { fontSize: '10px' } }}
+                      />
+                    </Group>
+                  </div>
+
+                  {/* Max Age of Diff / Sync Solution */}
+                  <div>
+                    <Text size="xs" style={{ fontSize: '10px', marginBottom: '4px' }}>
+                      Max Age of Diff (s) / Sync Solution
+                    </Text>
+                    <Group gap="xs" grow>
+                      <NumberInput
+                        size="xs"
+                        value={config.setting2.maxAgeDiff}
+                        onChange={(value: any) =>
+                          handleConfigChange({
+                            ...config,
+                            setting2: { ...config.setting2, maxAgeDiff: Number(value) },
+                          })
+                        }
+                        min={0}
+                        step={1}
+                        hideControls
+                        styles={{ input: { fontSize: '10px' } }}
+                      />
+                      <Checkbox
+                        size="xs"
+                        label="Sync"
+                        checked={config.setting2.syncSolution}
+                        onChange={(e: any) =>
+                          handleConfigChange({
+                            ...config,
+                            setting2: { ...config.setting2, syncSolution: e.currentTarget.checked },
+                          })
+                        }
+                        styles={{ label: { fontSize: '10px' } }}
+                      />
+                    </Group>
+                  </div>
+
+                  {/* Reject Threshold GDOP / Innov */}
+                  <div>
+                    <Text size="xs" style={{ fontSize: '10px', marginBottom: '4px' }}>
+                      Reject Threshold of GDOP / Innov (m)
+                    </Text>
+                    <Group gap="xs" grow>
+                      <NumberInput
+                        size="xs"
+                        value={config.setting2.rejectThresholdGdop}
+                        onChange={(value: any) =>
+                          handleConfigChange({
+                            ...config,
+                            setting2: { ...config.setting2, rejectThresholdGdop: Number(value) },
+                          })
+                        }
+                        min={0}
+                        step={1}
+                        hideControls
+                        styles={{ input: { fontSize: '10px' } }}
+                      />
+                      <NumberInput
+                        size="xs"
+                        value={config.setting2.rejectThresholdInnovation}
+                        onChange={(value: any) =>
+                          handleConfigChange({
+                            ...config,
+                            setting2: { ...config.setting2, rejectThresholdInnovation: Number(value) },
+                          })
+                        }
+                        min={0}
+                        step={1}
+                        hideControls
+                        styles={{ input: { fontSize: '10px' } }}
+                      />
+                    </Group>
+                  </div>
+                </Stack>
+              </Fieldset>
+
+              {/* Section C: Advanced Filter */}
+              <Fieldset legend="Advanced Filter" style={{ fontSize: '10px' }}>
+                <Stack gap="xs">
+                  <NumberInput
+                    size="xs"
+                    label="Number of Filter Iteration"
+                    value={config.setting2.numFilterIterations}
+                    onChange={(value: any) =>
+                      handleConfigChange({
+                        ...config,
+                        setting2: { ...config.setting2, numFilterIterations: Number(value) },
+                      })
+                    }
+                    min={1}
+                    max={10}
+                    styles={{ label: { fontSize: '10px' } }}
+                  />
+
+                  <Checkbox
+                    size="xs"
+                    label="Baseline Length Constraint"
+                    checked={config.setting2.baselineLengthConstraint.enabled}
+                    onChange={(e: any) =>
+                      handleConfigChange({
+                        ...config,
+                        setting2: {
+                          ...config.setting2,
+                          baselineLengthConstraint: {
+                            ...config.setting2.baselineLengthConstraint,
+                            enabled: e.currentTarget.checked,
+                          },
+                        },
+                      })
+                    }
+                    styles={{ label: { fontSize: '10px' } }}
+                  />
+
+                  {config.setting2.baselineLengthConstraint.enabled && (
+                    <SimpleGrid cols={2} spacing="xs">
+                      <NumberInput
+                        size="xs"
+                        label="Length (m)"
+                        value={config.setting2.baselineLengthConstraint.length}
+                        onChange={(value: any) =>
+                          handleConfigChange({
+                            ...config,
+                            setting2: {
+                              ...config.setting2,
+                              baselineLengthConstraint: {
+                                ...config.setting2.baselineLengthConstraint,
+                                length: Number(value),
+                              },
+                            },
+                          })
+                        }
+                        min={0}
+                        step={0.001}
+                        decimalScale={3}
+                        styles={{ label: { fontSize: '10px' } }}
+                      />
+                      <NumberInput
+                        size="xs"
+                        label="Sigma (m)"
+                        value={config.setting2.baselineLengthConstraint.sigma}
+                        onChange={(value: any) =>
+                          handleConfigChange({
+                            ...config,
+                            setting2: {
+                              ...config.setting2,
+                              baselineLengthConstraint: {
+                                ...config.setting2.baselineLengthConstraint,
+                                sigma: Number(value),
+                              },
+                            },
+                          })
+                        }
+                        min={0}
+                        step={0.001}
+                        decimalScale={3}
+                        styles={{ label: { fontSize: '10px' } }}
+                      />
+                    </SimpleGrid>
+                  )}
+                </Stack>
+              </Fieldset>
             </Stack>
           </Tabs.Panel>
 

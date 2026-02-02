@@ -76,11 +76,40 @@ export interface Setting1Config {
   raimFde: boolean;
 }
 
+export type GpsArMode = 'off' | 'continuous' | 'instantaneous' | 'fix-and-hold' | 'ppp-ar';
+export type GloArMode = 'off' | 'on' | 'autocal';
+export type BdsArMode = 'off' | 'on';
+
+export interface BaselineLengthConstraint {
+  enabled: boolean;
+  length: number; // meters
+  sigma: number; // meters
+}
+
 export interface Setting2Config {
-  arMode: ARMode;
+  // Section A: Ambiguity Resolution Strategy
+  gpsArMode: GpsArMode;
+  gloArMode: GloArMode;
+  bdsArMode: BdsArMode;
   minRatioToFix: number;
-  minFixSamples: number;
-  minHoldSamples: number;
+
+  // Section B: Thresholds & Validation
+  minConfidence: number;
+  maxFcb: number;
+  minLockToFix: number;
+  minElevationToFix: number; // degrees
+  minFixToHold: number;
+  minElevationToHold: number; // degrees
+  outageToReset: number; // seconds
+  slipThreshold: number; // meters
+  maxAgeDiff: number; // seconds
+  syncSolution: boolean;
+  rejectThresholdGdop: number;
+  rejectThresholdInnovation: number; // meters
+
+  // Section C: Advanced Filter
+  numFilterIterations: number;
+  baselineLengthConstraint: BaselineLengthConstraint;
 }
 
 export interface OutputConfig {
@@ -183,10 +212,33 @@ export const DEFAULT_SETTING1: Setting1Config = {
 };
 
 export const DEFAULT_SETTING2: Setting2Config = {
-  arMode: 'continuous',
+  // Section A: Ambiguity Resolution Strategy
+  gpsArMode: 'continuous',
+  gloArMode: 'on',
+  bdsArMode: 'on',
   minRatioToFix: 3.0,
-  minFixSamples: 10,
-  minHoldSamples: 40,
+
+  // Section B: Thresholds & Validation
+  minConfidence: 0.9999,
+  maxFcb: 0.25,
+  minLockToFix: 0,
+  minElevationToFix: 0,
+  minFixToHold: 10,
+  minElevationToHold: 0,
+  outageToReset: 5,
+  slipThreshold: 0.05,
+  maxAgeDiff: 30.0,
+  syncSolution: false,
+  rejectThresholdGdop: 30.0,
+  rejectThresholdInnovation: 30.0,
+
+  // Section C: Advanced Filter
+  numFilterIterations: 1,
+  baselineLengthConstraint: {
+    enabled: false,
+    length: 0.0,
+    sigma: 0.0,
+  },
 };
 
 export const DEFAULT_OUTPUT: OutputConfig = {

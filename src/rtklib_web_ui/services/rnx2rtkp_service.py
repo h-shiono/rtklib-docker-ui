@@ -72,13 +72,40 @@ class Setting1Config(BaseModel):
     raim_fde: bool = Field(default=False)
 
 
+class BaselineLengthConstraint(BaseModel):
+    """Baseline length constraint configuration."""
+
+    enabled: bool = Field(default=False)
+    length: float = Field(default=0.0)
+    sigma: float = Field(default=0.0)
+
+
 class Setting2Config(BaseModel):
     """Setting 2: Ambiguity resolution parameters."""
 
-    ar_mode: str = Field(default="continuous")
+    # Section A: Ambiguity Resolution Strategy
+    gps_ar_mode: str = Field(default="continuous")
+    glo_ar_mode: str = Field(default="on")
+    bds_ar_mode: str = Field(default="on")
     min_ratio_to_fix: float = Field(default=3.0)
-    min_fix_samples: int = Field(default=10)
-    min_hold_samples: int = Field(default=40)
+
+    # Section B: Thresholds & Validation
+    min_confidence: float = Field(default=0.9999)
+    max_fcb: float = Field(default=0.25)
+    min_lock_to_fix: int = Field(default=0)
+    min_elevation_to_fix: float = Field(default=0.0)
+    min_fix_to_hold: int = Field(default=10)
+    min_elevation_to_hold: float = Field(default=0.0)
+    outage_to_reset: int = Field(default=5)
+    slip_threshold: float = Field(default=0.05)
+    max_age_diff: float = Field(default=30.0)
+    sync_solution: bool = Field(default=False)
+    reject_threshold_gdop: float = Field(default=30.0)
+    reject_threshold_innovation: float = Field(default=30.0)
+
+    # Section C: Advanced Filter
+    num_filter_iterations: int = Field(default=1)
+    baseline_length_constraint: BaselineLengthConstraint = Field(default_factory=BaselineLengthConstraint)
 
 
 class OutputConfig(BaseModel):
