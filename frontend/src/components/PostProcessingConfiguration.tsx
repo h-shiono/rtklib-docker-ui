@@ -38,7 +38,7 @@ export function PostProcessingConfiguration({
   onConfigChange,
 }: PostProcessingConfigurationProps) {
   const [config, setConfig] = useLocalStorage<Rnx2RtkpConfig>({
-    key: 'rtklib-web-ui-rnx2rtkp-config',
+    key: 'rtklib-web-ui-rnx2rtkp-config-v2', // v2: Added constellation selection and advanced options
     defaultValue: DEFAULT_RNX2RTKP_CONFIG,
   });
 
