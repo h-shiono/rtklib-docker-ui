@@ -353,6 +353,17 @@ function StreamServerPanel({
       const result = await str2strApi.startStr2Str({ args: ['-h'] });
       setProcessId(result.id);
       setProcessState('running');
+
+      // Auto-stop after 3 seconds (help exits immediately, this ensures cleanup)
+      setTimeout(async () => {
+        try {
+          await str2strApi.stopStr2Str({ process_id: result.id });
+          setProcessState('idle');
+          setProcessId(null);
+        } catch (err) {
+          console.error('Auto-stop failed:', err);
+        }
+      }, 3000);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to run test');
       setProcessState('error');
