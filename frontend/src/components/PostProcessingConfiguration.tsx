@@ -660,227 +660,202 @@ export function PostProcessingConfiguration({
               {/* Section B: Thresholds & Validation */}
               <Fieldset legend="Thresholds & Validation" style={{ fontSize: '10px' }}>
                 <Stack gap="xs">
-                  {/* Min Confidence / Max FCB */}
-                  <div>
-                    <Text size="xs" style={{ fontSize: '10px', marginBottom: '4px' }}>
-                      Min Confidence / Max FCB
-                    </Text>
-                    <Group gap="xs" grow>
-                      <NumberInput
-                        size="xs"
-                        value={config.setting2.minConfidence}
-                        onChange={(value: any) =>
-                          handleConfigChange({
-                            ...config,
-                            setting2: { ...config.setting2, minConfidence: Number(value) },
-                          })
-                        }
-                        min={0}
-                        max={1}
-                        step={0.0001}
-                        decimalScale={4}
-                        hideControls
-                        styles={{ input: { fontSize: '10px' } }}
-                      />
-                      <NumberInput
-                        size="xs"
-                        value={config.setting2.maxFcb}
-                        onChange={(value: any) =>
-                          handleConfigChange({
-                            ...config,
-                            setting2: { ...config.setting2, maxFcb: Number(value) },
-                          })
-                        }
-                        min={0}
-                        step={0.01}
-                        decimalScale={2}
-                        hideControls
-                        styles={{ input: { fontSize: '10px' } }}
-                      />
-                    </Group>
-                  </div>
+                  <SimpleGrid cols={2} spacing="xs">
+                    <NumberInput
+                      size="xs"
+                      label="Min Confidence"
+                      value={config.setting2.minConfidence}
+                      onChange={(value: any) =>
+                        handleConfigChange({
+                          ...config,
+                          setting2: { ...config.setting2, minConfidence: Number(value) },
+                        })
+                      }
+                      min={0}
+                      max={1}
+                      step={0.0001}
+                      decimalScale={4}
+                      hideControls
+                      styles={{ label: { fontSize: '10px' } }}
+                    />
+                    <NumberInput
+                      size="xs"
+                      label="Max FCB"
+                      value={config.setting2.maxFcb}
+                      onChange={(value: any) =>
+                        handleConfigChange({
+                          ...config,
+                          setting2: { ...config.setting2, maxFcb: Number(value) },
+                        })
+                      }
+                      min={0}
+                      step={0.01}
+                      decimalScale={2}
+                      hideControls
+                      styles={{ label: { fontSize: '10px' } }}
+                    />
+                  </SimpleGrid>
 
-                  {/* Min Lock / Elevation to Fix Amb */}
-                  <div>
-                    <Text size="xs" style={{ fontSize: '10px', marginBottom: '4px' }}>
-                      Min Lock / Elevation (°) to Fix Amb
-                    </Text>
-                    <Group gap="xs" grow>
-                      <NumberInput
-                        size="xs"
-                        value={config.setting2.minLockToFix}
-                        onChange={(value: any) =>
-                          handleConfigChange({
-                            ...config,
-                            setting2: { ...config.setting2, minLockToFix: Number(value) },
-                          })
-                        }
-                        min={0}
-                        hideControls
-                        styles={{ input: { fontSize: '10px' } }}
-                      />
-                      <NumberInput
-                        size="xs"
-                        value={config.setting2.minElevationToFix}
-                        onChange={(value: any) =>
-                          handleConfigChange({
-                            ...config,
-                            setting2: { ...config.setting2, minElevationToFix: Number(value) },
-                          })
-                        }
-                        min={0}
-                        max={90}
-                        hideControls
-                        styles={{ input: { fontSize: '10px' } }}
-                      />
-                    </Group>
-                  </div>
+                  <SimpleGrid cols={2} spacing="xs">
+                    <NumberInput
+                      size="xs"
+                      label="Min Lock to Fix Amb"
+                      value={config.setting2.minLockToFix}
+                      onChange={(value: any) =>
+                        handleConfigChange({
+                          ...config,
+                          setting2: { ...config.setting2, minLockToFix: Number(value) },
+                        })
+                      }
+                      min={0}
+                      hideControls
+                      styles={{ label: { fontSize: '10px' } }}
+                    />
+                    <NumberInput
+                      size="xs"
+                      label="Elevation (°) to Fix Amb"
+                      value={config.setting2.minElevationToFix}
+                      onChange={(value: any) =>
+                        handleConfigChange({
+                          ...config,
+                          setting2: { ...config.setting2, minElevationToFix: Number(value) },
+                        })
+                      }
+                      min={0}
+                      max={90}
+                      hideControls
+                      styles={{ label: { fontSize: '10px' } }}
+                    />
+                  </SimpleGrid>
 
-                  {/* Min Fix / Elevation to Hold Amb */}
-                  <div>
-                    <Text size="xs" style={{ fontSize: '10px', marginBottom: '4px' }}>
-                      Min Fix / Elevation (°) to Hold Amb
-                    </Text>
-                    <Group gap="xs" grow>
-                      <NumberInput
-                        size="xs"
-                        value={config.setting2.minFixToHold}
-                        onChange={(value: any) =>
-                          handleConfigChange({
-                            ...config,
-                            setting2: { ...config.setting2, minFixToHold: Number(value) },
-                          })
-                        }
-                        min={0}
-                        hideControls
-                        styles={{ input: { fontSize: '10px' } }}
-                      />
-                      <NumberInput
-                        size="xs"
-                        value={config.setting2.minElevationToHold}
-                        onChange={(value: any) =>
-                          handleConfigChange({
-                            ...config,
-                            setting2: { ...config.setting2, minElevationToHold: Number(value) },
-                          })
-                        }
-                        min={0}
-                        max={90}
-                        hideControls
-                        styles={{ input: { fontSize: '10px' } }}
-                      />
-                    </Group>
-                  </div>
+                  <SimpleGrid cols={2} spacing="xs">
+                    <NumberInput
+                      size="xs"
+                      label="Min Fix to Hold Amb"
+                      value={config.setting2.minFixToHold}
+                      onChange={(value: any) =>
+                        handleConfigChange({
+                          ...config,
+                          setting2: { ...config.setting2, minFixToHold: Number(value) },
+                        })
+                      }
+                      min={0}
+                      hideControls
+                      styles={{ label: { fontSize: '10px' } }}
+                    />
+                    <NumberInput
+                      size="xs"
+                      label="Elevation (°) to Hold Amb"
+                      value={config.setting2.minElevationToHold}
+                      onChange={(value: any) =>
+                        handleConfigChange({
+                          ...config,
+                          setting2: { ...config.setting2, minElevationToHold: Number(value) },
+                        })
+                      }
+                      min={0}
+                      max={90}
+                      hideControls
+                      styles={{ label: { fontSize: '10px' } }}
+                    />
+                  </SimpleGrid>
 
-                  {/* Outage to Reset / Slip Thres */}
-                  <div>
-                    <Text size="xs" style={{ fontSize: '10px', marginBottom: '4px' }}>
-                      Outage to Reset Amb / Slip Thres (m)
-                    </Text>
-                    <Group gap="xs" grow>
-                      <NumberInput
-                        size="xs"
-                        value={config.setting2.outageToReset}
-                        onChange={(value: any) =>
-                          handleConfigChange({
-                            ...config,
-                            setting2: { ...config.setting2, outageToReset: Number(value) },
-                          })
-                        }
-                        min={0}
-                        step={1}
-                        hideControls
-                        styles={{ input: { fontSize: '10px' } }}
-                      />
-                      <NumberInput
-                        size="xs"
-                        value={config.setting2.slipThreshold}
-                        onChange={(value: any) =>
-                          handleConfigChange({
-                            ...config,
-                            setting2: { ...config.setting2, slipThreshold: Number(value) },
-                          })
-                        }
-                        min={0}
-                        step={0.001}
-                        decimalScale={3}
-                        hideControls
-                        styles={{ input: { fontSize: '10px' } }}
-                      />
-                    </Group>
-                  </div>
+                  <SimpleGrid cols={2} spacing="xs">
+                    <NumberInput
+                      size="xs"
+                      label="Outage to Reset Amb"
+                      value={config.setting2.outageToReset}
+                      onChange={(value: any) =>
+                        handleConfigChange({
+                          ...config,
+                          setting2: { ...config.setting2, outageToReset: Number(value) },
+                        })
+                      }
+                      min={0}
+                      step={1}
+                      hideControls
+                      styles={{ label: { fontSize: '10px' } }}
+                    />
+                    <NumberInput
+                      size="xs"
+                      label="Slip Threshold (m)"
+                      value={config.setting2.slipThreshold}
+                      onChange={(value: any) =>
+                        handleConfigChange({
+                          ...config,
+                          setting2: { ...config.setting2, slipThreshold: Number(value) },
+                        })
+                      }
+                      min={0}
+                      step={0.001}
+                      decimalScale={3}
+                      hideControls
+                      styles={{ label: { fontSize: '10px' } }}
+                    />
+                  </SimpleGrid>
 
-                  {/* Max Age of Diff / Sync Solution */}
-                  <div>
-                    <Text size="xs" style={{ fontSize: '10px', marginBottom: '4px' }}>
-                      Max Age of Diff (s) / Sync Solution
-                    </Text>
-                    <Group gap="xs" grow>
-                      <NumberInput
-                        size="xs"
-                        value={config.setting2.maxAgeDiff}
-                        onChange={(value: any) =>
-                          handleConfigChange({
-                            ...config,
-                            setting2: { ...config.setting2, maxAgeDiff: Number(value) },
-                          })
-                        }
-                        min={0}
-                        step={1}
-                        hideControls
-                        styles={{ input: { fontSize: '10px' } }}
-                      />
-                      <Checkbox
-                        size="xs"
-                        label="Sync"
-                        checked={config.setting2.syncSolution}
-                        onChange={(e: any) =>
-                          handleConfigChange({
-                            ...config,
-                            setting2: { ...config.setting2, syncSolution: e.currentTarget.checked },
-                          })
-                        }
-                        styles={{ label: { fontSize: '10px' } }}
-                      />
-                    </Group>
-                  </div>
+                  <SimpleGrid cols={2} spacing="xs">
+                    <NumberInput
+                      size="xs"
+                      label="Max Age of Diff (s)"
+                      value={config.setting2.maxAgeDiff}
+                      onChange={(value: any) =>
+                        handleConfigChange({
+                          ...config,
+                          setting2: { ...config.setting2, maxAgeDiff: Number(value) },
+                        })
+                      }
+                      min={0}
+                      step={1}
+                      hideControls
+                      styles={{ label: { fontSize: '10px' } }}
+                    />
+                    <Checkbox
+                      size="xs"
+                      label="Sync Solution"
+                      checked={config.setting2.syncSolution}
+                      onChange={(e: any) =>
+                        handleConfigChange({
+                          ...config,
+                          setting2: { ...config.setting2, syncSolution: e.currentTarget.checked },
+                        })
+                      }
+                      styles={{ label: { fontSize: '10px' }, root: { marginTop: '20px' } }}
+                    />
+                  </SimpleGrid>
 
-                  {/* Reject Threshold GDOP / Innov */}
-                  <div>
-                    <Text size="xs" style={{ fontSize: '10px', marginBottom: '4px' }}>
-                      Reject Threshold of GDOP / Innov (m)
-                    </Text>
-                    <Group gap="xs" grow>
-                      <NumberInput
-                        size="xs"
-                        value={config.setting2.rejectThresholdGdop}
-                        onChange={(value: any) =>
-                          handleConfigChange({
-                            ...config,
-                            setting2: { ...config.setting2, rejectThresholdGdop: Number(value) },
-                          })
-                        }
-                        min={0}
-                        step={1}
-                        hideControls
-                        styles={{ input: { fontSize: '10px' } }}
-                      />
-                      <NumberInput
-                        size="xs"
-                        value={config.setting2.rejectThresholdInnovation}
-                        onChange={(value: any) =>
-                          handleConfigChange({
-                            ...config,
-                            setting2: { ...config.setting2, rejectThresholdInnovation: Number(value) },
-                          })
-                        }
-                        min={0}
-                        step={1}
-                        hideControls
-                        styles={{ input: { fontSize: '10px' } }}
-                      />
-                    </Group>
-                  </div>
+                  <SimpleGrid cols={2} spacing="xs">
+                    <NumberInput
+                      size="xs"
+                      label="Reject Threshold of GDOP"
+                      value={config.setting2.rejectThresholdGdop}
+                      onChange={(value: any) =>
+                        handleConfigChange({
+                          ...config,
+                          setting2: { ...config.setting2, rejectThresholdGdop: Number(value) },
+                        })
+                      }
+                      min={0}
+                      step={1}
+                      hideControls
+                      styles={{ label: { fontSize: '10px' } }}
+                    />
+                    <NumberInput
+                      size="xs"
+                      label="Innov (m)"
+                      value={config.setting2.rejectThresholdInnovation}
+                      onChange={(value: any) =>
+                        handleConfigChange({
+                          ...config,
+                          setting2: { ...config.setting2, rejectThresholdInnovation: Number(value) },
+                        })
+                      }
+                      min={0}
+                      step={1}
+                      hideControls
+                      styles={{ label: { fontSize: '10px' } }}
+                    />
+                  </SimpleGrid>
                 </Stack>
               </Fieldset>
 
