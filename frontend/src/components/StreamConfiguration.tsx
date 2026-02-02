@@ -333,8 +333,8 @@ export function StreamConfiguration({ onArgsChange }: StreamConfigurationProps) 
                   </Group>
 
                   {builderConfig.outputs.length === 0 && (
-                    <Alert color="yellow" icon={<IconInfoCircle size={14} />} p="xs">
-                      <Text size="xs">At least one output stream is required</Text>
+                    <Alert color="blue" icon={<IconInfoCircle size={14} />} p="xs">
+                      <Text size="xs">No output streams configured</Text>
                     </Alert>
                   )}
 
@@ -346,16 +346,14 @@ export function StreamConfiguration({ onArgsChange }: StreamConfigurationProps) 
                             <Text size="xs" fw={500}>
                               Output #{index + 1}
                             </Text>
-                            {builderConfig.outputs.length > 1 && (
-                              <ActionIcon
-                                variant="subtle"
-                                color="red"
-                                size="xs"
-                                onClick={() => handleOutputRemove(output.id)}
-                              >
-                                <IconTrash size={12} />
-                              </ActionIcon>
-                            )}
+                            <ActionIcon
+                              variant="subtle"
+                              color="red"
+                              size="xs"
+                              onClick={() => handleOutputRemove(output.id)}
+                            >
+                              <IconTrash size={12} />
+                            </ActionIcon>
                           </Group>
 
                           <Select
