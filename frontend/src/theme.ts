@@ -1,7 +1,7 @@
-import { createTheme, MantineColorsTuple } from '@mantine/core';
+import { createTheme } from '@mantine/core';
 
-// Custom primary color palette
-const primary: MantineColorsTuple = [
+// Custom primary color palette (10 shades required)
+const primary: readonly [string, string, string, string, string, string, string, string, string, string] = [
   '#e5f4ff',
   '#cde2ff',
   '#9bc2ff',

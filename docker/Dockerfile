@@ -18,8 +18,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /build
 
-# Clone rtklibexplorer/RTKLIB demo5 branch
-RUN git clone --depth 1 --branch demo5 https://github.com/rtklibexplorer/RTKLIB.git
+# Clone official RTKLIB (tomojitakasu) rtklib_2.4.3 branch
+RUN git clone --depth 1 --branch rtklib_2.4.3 https://github.com/tomojitakasu/RTKLIB.git
 
 # Build str2str
 WORKDIR /build/RTKLIB/app/consapp/str2str/gcc
