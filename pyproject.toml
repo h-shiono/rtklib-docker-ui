@@ -1,16 +1,30 @@
 [project]
 name = "rtklib-web-ui"
 version = "0.1.0"
-description = "Add your description here"
+description = "Web UI for RTKLIB command-line tools"
 readme = "README.md"
 authors = [
     { name = "h-shiono", email = "hato.gnss@gmail.com" }
 ]
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.34.0",
+    "python-socketio>=5.11.0",
+    "python-multipart>=0.0.18",
+    "pydantic>=2.10.0",
+]
 
 [project.scripts]
 rtklib-web-ui = "rtklib_web_ui:main"
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.24.0",
+    "httpx>=0.28.0",
+    "ruff>=0.8.0",
+]
 
 [build-system]
 requires = ["hatchling"]

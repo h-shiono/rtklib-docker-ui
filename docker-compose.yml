@@ -1,0 +1,12 @@
+services:
+  rtklib-web-ui:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    ports:
+      - "8080:8000"
+    volumes:
+      - ${WORKSPACE_PATH:-./workspace}:/workspace:rw
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
