@@ -34,7 +34,8 @@ import {
   IconPlugConnectedX,
   IconTestPipe,
 } from '@tabler/icons-react';
-import { TerminalOutput, StatusIndicator, ConfigLoader, ProcessStatus } from './components';
+import { TerminalOutput, StatusIndicator, ConfigLoader } from './components';
+import type { ProcessStatus } from './components';
 import { useWebSocket } from './hooks';
 import type { LogMessage } from './hooks';
 import * as str2strApi from './api/str2str';

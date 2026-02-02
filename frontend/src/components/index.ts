@@ -1,3 +1,4 @@
 export { TerminalOutput } from './TerminalOutput';
-export { StatusIndicator, type ProcessStatus } from './StatusIndicator';
+export { StatusIndicator } from './StatusIndicator';
+export type { ProcessStatus } from './StatusIndicator';
 export { ConfigLoader } from './ConfigLoader';
