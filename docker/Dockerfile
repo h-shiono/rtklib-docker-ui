@@ -65,15 +65,13 @@ FROM ghcr.io/astral-sh/uv:python3.12-bookworm AS backend-builder
 
 WORKDIR /app
 
-# Copy pyproject.toml, lock file, and README
+# Copy pyproject.toml, lock file, README, and source
 COPY pyproject.toml uv.lock* README.md ./
+COPY src/ ./src/
 
 # Install dependencies (frozen if lock exists)
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev || uv sync --no-dev
-
-# Copy backend source
-COPY src/ ./src/
 
 # ================================
 # Stage 4: Runtime
