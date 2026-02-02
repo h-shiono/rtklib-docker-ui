@@ -19,6 +19,7 @@ import {
   Code,
   Tooltip,
   Textarea,
+  Alert,
 } from '@mantine/core';
 import {
   IconSun,
@@ -34,7 +35,7 @@ import {
   IconPlugConnectedX,
   IconTestPipe,
 } from '@tabler/icons-react';
-import { TerminalOutput, StatusIndicator, ConfigLoader } from './components';
+import { TerminalOutput, StatusIndicator, ConfigLoader, StreamConfiguration } from './components';
 import type { ProcessStatus } from './components';
 import { useWebSocket } from './hooks';
 import type { LogMessage } from './hooks';
@@ -267,7 +268,7 @@ function StreamServerPanel() {
   const [processId, setProcessId] = useState<string | null>(null);
   const [processState, setProcessState] = useState<ProcessStatus>('idle');
   const [logLines, setLogLines] = useState<string[]>([]);
-  const [argsInput, setArgsInput] = useState('');
+  const [currentArgs, setCurrentArgs] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -304,10 +305,7 @@ function StreamServerPanel() {
     setLogLines([]);
 
     try {
-      // Parse args from input (simple space-separated)
-      const args = argsInput.trim() ? argsInput.trim().split(/\s+/) : [];
-
-      const result = await str2strApi.startStr2Str({ args });
+      const result = await str2strApi.startStr2Str({ args: currentArgs });
       setProcessId(result.id);
       setProcessState('running');
     } catch (err) {
@@ -362,10 +360,10 @@ function StreamServerPanel() {
       {/* Left Pane: Configuration */}
       <Grid.Col span={{ base: 12, md: 5 }}>
         <Stack gap="md">
-          <Card withBorder>
-            <Stack gap="sm">
-              <Group justify="space-between">
-                <Title order={6}>Stream Configuration</Title>
+          <Card withBorder padding="xs">
+            <Group justify="space-between">
+              <Text size="sm" fw={600}>WebSocket Status</Text>
+              <Group gap="xs">
                 <Tooltip label={isConnected ? 'WebSocket connected' : 'WebSocket disconnected'}>
                   {isConnected ? (
                     <IconPlugConnected size={18} color="var(--mantine-color-green-6)" />
@@ -373,39 +371,20 @@ function StreamServerPanel() {
                     <IconPlugConnectedX size={18} color="var(--mantine-color-red-6)" />
                   )}
                 </Tooltip>
-              </Group>
-
-              <Textarea
-                label="str2str Arguments"
-                placeholder="-in serial://ttyUSB0:115200 -out file:///workspace/output.ubx"
-                description="Enter command line arguments for str2str"
-                value={argsInput}
-                onChange={(e) => setArgsInput(e.currentTarget.value)}
-                minRows={3}
-                autosize
-              />
-
-              <Text size="xs" c="dimmed">
-                Examples:
-              </Text>
-              <Code block style={{ fontSize: '11px' }}>
-{`# Serial to file
--in serial://ttyUSB0:115200 -out file:///workspace/out.ubx
-
-# TCP client to file
--in tcpcli://192.168.1.100:2101 -out file:///workspace/out.ubx
-
-# NTRIP to file
--in ntrip://user:pass@host:2101/mountpoint -out file:///workspace/out.rtcm`}
-              </Code>
-
-              {error && (
-                <Text size="sm" c="red">
-                  {error}
+                <Text size="xs" c={isConnected ? 'green' : 'dimmed'}>
+                  {isConnected ? 'Connected' : 'Disconnected'}
                 </Text>
-              )}
-            </Stack>
+              </Group>
+            </Group>
           </Card>
+
+          <StreamConfiguration onArgsChange={setCurrentArgs} />
+
+          {error && (
+            <Alert color="red" icon={<IconInfoCircle size={16} />} withCloseButton onClose={() => setError(null)}>
+              {error}
+            </Alert>
+          )}
 
           {/* Action Area */}
           <Card withBorder>
