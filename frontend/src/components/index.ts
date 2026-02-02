@@ -5,3 +5,4 @@ export { ConfigLoader } from './ConfigLoader';
 export { StreamConfiguration } from './StreamConfiguration';
 export { FileNamingHelper } from './FileNamingHelper';
 export { PostProcessingConfiguration } from './PostProcessingConfiguration';
+export { SnrMaskModal } from './SnrMaskModal';

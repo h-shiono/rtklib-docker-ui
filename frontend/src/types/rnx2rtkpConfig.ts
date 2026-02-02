@@ -40,22 +40,31 @@ export type ARMode = 'off' | 'continuous' | 'instantaneous' | 'fix-and-hold';
 
 export type SolutionFormat = 'llh' | 'xyz' | 'enu' | 'nmea';
 
+export interface SnrMaskConfig {
+  enableRover: boolean;
+  enableBase: boolean;
+  // Matrix: [Frequency_Index][Elevation_Bin_Index]
+  // Frequencies: L1=0, L2=1, L5=2
+  // Elevation bins: <5, 15, 25, 35, 45, 55, 65, 75, >85 (9 bins)
+  mask: number[][]; // 3x9 matrix
+}
+
 export interface Setting1Config {
   // Group A: Basic Strategy
   positioningMode: PositioningMode;
   frequency: Frequency;
   filterType: FilterType;
 
-  // Group B: Satellite Selection
-  constellations: ConstellationSelection;
-  excludedSatellites: string;
-
-  // Group C: Masks & Environment
+  // Group B: Masks & Environment
   elevationMask: number; // degrees
-  snrMask: number; // dB-Hz
+  snrMask: SnrMaskConfig;
   ionosphereCorrection: IonosphereCorrection;
   troposphereCorrection: TroposphereCorrection;
   ephemerisOption: EphemerisOption;
+
+  // Group C: Satellite Selection
+  constellations: ConstellationSelection;
+  excludedSatellites: string;
 
   // Group D: Advanced Options
   earthTidesCorrection: EarthTidesCorrection;
@@ -135,7 +144,23 @@ export const DEFAULT_SETTING1: Setting1Config = {
   frequency: 'l1+l2',
   filterType: 'forward',
 
-  // Group B: Satellite Selection
+  // Group B: Masks & Environment
+  elevationMask: 15,
+  snrMask: {
+    enableRover: false,
+    enableBase: false,
+    // Default mask values: 3 frequencies (L1, L2, L5) × 9 elevation bins
+    mask: [
+      [35, 35, 35, 35, 35, 35, 35, 35, 35], // L1
+      [35, 35, 35, 35, 35, 35, 35, 35, 35], // L2
+      [35, 35, 35, 35, 35, 35, 35, 35, 35], // L5
+    ],
+  },
+  ionosphereCorrection: 'broadcast',
+  troposphereCorrection: 'saastamoinen',
+  ephemerisOption: 'broadcast',
+
+  // Group C: Satellite Selection
   constellations: {
     gps: true,
     glonass: true,
@@ -146,13 +171,6 @@ export const DEFAULT_SETTING1: Setting1Config = {
     irnss: false,
   },
   excludedSatellites: '',
-
-  // Group C: Masks & Environment
-  elevationMask: 15,
-  snrMask: 35,
-  ionosphereCorrection: 'broadcast',
-  troposphereCorrection: 'saastamoinen',
-  ephemerisOption: 'broadcast',
 
   // Group D: Advanced Options
   earthTidesCorrection: 'off',

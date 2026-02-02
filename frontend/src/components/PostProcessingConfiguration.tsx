@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useLocalStorage } from '@mantine/hooks';
 import {
   Card,
@@ -14,6 +15,8 @@ import {
   Fieldset,
   TextInput,
   Checkbox,
+  Button,
+  Badge,
 } from '@mantine/core';
 import type {
   Rnx2RtkpConfig,
@@ -27,8 +30,10 @@ import type {
   ReceiverDynamics,
   ARMode,
   SolutionFormat,
+  SnrMaskConfig,
 } from '../types/rnx2rtkpConfig';
 import { DEFAULT_RNX2RTKP_CONFIG } from '../types/rnx2rtkpConfig';
+import { SnrMaskModal } from './SnrMaskModal';
 
 interface PostProcessingConfigurationProps {
   onConfigChange: (config: Rnx2RtkpConfig) => void;
@@ -38,16 +43,28 @@ export function PostProcessingConfiguration({
   onConfigChange,
 }: PostProcessingConfigurationProps) {
   const [config, setConfig] = useLocalStorage<Rnx2RtkpConfig>({
-    key: 'rtklib-web-ui-rnx2rtkp-config-v2', // v2: Added constellation selection and advanced options
+    key: 'rtklib-web-ui-rnx2rtkp-config-v3', // v3: SNR Mask modal implementation
     defaultValue: DEFAULT_RNX2RTKP_CONFIG,
   });
+
+  const [snrMaskModalOpened, setSnrMaskModalOpened] = useState(false);
 
   const handleConfigChange = (newConfig: Rnx2RtkpConfig) => {
     setConfig(newConfig);
     onConfigChange(newConfig);
   };
 
+  const getSnrMaskStatus = () => {
+    const { enableRover, enableBase } = config.setting1.snrMask;
+    if (!enableRover && !enableBase) return 'Disabled';
+    const parts = [];
+    if (enableRover) parts.push('Rover: ON');
+    if (enableBase) parts.push('Base: ON');
+    return parts.join(', ');
+  };
+
   return (
+    <>
     <Card withBorder p="xs">
       <Stack gap="xs">
         <Title order={6} size="xs">
@@ -148,7 +165,119 @@ export function PostProcessingConfiguration({
                 </SimpleGrid>
               </Fieldset>
 
-              {/* Group B: Satellite Selection */}
+              {/* Group B: Masks & Environment */}
+              <Fieldset legend="Masks & Environment" style={{ fontSize: '10px' }}>
+                <SimpleGrid cols={2} spacing="xs">
+                  <NumberInput
+                    size="xs"
+                    label="Elevation Mask (deg)"
+                    value={config.setting1.elevationMask}
+                    onChange={(value) =>
+                      handleConfigChange({
+                        ...config,
+                        setting1: {
+                          ...config.setting1,
+                          elevationMask: Number(value),
+                        },
+                      })
+                    }
+                    min={0}
+                    max={90}
+                    styles={{ label: { fontSize: '10px' } }}
+                  />
+
+                  <div>
+                    <Text size="xs" style={{ fontSize: '10px', marginBottom: '4px' }}>
+                      SNR Mask
+                    </Text>
+                    <Group gap="xs">
+                      <Button
+                        size="xs"
+                        variant="light"
+                        onClick={() => setSnrMaskModalOpened(true)}
+                        style={{ flex: 1 }}
+                      >
+                        Edit SNR Mask...
+                      </Button>
+                      <Badge size="sm" variant="dot" color={config.setting1.snrMask.enableRover || config.setting1.snrMask.enableBase ? 'green' : 'gray'}>
+                        {getSnrMaskStatus()}
+                      </Badge>
+                    </Group>
+                  </div>
+
+                  <Select
+                    size="xs"
+                    label="Ionosphere Correction"
+                    value={config.setting1.ionosphereCorrection}
+                    onChange={(value) =>
+                      handleConfigChange({
+                        ...config,
+                        setting1: {
+                          ...config.setting1,
+                          ionosphereCorrection: value as IonosphereCorrection,
+                        },
+                      })
+                    }
+                    data={[
+                      { value: 'off', label: 'OFF' },
+                      { value: 'broadcast', label: 'Broadcast' },
+                      { value: 'sbas', label: 'SBAS' },
+                      { value: 'dual-freq', label: 'Dual-Frequency' },
+                      { value: 'est-stec', label: 'Estimate STEC' },
+                      { value: 'ionex-tec', label: 'IONEX TEC' },
+                    ]}
+                    styles={{ label: { fontSize: '10px' } }}
+                  />
+
+                  <Select
+                    size="xs"
+                    label="Troposphere Correction"
+                    value={config.setting1.troposphereCorrection}
+                    onChange={(value) =>
+                      handleConfigChange({
+                        ...config,
+                        setting1: {
+                          ...config.setting1,
+                          troposphereCorrection: value as TroposphereCorrection,
+                        },
+                      })
+                    }
+                    data={[
+                      { value: 'off', label: 'OFF' },
+                      { value: 'saastamoinen', label: 'Saastamoinen' },
+                      { value: 'sbas', label: 'SBAS' },
+                      { value: 'est-ztd', label: 'Estimate ZTD' },
+                      { value: 'est-ztd-grad', label: 'Estimate ZTD+Grad' },
+                    ]}
+                    styles={{ label: { fontSize: '10px' } }}
+                  />
+
+                  <Select
+                    size="xs"
+                    label="Satellite Ephemeris"
+                    value={config.setting1.ephemerisOption}
+                    onChange={(value) =>
+                      handleConfigChange({
+                        ...config,
+                        setting1: {
+                          ...config.setting1,
+                          ephemerisOption: value as EphemerisOption,
+                        },
+                      })
+                    }
+                    data={[
+                      { value: 'broadcast', label: 'Broadcast' },
+                      { value: 'precise', label: 'Precise' },
+                      { value: 'broadcast+sbas', label: 'Broadcast+SBAS' },
+                      { value: 'broadcast+ssrapc', label: 'Broadcast+SSR APC' },
+                      { value: 'broadcast+ssrcom', label: 'Broadcast+SSR CoM' },
+                    ]}
+                    styles={{ label: { fontSize: '10px' } }}
+                  />
+                </SimpleGrid>
+              </Fieldset>
+
+              {/* Group C: Satellite Selection */}
               <Fieldset legend="Satellite Selection" style={{ fontSize: '10px' }}>
                 <Stack gap="xs">
                   <Text size="xs" style={{ fontSize: '10px' }}>
@@ -300,114 +429,6 @@ export function PostProcessingConfiguration({
                     styles={{ label: { fontSize: '10px' } }}
                   />
                 </Stack>
-              </Fieldset>
-
-              {/* Group C: Masks & Environment */}
-              <Fieldset legend="Masks & Environment" style={{ fontSize: '10px' }}>
-                <SimpleGrid cols={2} spacing="xs">
-                  <NumberInput
-                    size="xs"
-                    label="Elevation Mask (deg)"
-                    value={config.setting1.elevationMask}
-                    onChange={(value) =>
-                      handleConfigChange({
-                        ...config,
-                        setting1: {
-                          ...config.setting1,
-                          elevationMask: Number(value),
-                        },
-                      })
-                    }
-                    min={0}
-                    max={90}
-                    styles={{ label: { fontSize: '10px' } }}
-                  />
-
-                  <NumberInput
-                    size="xs"
-                    label="SNR Mask (dBHz)"
-                    value={config.setting1.snrMask}
-                    onChange={(value) =>
-                      handleConfigChange({
-                        ...config,
-                        setting1: { ...config.setting1, snrMask: Number(value) },
-                      })
-                    }
-                    min={0}
-                    max={60}
-                    styles={{ label: { fontSize: '10px' } }}
-                  />
-
-                  <Select
-                    size="xs"
-                    label="Ionosphere Correction"
-                    value={config.setting1.ionosphereCorrection}
-                    onChange={(value) =>
-                      handleConfigChange({
-                        ...config,
-                        setting1: {
-                          ...config.setting1,
-                          ionosphereCorrection: value as IonosphereCorrection,
-                        },
-                      })
-                    }
-                    data={[
-                      { value: 'off', label: 'OFF' },
-                      { value: 'broadcast', label: 'Broadcast' },
-                      { value: 'sbas', label: 'SBAS' },
-                      { value: 'dual-freq', label: 'Dual-Frequency' },
-                      { value: 'est-stec', label: 'Estimate STEC' },
-                      { value: 'ionex-tec', label: 'IONEX TEC' },
-                    ]}
-                    styles={{ label: { fontSize: '10px' } }}
-                  />
-
-                  <Select
-                    size="xs"
-                    label="Troposphere Correction"
-                    value={config.setting1.troposphereCorrection}
-                    onChange={(value) =>
-                      handleConfigChange({
-                        ...config,
-                        setting1: {
-                          ...config.setting1,
-                          troposphereCorrection: value as TroposphereCorrection,
-                        },
-                      })
-                    }
-                    data={[
-                      { value: 'off', label: 'OFF' },
-                      { value: 'saastamoinen', label: 'Saastamoinen' },
-                      { value: 'sbas', label: 'SBAS' },
-                      { value: 'est-ztd', label: 'Estimate ZTD' },
-                      { value: 'est-ztd-grad', label: 'Estimate ZTD+Grad' },
-                    ]}
-                    styles={{ label: { fontSize: '10px' } }}
-                  />
-
-                  <Select
-                    size="xs"
-                    label="Satellite Ephemeris"
-                    value={config.setting1.ephemerisOption}
-                    onChange={(value) =>
-                      handleConfigChange({
-                        ...config,
-                        setting1: {
-                          ...config.setting1,
-                          ephemerisOption: value as EphemerisOption,
-                        },
-                      })
-                    }
-                    data={[
-                      { value: 'broadcast', label: 'Broadcast' },
-                      { value: 'precise', label: 'Precise' },
-                      { value: 'broadcast+sbas', label: 'Broadcast+SBAS' },
-                      { value: 'broadcast+ssrapc', label: 'Broadcast+SSR APC' },
-                      { value: 'broadcast+ssrcom', label: 'Broadcast+SSR CoM' },
-                    ]}
-                    styles={{ label: { fontSize: '10px' } }}
-                  />
-                </SimpleGrid>
               </Fieldset>
 
               {/* Group D: Advanced Options */}
@@ -862,5 +883,18 @@ export function PostProcessingConfiguration({
         </Tabs>
       </Stack>
     </Card>
+
+      <SnrMaskModal
+        opened={snrMaskModalOpened}
+        onClose={() => setSnrMaskModalOpened(false)}
+        value={config.setting1.snrMask}
+        onChange={(newSnrMask: SnrMaskConfig) =>
+          handleConfigChange({
+            ...config,
+            setting1: { ...config.setting1, snrMask: newSnrMask },
+          })
+        }
+      />
+    </>
   );
 }

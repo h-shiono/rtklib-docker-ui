@@ -134,7 +134,11 @@ function PostProcessingPanel() {
           constellations: config.setting1.constellations,
           excluded_satellites: config.setting1.excludedSatellites,
           elevation_mask: config.setting1.elevationMask,
-          snr_mask: config.setting1.snrMask,
+          snr_mask: {
+            enable_rover: config.setting1.snrMask.enableRover,
+            enable_base: config.setting1.snrMask.enableBase,
+            mask: config.setting1.snrMask.mask,
+          },
           ionosphere_correction: config.setting1.ionosphereCorrection,
           troposphere_correction: config.setting1.troposphereCorrection,
           ephemeris_option: config.setting1.ephemerisOption,

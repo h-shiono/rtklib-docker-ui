@@ -26,6 +26,23 @@ class ConstellationSelection(BaseModel):
     irnss: bool = Field(default=False)
 
 
+class SnrMaskConfig(BaseModel):
+    """SNR mask configuration."""
+
+    enable_rover: bool = Field(default=False)
+    enable_base: bool = Field(default=False)
+    # Matrix: [Frequency_Index][Elevation_Bin_Index]
+    # Frequencies: L1=0, L2=1, L5=2
+    # Elevation bins: <5, 15, 25, 35, 45, 55, 65, 75, >85 (9 bins)
+    mask: list[list[float]] = Field(
+        default=[
+            [35.0] * 9,  # L1
+            [35.0] * 9,  # L2
+            [35.0] * 9,  # L5
+        ]
+    )
+
+
 class Setting1Config(BaseModel):
     """Setting 1: Basic positioning parameters."""
 
@@ -34,16 +51,16 @@ class Setting1Config(BaseModel):
     frequency: str = Field(default="l1+l2")
     filter_type: str = Field(default="forward")
 
-    # Group B: Satellite Selection
-    constellations: ConstellationSelection = Field(default_factory=ConstellationSelection)
-    excluded_satellites: str = Field(default="")
-
-    # Group C: Masks & Environment
+    # Group B: Masks & Environment
     elevation_mask: float = Field(default=15.0)
-    snr_mask: float = Field(default=35.0)
+    snr_mask: SnrMaskConfig = Field(default_factory=SnrMaskConfig)
     ionosphere_correction: str = Field(default="broadcast")
     troposphere_correction: str = Field(default="saastamoinen")
     ephemeris_option: str = Field(default="broadcast")
+
+    # Group C: Satellite Selection
+    constellations: ConstellationSelection = Field(default_factory=ConstellationSelection)
+    excluded_satellites: str = Field(default="")
 
     # Group D: Advanced Options
     earth_tides_correction: str = Field(default="off")
