@@ -261,7 +261,7 @@ export function PostProcessingConfiguration({
   onConfigChange,
 }: PostProcessingConfigurationProps) {
   const [config, setConfig] = useLocalStorage<Rnx2RtkpConfig>({
-    key: 'rtklib-web-ui-rnx2rtkp-config-v10', // v10: Added DBCorr, refined dependencies
+    key: 'rtklib-web-ui-rnx2rtkp-config-v11', // v11: Added maxArIter, PPP-only Sync Solution
     defaultValue: DEFAULT_RNX2RTKP_CONFIG,
   });
 
