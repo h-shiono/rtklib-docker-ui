@@ -271,7 +271,6 @@ export function PostProcessingConfiguration({
   const isSingle = config.setting1.positioningMode === 'single';
   const isDGPS = config.setting1.positioningMode === 'dgps';
   const isPPP = ['ppp-kinematic', 'ppp-static', 'ppp-fixed'].includes(config.setting1.positioningMode);
-  const isCarrierBased = !isSingle && !isDGPS;
   const isGpsFixAndHold = config.setting2.gpsArMode === 'fix-and-hold';
   const isPppAr = config.setting2.gpsArMode === 'ppp-ar';
   const isReceiverDynamicsEnabled =
