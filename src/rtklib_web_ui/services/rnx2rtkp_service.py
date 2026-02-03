@@ -130,6 +130,7 @@ class OutputConfig(BaseModel):
 
     # Group C: Output Control
     static_solution_mode: str = Field(default="all")
+    output_single_on_outage: bool = Field(default=False)
     nmea_interval_rmc_gga: int = Field(default=0)
     nmea_interval_gsa_gsv: int = Field(default=0)
     output_solution_status: str = Field(default="off")

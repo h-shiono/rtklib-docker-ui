@@ -192,6 +192,7 @@ function PostProcessingPanel() {
           geoid_model: config.output.geoidModel,
           // Group C: Output Control
           static_solution_mode: config.output.staticSolutionMode,
+          output_single_on_outage: config.output.outputSingleOnOutage,
           nmea_interval_rmc_gga: config.output.nmeaIntervalRmcGga,
           nmea_interval_gsa_gsv: config.output.nmeaIntervalGsaGsv,
           output_solution_status: config.output.outputSolutionStatus,

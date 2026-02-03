@@ -150,6 +150,7 @@ export interface OutputConfig {
 
   // Group C: Output Control
   staticSolutionMode: StaticSolutionMode;
+  outputSingleOnOutage: boolean;
   nmeaIntervalRmcGga: number; // seconds
   nmeaIntervalGsaGsv: number; // seconds
   outputSolutionStatus: DebugTraceLevel;
@@ -348,6 +349,7 @@ export const DEFAULT_OUTPUT: OutputConfig = {
 
   // Group C: Output Control
   staticSolutionMode: 'all',
+  outputSingleOnOutage: false,
   nmeaIntervalRmcGga: 0,
   nmeaIntervalGsaGsv: 0,
   outputSolutionStatus: 'off',

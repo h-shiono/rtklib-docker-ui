@@ -261,7 +261,7 @@ export function PostProcessingConfiguration({
   onConfigChange,
 }: PostProcessingConfigurationProps) {
   const [config, setConfig] = useLocalStorage<Rnx2RtkpConfig>({
-    key: 'rtklib-web-ui-rnx2rtkp-config-v11', // v11: Added maxArIter, PPP-only Sync Solution
+    key: 'rtklib-web-ui-rnx2rtkp-config-v12', // v12: Added outputSingleOnOutage, Output tab conditional logic
     defaultValue: DEFAULT_RNX2RTKP_CONFIG,
   });
 
@@ -276,6 +276,12 @@ export function PostProcessingConfiguration({
   const isReceiverDynamicsEnabled =
     config.setting1.positioningMode === 'kinematic' ||
     config.setting1.positioningMode === 'ppp-kinematic';
+
+  // Output tab conditional logic
+  const isStaticMode = ['static', 'ppp-static'].includes(config.setting1.positioningMode);
+  const isSolLLH = config.output.solutionFormat === 'llh';
+  const isSolXYZ = config.output.solutionFormat === 'xyz';
+  const isSolNMEA = config.output.solutionFormat === 'nmea';
 
   const handleConfigChange = (newConfig: Rnx2RtkpConfig) => {
     setConfig(newConfig);
@@ -1363,6 +1369,7 @@ export function PostProcessingConfiguration({
                               },
                             })
                           }
+                          disabled={isSolNMEA}
                           styles={{ label: { fontSize: '10px' } }}
                         />
                         <Switch
@@ -1378,6 +1385,7 @@ export function PostProcessingConfiguration({
                               },
                             })
                           }
+                          disabled={isSolNMEA}
                           styles={{ label: { fontSize: '10px' } }}
                         />
                         <Switch
@@ -1393,6 +1401,7 @@ export function PostProcessingConfiguration({
                               },
                             })
                           }
+                          disabled={isSolNMEA}
                           styles={{ label: { fontSize: '10px' } }}
                         />
                       </Group>
@@ -1416,6 +1425,7 @@ export function PostProcessingConfiguration({
                         { value: 'jst', label: 'hh:mm:ss JST' },
                         { value: 'tow', label: 'TOW' },
                       ]}
+                      disabled={isSolNMEA}
                       styles={{ label: { fontSize: '10px' } }}
                     />
                     <NumberInput
@@ -1431,6 +1441,7 @@ export function PostProcessingConfiguration({
                       min={0}
                       max={12}
                       hideControls
+                      disabled={isSolNMEA}
                       styles={{ label: { fontSize: '10px' } }}
                     />
                   </SimpleGrid>
@@ -1450,6 +1461,7 @@ export function PostProcessingConfiguration({
                         { value: 'ddd.ddddddd', label: 'ddd.ddddddd' },
                         { value: 'ddd-mm-ss.sss', label: 'ddd mm ss.sss' },
                       ]}
+                      disabled={!isSolLLH}
                       styles={{ label: { fontSize: '10px' } }}
                     />
 
@@ -1489,6 +1501,7 @@ export function PostProcessingConfiguration({
                         { value: 'tokyo', label: 'Tokyo' },
                         { value: 'pz90.11', label: 'PZ-90.11' },
                       ]}
+                      disabled={!isSolLLH && !isSolXYZ}
                       styles={{ label: { fontSize: '10px' } }}
                     />
                     <Select
@@ -1505,6 +1518,7 @@ export function PostProcessingConfiguration({
                         { value: 'ellipsoidal', label: 'Ellipsoidal' },
                         { value: 'geodetic', label: 'Geodetic' },
                       ]}
+                      disabled={!isSolLLH}
                       styles={{ label: { fontSize: '10px' } }}
                     />
                   </SimpleGrid>
@@ -1549,6 +1563,23 @@ export function PostProcessingConfiguration({
                       { value: 'single', label: 'Single' },
                       { value: 'fixed', label: 'Fixed' },
                     ]}
+                    disabled={!isStaticMode}
+                    styles={{ label: { fontSize: '10px' } }}
+                  />
+
+                  <Checkbox
+                    size="xs"
+                    label="Output Single if Sol Outage"
+                    checked={config.output.outputSingleOnOutage}
+                    onChange={(e: any) =>
+                      handleConfigChange({
+                        ...config,
+                        output: {
+                          ...config.output,
+                          outputSingleOnOutage: e.currentTarget.checked,
+                        },
+                      })
+                    }
                     disabled={isSingle}
                     styles={{ label: { fontSize: '10px' } }}
                   />
@@ -1567,6 +1598,7 @@ export function PostProcessingConfiguration({
                       min={0}
                       step={1}
                       hideControls
+                      disabled={!isSolNMEA}
                       styles={{ label: { fontSize: '10px' } }}
                     />
                     <NumberInput
@@ -1582,6 +1614,7 @@ export function PostProcessingConfiguration({
                       min={0}
                       step={1}
                       hideControls
+                      disabled={!isSolNMEA}
                       styles={{ label: { fontSize: '10px' } }}
                     />
                   </SimpleGrid>
