@@ -379,12 +379,8 @@ export function PostProcessingConfiguration({
                           <Text size="xs" fw={500} mb="xs" style={{ fontSize: '10px' }}>
                             GNSS Frequency Mapping
                           </Text>
-                          <Table
-                            withTableBorder
-                            withColumnBorders
-                            style={{ fontSize: '9px' }}
-                          >
-                            <Table.Thead>
+                          <Table style={{ fontSize: '9px' }}>
+                            <Table.Thead style={{ borderBottom: '1px solid #dee2e6' }}>
                               <Table.Tr>
                                 <Table.Th style={{ fontSize: '9px', padding: '4px' }}></Table.Th>
                                 <Table.Th style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>L1</Table.Th>
@@ -397,59 +393,59 @@ export function PostProcessingConfiguration({
                             <Table.Tbody>
                               <Table.Tr>
                                 <Table.Td style={{ fontSize: '9px', padding: '4px' }}>GPS</Table.Td>
-                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>L1</Table.Td>
-                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>L2</Table.Td>
-                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>L5</Table.Td>
-                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>-</Table.Td>
-                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>-</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>L1</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>L2</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>L5</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>-</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>-</Table.Td>
                               </Table.Tr>
                               <Table.Tr>
                                 <Table.Td style={{ fontSize: '9px', padding: '4px' }}>GLONASS</Table.Td>
-                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>G1/a</Table.Td>
-                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>G2/a</Table.Td>
-                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>G3</Table.Td>
-                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>-</Table.Td>
-                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>-</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>G1/a</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>G2/a</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>G3</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>-</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>-</Table.Td>
                               </Table.Tr>
                               <Table.Tr>
                                 <Table.Td style={{ fontSize: '9px', padding: '4px' }}>Galileo</Table.Td>
-                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>E1</Table.Td>
-                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>E5b</Table.Td>
-                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>E5a</Table.Td>
-                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>E6</Table.Td>
-                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>E5a+b</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>E1</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>E5b</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>E5a</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>E6</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>E5a+b</Table.Td>
                               </Table.Tr>
                               <Table.Tr>
                                 <Table.Td style={{ fontSize: '9px', padding: '4px' }}>QZSS</Table.Td>
-                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>L1</Table.Td>
-                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>L2</Table.Td>
-                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>L5</Table.Td>
-                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>L6</Table.Td>
-                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>-</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>L1</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>L2</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>L5</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>L6</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>-</Table.Td>
                               </Table.Tr>
                               <Table.Tr>
                                 <Table.Td style={{ fontSize: '9px', padding: '4px' }}>BDS</Table.Td>
-                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>B1I/C</Table.Td>
-                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>B2I/b</Table.Td>
-                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>B2a</Table.Td>
-                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>B3</Table.Td>
-                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>B2a+b</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>B1I/C</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>B2I/b</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>B2a</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>B3</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>B2a+b</Table.Td>
                               </Table.Tr>
                               <Table.Tr>
                                 <Table.Td style={{ fontSize: '9px', padding: '4px' }}>IRNSS</Table.Td>
-                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>L5</Table.Td>
-                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>S</Table.Td>
-                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>-</Table.Td>
-                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>-</Table.Td>
-                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>-</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>L5</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>S</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>-</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>-</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>-</Table.Td>
                               </Table.Tr>
                               <Table.Tr>
                                 <Table.Td style={{ fontSize: '9px', padding: '4px' }}>SBAS</Table.Td>
-                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>L1</Table.Td>
-                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>L5</Table.Td>
-                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>-</Table.Td>
-                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>-</Table.Td>
-                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>-</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>L1</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>L5</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>-</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>-</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>-</Table.Td>
                               </Table.Tr>
                             </Table.Tbody>
                           </Table>
