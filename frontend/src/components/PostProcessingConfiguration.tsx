@@ -280,7 +280,6 @@ export function PostProcessingConfiguration({
   // Output tab conditional logic
   const isStaticMode = ['static', 'ppp-static'].includes(config.setting1.positioningMode);
   const isSolLLH = config.output.solutionFormat === 'llh';
-  const isSolXYZ = config.output.solutionFormat === 'xyz';
   const isSolNMEA = config.output.solutionFormat === 'nmea';
 
   const handleConfigChange = (newConfig: Rnx2RtkpConfig) => {
@@ -1346,7 +1345,6 @@ export function PostProcessingConfiguration({
                         { value: 'xyz', label: 'X/Y/Z-ECEF' },
                         { value: 'enu', label: 'E/N/U-Baseline' },
                         { value: 'nmea', label: 'NMEA-0183' },
-                        { value: 'solution-status', label: 'Solution Status' },
                       ]}
                       styles={{ label: { fontSize: '10px' } }}
                     />
@@ -1401,7 +1399,6 @@ export function PostProcessingConfiguration({
                               },
                             })
                           }
-                          disabled={isSolNMEA}
                           styles={{ label: { fontSize: '10px' } }}
                         />
                       </Group>
@@ -1420,10 +1417,10 @@ export function PostProcessingConfiguration({
                         })
                       }
                       data={[
-                        { value: 'gpst', label: 'ww:ssss GPST' },
+                        { value: 'gpst', label: 'ww ssss GPST' },
+                        { value: 'gpst-hms', label: 'hh:mm:ss GPST' },
                         { value: 'utc', label: 'hh:mm:ss UTC' },
                         { value: 'jst', label: 'hh:mm:ss JST' },
-                        { value: 'tow', label: 'TOW' },
                       ]}
                       disabled={isSolNMEA}
                       styles={{ label: { fontSize: '10px' } }}
@@ -1501,7 +1498,7 @@ export function PostProcessingConfiguration({
                         { value: 'tokyo', label: 'Tokyo' },
                         { value: 'pz90.11', label: 'PZ-90.11' },
                       ]}
-                      disabled={!isSolLLH && !isSolXYZ}
+                      disabled={!isSolLLH}
                       styles={{ label: { fontSize: '10px' } }}
                     />
                     <Select

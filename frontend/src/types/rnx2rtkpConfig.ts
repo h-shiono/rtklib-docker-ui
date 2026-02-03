@@ -38,13 +38,13 @@ export interface ConstellationSelection {
 
 export type ARMode = 'off' | 'continuous' | 'instantaneous' | 'fix-and-hold';
 
-export type SolutionFormat = 'llh' | 'xyz' | 'enu' | 'nmea' | 'solution-status';
+export type SolutionFormat = 'llh' | 'xyz' | 'enu' | 'nmea';
 
 export type TimeFormat =
   | 'gpst'
+  | 'gpst-hms'
   | 'utc'
-  | 'jst'
-  | 'tow';
+  | 'jst';
 
 export type LatLonFormat = 'ddd.ddddddd' | 'ddd-mm-ss.sss';
 
