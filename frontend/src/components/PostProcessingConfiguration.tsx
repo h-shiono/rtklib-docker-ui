@@ -1163,7 +1163,7 @@ export function PostProcessingConfiguration({
                           setting2: { ...config.setting2, syncSolution: e.currentTarget.checked },
                         })
                       }
-                      disabled={isSingle || isDGPS}
+                      disabled={!isPPP}
                       styles={{ label: { fontSize: '10px' }, root: { marginTop: '20px' } }}
                     />
                   </SimpleGrid>
