@@ -345,14 +345,34 @@ export function PostProcessingConfiguration({
                   />
 
                   <div>
-                    <Group gap={4} mb={4}>
-                      <Text size="xs" style={{ fontSize: '10px' }}>
-                        Frequencies
-                      </Text>
+                    <Text size="xs" style={{ fontSize: '10px', marginBottom: '4px' }}>
+                      Frequencies
+                    </Text>
+                    <Group gap="xs" wrap="nowrap">
+                      <Select
+                        size="xs"
+                        value={config.setting1.frequency}
+                        onChange={(value: any) =>
+                          handleConfigChange({
+                            ...config,
+                            setting1: { ...config.setting1, frequency: value as Frequency },
+                          })
+                        }
+                        data={[
+                          { value: 'l1', label: 'L1' },
+                          { value: 'l1+l2', label: 'L1+2' },
+                          { value: 'l1+l2+l5', label: 'L1+2+3' },
+                          { value: 'l1+l2+l5+l6', label: 'L1+2+3+4' },
+                          { value: 'l1+l2+l5+l6+l7', label: 'L1+2+3+4+5' },
+                        ]}
+                        disabled={isSingle}
+                        styles={{ label: { fontSize: '10px' }, root: { flex: 1 } }}
+                        style={{ flex: 1 }}
+                      />
                       <HoverCard width={400} shadow="md" withinPortal>
                         <HoverCard.Target>
-                          <ActionIcon variant="transparent" size="xs" color="gray">
-                            <IconInfoCircle size={12} />
+                          <ActionIcon variant="subtle" size="sm" color="gray">
+                            <IconInfoCircle size={14} />
                           </ActionIcon>
                         </HoverCard.Target>
                         <HoverCard.Dropdown p="xs">
@@ -436,25 +456,6 @@ export function PostProcessingConfiguration({
                         </HoverCard.Dropdown>
                       </HoverCard>
                     </Group>
-                    <Select
-                      size="xs"
-                      value={config.setting1.frequency}
-                      onChange={(value: any) =>
-                        handleConfigChange({
-                          ...config,
-                          setting1: { ...config.setting1, frequency: value as Frequency },
-                        })
-                      }
-                      data={[
-                        { value: 'l1', label: 'L1' },
-                        { value: 'l1+l2', label: 'L1+2' },
-                        { value: 'l1+l2+l5', label: 'L1+2+3' },
-                        { value: 'l1+l2+l5+l6', label: 'L1+2+3+4' },
-                        { value: 'l1+l2+l5+l6+l7', label: 'L1+2+3+4+5' },
-                      ]}
-                      disabled={isSingle}
-                      styles={{ label: { fontSize: '10px' } }}
-                    />
                   </div>
 
                   <Select
