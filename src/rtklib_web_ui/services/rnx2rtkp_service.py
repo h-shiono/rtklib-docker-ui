@@ -184,10 +184,13 @@ class BasePositionConfig(BaseModel):
 class FilesConfig(BaseModel):
     """Auxiliary files configuration."""
 
-    antex_file: Optional[str] = None
-    geoid_file: Optional[str] = None
-    dcb_file: Optional[str] = None
-    eop_file: Optional[str] = None
+    antex1: str = Field(default="")
+    antex2: str = Field(default="")
+    geoid: str = Field(default="")
+    dcb: str = Field(default="")
+    eop: str = Field(default="")
+    blq: str = Field(default="")
+    ionosphere: str = Field(default="")
 
 
 class MiscConfig(BaseModel):

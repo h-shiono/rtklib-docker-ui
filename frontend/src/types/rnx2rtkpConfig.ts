@@ -201,10 +201,13 @@ export interface BasePositionConfig {
 }
 
 export interface FilesConfig {
-  antexFile?: string;
-  geoidFile?: string;
-  dcbFile?: string;
-  eopFile?: string;
+  antex1: string;
+  antex2: string;
+  geoid: string;
+  dcb: string;
+  eop: string;
+  blq: string;
+  ionosphere: string;
 }
 
 export interface MiscConfig {
@@ -385,7 +388,15 @@ export const DEFAULT_BASE_POSITION: BasePositionConfig = {
   useRinexHeader: true,
 };
 
-export const DEFAULT_FILES: FilesConfig = {};
+export const DEFAULT_FILES: FilesConfig = {
+  antex1: '',
+  antex2: '',
+  geoid: '',
+  dcb: '',
+  eop: '',
+  blq: '',
+  ionosphere: '',
+};
 
 export const DEFAULT_MISC: MiscConfig = {
   timeSystem: 'gpst',

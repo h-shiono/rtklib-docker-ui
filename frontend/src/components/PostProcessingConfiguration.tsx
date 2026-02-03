@@ -16,6 +16,7 @@ import {
   TextInput,
   Checkbox,
   Button,
+  ActionIcon,
 } from '@mantine/core';
 import {
   IconAdjustments,
@@ -62,6 +63,13 @@ interface StationPositionInputProps {
   label: string;
   value: StationPosition;
   onChange: (value: StationPosition) => void;
+}
+
+interface FileInputRowProps {
+  label?: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
 }
 
 function StationPositionInput({ label, value, onChange }: StationPositionInputProps) {
@@ -203,11 +211,47 @@ function StationPositionInput({ label, value, onChange }: StationPositionInputPr
   );
 }
 
+function FileInputRow({ label, value, onChange, placeholder }: FileInputRowProps) {
+  return (
+    <div>
+      {label && (
+        <Text size="xs" style={{ fontSize: '10px', marginBottom: '4px' }}>
+          {label}
+        </Text>
+      )}
+      <Group gap="xs" wrap="nowrap">
+        <TextInput
+          size="xs"
+          value={value}
+          onChange={(e: any) => onChange(e.currentTarget.value)}
+          placeholder={placeholder || 'Path to file'}
+          styles={{
+            label: { fontSize: '10px' },
+            root: { flex: 1 }
+          }}
+          style={{ flex: 1 }}
+        />
+        <ActionIcon
+          variant="filled"
+          color="blue"
+          size="lg"
+          onClick={() => {
+            // TODO: Open file picker modal
+            console.log('File picker clicked');
+          }}
+        >
+          <IconFolderOpen size={16} />
+        </ActionIcon>
+      </Group>
+    </div>
+  );
+}
+
 export function PostProcessingConfiguration({
   onConfigChange,
 }: PostProcessingConfigurationProps) {
   const [config, setConfig] = useLocalStorage<Rnx2RtkpConfig>({
-    key: 'rtklib-web-ui-rnx2rtkp-config-v7', // v7: Positions tab added
+    key: 'rtklib-web-ui-rnx2rtkp-config-v8', // v8: Files tab implemented
     defaultValue: DEFAULT_RNX2RTKP_CONFIG,
   });
 
@@ -1668,16 +1712,95 @@ export function PostProcessingConfiguration({
             </Stack>
           </Tabs.Panel>
 
-          {/* Tab 5: Files */}
+          {/* Tab 6: Files */}
           <Tabs.Panel value="files" pt="xs">
             <Stack gap="xs">
-              <Text size="xs" c="dimmed">
-                Auxiliary files (optional)
-              </Text>
-              {/* Placeholder for future implementation */}
-              <Text size="xs" c="dimmed">
-                ANTEX, Geoid, DCB, EOP files will be added in future updates
-              </Text>
+              {/* Satellite/Receiver Antenna PCV File (ANTEX) */}
+              <div>
+                <Text size="xs" fw={500} mb="xs" style={{ fontSize: '10px' }}>
+                  Satellite/Receiver Antenna PCV File (ANTEX)
+                </Text>
+                <Stack gap="xs">
+                  <FileInputRow
+                    value={config.files.antex1}
+                    onChange={(val) =>
+                      handleConfigChange({
+                        ...config,
+                        files: { ...config.files, antex1: val },
+                      })
+                    }
+                  />
+                  <FileInputRow
+                    value={config.files.antex2}
+                    onChange={(val) =>
+                      handleConfigChange({
+                        ...config,
+                        files: { ...config.files, antex2: val },
+                      })
+                    }
+                  />
+                </Stack>
+              </div>
+
+              {/* Geoid Data File */}
+              <FileInputRow
+                label="Geoid Data File"
+                value={config.files.geoid}
+                onChange={(val) =>
+                  handleConfigChange({
+                    ...config,
+                    files: { ...config.files, geoid: val },
+                  })
+                }
+              />
+
+              {/* DCB Data File */}
+              <FileInputRow
+                label="DCB Data File"
+                value={config.files.dcb}
+                onChange={(val) =>
+                  handleConfigChange({
+                    ...config,
+                    files: { ...config.files, dcb: val },
+                  })
+                }
+              />
+
+              {/* EOP Data File */}
+              <FileInputRow
+                label="EOP Data File"
+                value={config.files.eop}
+                onChange={(val) =>
+                  handleConfigChange({
+                    ...config,
+                    files: { ...config.files, eop: val },
+                  })
+                }
+              />
+
+              {/* OTL BLQ File */}
+              <FileInputRow
+                label="OTL BLQ File"
+                value={config.files.blq}
+                onChange={(val) =>
+                  handleConfigChange({
+                    ...config,
+                    files: { ...config.files, blq: val },
+                  })
+                }
+              />
+
+              {/* Ionosphere Data File */}
+              <FileInputRow
+                label="Ionosphere Data File"
+                value={config.files.ionosphere}
+                onChange={(val) =>
+                  handleConfigChange({
+                    ...config,
+                    files: { ...config.files, ionosphere: val },
+                  })
+                }
+              />
             </Stack>
           </Tabs.Panel>
 
