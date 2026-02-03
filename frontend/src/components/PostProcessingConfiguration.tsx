@@ -366,12 +366,12 @@ export function PostProcessingConfiguration({
                           >
                             <Table.Thead>
                               <Table.Tr>
-                                <Table.Th style={{ fontSize: '9px', padding: '4px' }}>GNSS</Table.Th>
-                                <Table.Th style={{ fontSize: '9px', padding: '4px' }}>L1</Table.Th>
-                                <Table.Th style={{ fontSize: '9px', padding: '4px' }}>L2</Table.Th>
-                                <Table.Th style={{ fontSize: '9px', padding: '4px' }}>L3</Table.Th>
-                                <Table.Th style={{ fontSize: '9px', padding: '4px' }}>L4</Table.Th>
-                                <Table.Th style={{ fontSize: '9px', padding: '4px' }}>L5</Table.Th>
+                                <Table.Th style={{ fontSize: '9px', padding: '4px' }}></Table.Th>
+                                <Table.Th style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>L1</Table.Th>
+                                <Table.Th style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>2</Table.Th>
+                                <Table.Th style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>3</Table.Th>
+                                <Table.Th style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>4</Table.Th>
+                                <Table.Th style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>5</Table.Th>
                               </Table.Tr>
                             </Table.Thead>
                             <Table.Tbody>
@@ -447,10 +447,10 @@ export function PostProcessingConfiguration({
                       }
                       data={[
                         { value: 'l1', label: 'L1' },
-                        { value: 'l1+l2', label: 'L1+L2' },
-                        { value: 'l1+l2+l5', label: 'L1+L2+L5' },
-                        { value: 'l1+l2+l5+l6', label: 'L1+L2+L5+L6' },
-                        { value: 'l1+l2+l5+l6+l7', label: 'L1+L2+L5+L6+L7' },
+                        { value: 'l1+l2', label: 'L1+2' },
+                        { value: 'l1+l2+l5', label: 'L1+2+3' },
+                        { value: 'l1+l2+l5+l6', label: 'L1+2+3+4' },
+                        { value: 'l1+l2+l5+l6+l7', label: 'L1+2+3+4+5' },
                       ]}
                       disabled={isSingle}
                       styles={{ label: { fontSize: '10px' } }}
@@ -562,7 +562,7 @@ export function PostProcessingConfiguration({
 
                   <Select
                     size="xs"
-                    label="Satellite Ephemeris"
+                    label="Satellite Ephemeris/Clock"
                     value={config.setting1.ephemerisOption}
                     onChange={(value) =>
                       handleConfigChange({
@@ -799,7 +799,7 @@ export function PostProcessingConfiguration({
                       <Group gap="xs">
                         <Switch
                           size="xs"
-                          label="Satellite PCV"
+                          label="Sat PCV"
                           checked={config.setting1.satellitePcv}
                           onChange={(e: any) =>
                             handleConfigChange({
@@ -815,7 +815,7 @@ export function PostProcessingConfiguration({
                         />
                         <Switch
                           size="xs"
-                          label="Receiver PCV"
+                          label="Rec PCV"
                           checked={config.setting1.receiverPcv}
                           onChange={(e: any) =>
                             handleConfigChange({
@@ -831,7 +831,7 @@ export function PostProcessingConfiguration({
                         />
                         <Switch
                           size="xs"
-                          label="Phase Windup"
+                          label="PhWU"
                           checked={config.setting1.phaseWindup}
                           onChange={(e: any) =>
                             handleConfigChange({
@@ -847,7 +847,7 @@ export function PostProcessingConfiguration({
                         />
                         <Switch
                           size="xs"
-                          label="Reject Eclipse"
+                          label="Rej Ecl"
                           checked={config.setting1.rejectEclipse}
                           onChange={(e: any) =>
                             handleConfigChange({
