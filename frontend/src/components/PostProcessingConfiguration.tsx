@@ -17,6 +17,8 @@ import {
   Checkbox,
   Button,
   ActionIcon,
+  HoverCard,
+  Table,
 } from '@mantine/core';
 import {
   IconAdjustments,
@@ -26,6 +28,7 @@ import {
   IconDots,
   IconFolderOpen,
   IconMapPin,
+  IconInfoCircle,
 } from '@tabler/icons-react';
 import type {
   Rnx2RtkpConfig,
@@ -258,7 +261,7 @@ export function PostProcessingConfiguration({
   onConfigChange,
 }: PostProcessingConfigurationProps) {
   const [config, setConfig] = useLocalStorage<Rnx2RtkpConfig>({
-    key: 'rtklib-web-ui-rnx2rtkp-config-v9', // v9: Misc tab completed
+    key: 'rtklib-web-ui-rnx2rtkp-config-v10', // v10: Added DBCorr, refined dependencies
     defaultValue: DEFAULT_RNX2RTKP_CONFIG,
   });
 
@@ -267,6 +270,9 @@ export function PostProcessingConfiguration({
   // Conditional logic based on positioning mode
   const isSingle = config.setting1.positioningMode === 'single';
   const isPPP = ['ppp-kinematic', 'ppp-static'].includes(config.setting1.positioningMode);
+  const isReceiverDynamicsEnabled =
+    config.setting1.positioningMode === 'kinematic' ||
+    config.setting1.positioningMode === 'ppp-kinematic';
 
   const handleConfigChange = (newConfig: Rnx2RtkpConfig) => {
     setConfig(newConfig);
@@ -338,26 +344,118 @@ export function PostProcessingConfiguration({
                     styles={{ label: { fontSize: '10px' } }}
                   />
 
-                  <Select
-                    size="xs"
-                    label="Frequencies"
-                    value={config.setting1.frequency}
-                    onChange={(value) =>
-                      handleConfigChange({
-                        ...config,
-                        setting1: { ...config.setting1, frequency: value as Frequency },
-                      })
-                    }
-                    data={[
-                      { value: 'l1', label: 'L1' },
-                      { value: 'l1+l2', label: 'L1+L2' },
-                      { value: 'l1+l2+l5', label: 'L1+L2+L5' },
-                      { value: 'l1+l2+l5+l6', label: 'L1+L2+L5+L6' },
-                      { value: 'l1+l2+l5+l6+l7', label: 'L1+L2+L5+L6+L7' },
-                    ]}
-                    disabled={isSingle}
-                    styles={{ label: { fontSize: '10px' } }}
-                  />
+                  <div>
+                    <Group gap={4} mb={4}>
+                      <Text size="xs" style={{ fontSize: '10px' }}>
+                        Frequencies
+                      </Text>
+                      <HoverCard width={400} shadow="md" withinPortal>
+                        <HoverCard.Target>
+                          <ActionIcon variant="transparent" size="xs" color="gray">
+                            <IconInfoCircle size={12} />
+                          </ActionIcon>
+                        </HoverCard.Target>
+                        <HoverCard.Dropdown p="xs">
+                          <Text size="xs" fw={500} mb="xs" style={{ fontSize: '10px' }}>
+                            GNSS Frequency Mapping
+                          </Text>
+                          <Table
+                            withTableBorder
+                            withColumnBorders
+                            style={{ fontSize: '9px' }}
+                          >
+                            <Table.Thead>
+                              <Table.Tr>
+                                <Table.Th style={{ fontSize: '9px', padding: '4px' }}>GNSS</Table.Th>
+                                <Table.Th style={{ fontSize: '9px', padding: '4px' }}>L1</Table.Th>
+                                <Table.Th style={{ fontSize: '9px', padding: '4px' }}>L2</Table.Th>
+                                <Table.Th style={{ fontSize: '9px', padding: '4px' }}>L3</Table.Th>
+                                <Table.Th style={{ fontSize: '9px', padding: '4px' }}>L4</Table.Th>
+                                <Table.Th style={{ fontSize: '9px', padding: '4px' }}>L5</Table.Th>
+                              </Table.Tr>
+                            </Table.Thead>
+                            <Table.Tbody>
+                              <Table.Tr>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>GPS</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>L1</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>L2</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>L5</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>-</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>-</Table.Td>
+                              </Table.Tr>
+                              <Table.Tr>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>GLONASS</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>G1/a</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>G2/a</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>G3</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>-</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>-</Table.Td>
+                              </Table.Tr>
+                              <Table.Tr>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>Galileo</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>E1</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>E5b</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>E5a</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>E6</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>E5a+b</Table.Td>
+                              </Table.Tr>
+                              <Table.Tr>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>QZSS</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>L1</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>L2</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>L5</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>L6</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>-</Table.Td>
+                              </Table.Tr>
+                              <Table.Tr>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>BDS</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>B1I/C</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>B2I/b</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>B2a</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>B3</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>B2a+b</Table.Td>
+                              </Table.Tr>
+                              <Table.Tr>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>IRNSS</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>L5</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>S</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>-</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>-</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>-</Table.Td>
+                              </Table.Tr>
+                              <Table.Tr>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>SBAS</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>L1</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>L5</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>-</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>-</Table.Td>
+                                <Table.Td style={{ fontSize: '9px', padding: '4px' }}>-</Table.Td>
+                              </Table.Tr>
+                            </Table.Tbody>
+                          </Table>
+                        </HoverCard.Dropdown>
+                      </HoverCard>
+                    </Group>
+                    <Select
+                      size="xs"
+                      value={config.setting1.frequency}
+                      onChange={(value: any) =>
+                        handleConfigChange({
+                          ...config,
+                          setting1: { ...config.setting1, frequency: value as Frequency },
+                        })
+                      }
+                      data={[
+                        { value: 'l1', label: 'L1' },
+                        { value: 'l1+l2', label: 'L1+L2' },
+                        { value: 'l1+l2+l5', label: 'L1+L2+L5' },
+                        { value: 'l1+l2+l5+l6', label: 'L1+L2+L5+L6' },
+                        { value: 'l1+l2+l5+l6+l7', label: 'L1+L2+L5+L6+L7' },
+                      ]}
+                      disabled={isSingle}
+                      styles={{ label: { fontSize: '10px' } }}
+                    />
+                  </div>
 
                   <Select
                     size="xs"
@@ -690,7 +788,7 @@ export function PostProcessingConfiguration({
                             { value: 'off', label: 'OFF' },
                             { value: 'on', label: 'ON' },
                           ]}
-                          disabled={isSingle}
+                          disabled={!isReceiverDynamicsEnabled}
                           styles={{ label: { fontSize: '10px' } }}
                         />
                       </SimpleGrid>
@@ -776,6 +874,22 @@ export function PostProcessingConfiguration({
                               },
                             })
                           }
+                          styles={{ label: { fontSize: '10px' } }}
+                        />
+                        <Switch
+                          size="xs"
+                          label="DBCorr"
+                          checked={config.setting1.dbCorr}
+                          onChange={(e: any) =>
+                            handleConfigChange({
+                              ...config,
+                              setting1: {
+                                ...config.setting1,
+                                dbCorr: e.currentTarget.checked,
+                              },
+                            })
+                          }
+                          disabled={!isPPP}
                           styles={{ label: { fontSize: '10px' } }}
                         />
                       </Group>

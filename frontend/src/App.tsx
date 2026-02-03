@@ -149,6 +149,7 @@ function PostProcessingPanel() {
           phase_windup: config.setting1.phaseWindup,
           reject_eclipse: config.setting1.rejectEclipse,
           raim_fde: config.setting1.raimFde,
+          db_corr: config.setting1.dbCorr,
         },
         setting2: {
           gps_ar_mode: config.setting2.gpsArMode,

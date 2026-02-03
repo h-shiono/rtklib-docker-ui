@@ -92,6 +92,7 @@ export interface Setting1Config {
   phaseWindup: boolean;
   rejectEclipse: boolean;
   raimFde: boolean;
+  dbCorr: boolean;
 }
 
 export type GpsArMode = 'off' | 'continuous' | 'instantaneous' | 'fix-and-hold' | 'ppp-ar';
@@ -294,6 +295,7 @@ export const DEFAULT_SETTING1: Setting1Config = {
   phaseWindup: false,
   rejectEclipse: false,
   raimFde: false,
+  dbCorr: false,
 };
 
 export const DEFAULT_SETTING2: Setting2Config = {

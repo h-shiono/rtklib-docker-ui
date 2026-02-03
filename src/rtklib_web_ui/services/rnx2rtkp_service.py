@@ -70,6 +70,7 @@ class Setting1Config(BaseModel):
     phase_windup: bool = Field(default=False)
     reject_eclipse: bool = Field(default=False)
     raim_fde: bool = Field(default=False)
+    db_corr: bool = Field(default=False)
 
 
 class BaselineLengthConstraint(BaseModel):
