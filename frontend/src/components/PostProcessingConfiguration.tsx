@@ -63,6 +63,7 @@ interface StationPositionInputProps {
   label: string;
   value: StationPosition;
   onChange: (value: StationPosition) => void;
+  disabled?: boolean;
 }
 
 interface FileInputRowProps {
@@ -72,7 +73,7 @@ interface FileInputRowProps {
   placeholder?: string;
 }
 
-function StationPositionInput({ label, value, onChange }: StationPositionInputProps) {
+function StationPositionInput({ label, value, onChange, disabled = false }: StationPositionInputProps) {
   const isManualInput = value.mode === 'llh' || value.mode === 'xyz';
   const coordinateLabels = value.mode === 'xyz'
     ? ['X-ECEF (m)', 'Y-ECEF (m)', 'Z-ECEF (m)']
@@ -93,6 +94,7 @@ function StationPositionInput({ label, value, onChange }: StationPositionInputPr
             { value: 'rinex', label: 'RINEX Header Pos' },
             { value: 'average', label: 'Average of Single Pos' },
           ]}
+          disabled={disabled}
           styles={{ label: { fontSize: '10px' } }}
         />
 
@@ -104,7 +106,7 @@ function StationPositionInput({ label, value, onChange }: StationPositionInputPr
             onChange={(val: any) =>
               onChange({ ...value, values: [Number(val), value.values[1], value.values[2]] })
             }
-            disabled={!isManualInput}
+            disabled={disabled || !isManualInput}
             step={value.mode === 'xyz' ? 1 : 0.0001}
             decimalScale={value.mode === 'xyz' ? 3 : 6}
             hideControls
@@ -117,7 +119,7 @@ function StationPositionInput({ label, value, onChange }: StationPositionInputPr
             onChange={(val: any) =>
               onChange({ ...value, values: [value.values[0], Number(val), value.values[2]] })
             }
-            disabled={!isManualInput}
+            disabled={disabled || !isManualInput}
             step={value.mode === 'xyz' ? 1 : 0.0001}
             decimalScale={value.mode === 'xyz' ? 3 : 6}
             hideControls
@@ -130,7 +132,7 @@ function StationPositionInput({ label, value, onChange }: StationPositionInputPr
             onChange={(val: any) =>
               onChange({ ...value, values: [value.values[0], value.values[1], Number(val)] })
             }
-            disabled={!isManualInput}
+            disabled={disabled || !isManualInput}
             step={0.001}
             decimalScale={3}
             hideControls
@@ -143,6 +145,7 @@ function StationPositionInput({ label, value, onChange }: StationPositionInputPr
           label="Antenna Type"
           checked={value.antennaTypeEnabled}
           onChange={(e: any) => onChange({ ...value, antennaTypeEnabled: e.currentTarget.checked })}
+          disabled={disabled}
           styles={{ label: { fontSize: '10px' } }}
         />
 
@@ -152,6 +155,7 @@ function StationPositionInput({ label, value, onChange }: StationPositionInputPr
             placeholder="Antenna type identifier"
             value={value.antennaType}
             onChange={(e: any) => onChange({ ...value, antennaType: e.currentTarget.value })}
+            disabled={disabled}
             styles={{ label: { fontSize: '10px' } }}
           />
         )}
@@ -173,6 +177,7 @@ function StationPositionInput({ label, value, onChange }: StationPositionInputPr
             step={0.001}
             decimalScale={3}
             hideControls
+            disabled={disabled}
             styles={{ label: { fontSize: '10px' } }}
           />
           <NumberInput
@@ -188,6 +193,7 @@ function StationPositionInput({ label, value, onChange }: StationPositionInputPr
             step={0.001}
             decimalScale={3}
             hideControls
+            disabled={disabled}
             styles={{ label: { fontSize: '10px' } }}
           />
           <NumberInput
@@ -203,6 +209,7 @@ function StationPositionInput({ label, value, onChange }: StationPositionInputPr
             step={0.001}
             decimalScale={3}
             hideControls
+            disabled={disabled}
             styles={{ label: { fontSize: '10px' } }}
           />
         </SimpleGrid>
@@ -256,6 +263,10 @@ export function PostProcessingConfiguration({
   });
 
   const [snrMaskModalOpened, setSnrMaskModalOpened] = useState(false);
+
+  // Conditional logic based on positioning mode
+  const isSingle = config.setting1.positioningMode === 'single';
+  const isPPP = ['ppp-kinematic', 'ppp-static'].includes(config.setting1.positioningMode);
 
   const handleConfigChange = (newConfig: Rnx2RtkpConfig) => {
     setConfig(newConfig);
@@ -344,6 +355,7 @@ export function PostProcessingConfiguration({
                       { value: 'l1+l2+l5+l6', label: 'L1+L2+L5+L6' },
                       { value: 'l1+l2+l5+l6+l7', label: 'L1+L2+L5+L6+L7' },
                     ]}
+                    disabled={isSingle}
                     styles={{ label: { fontSize: '10px' } }}
                   />
 
@@ -362,6 +374,7 @@ export function PostProcessingConfiguration({
                       { value: 'backward', label: 'Backward' },
                       { value: 'combined', label: 'Combined' },
                     ]}
+                    disabled={isSingle}
                     styles={{ label: { fontSize: '10px' } }}
                   />
                 </SimpleGrid>
@@ -656,6 +669,7 @@ export function PostProcessingConfiguration({
                             { value: 'solid+otl', label: 'Solid+OTL' },
                             { value: 'solid+otl+pole', label: 'Solid+OTL+Pole' },
                           ]}
+                          disabled={isSingle}
                           styles={{ label: { fontSize: '10px' } }}
                         />
 
@@ -676,6 +690,7 @@ export function PostProcessingConfiguration({
                             { value: 'off', label: 'OFF' },
                             { value: 'on', label: 'ON' },
                           ]}
+                          disabled={isSingle}
                           styles={{ label: { fontSize: '10px' } }}
                         />
                       </SimpleGrid>
@@ -697,6 +712,7 @@ export function PostProcessingConfiguration({
                               },
                             })
                           }
+                          disabled={!isPPP}
                           styles={{ label: { fontSize: '10px' } }}
                         />
                         <Switch
@@ -712,6 +728,7 @@ export function PostProcessingConfiguration({
                               },
                             })
                           }
+                          disabled={!isPPP}
                           styles={{ label: { fontSize: '10px' } }}
                         />
                         <Switch
@@ -727,6 +744,7 @@ export function PostProcessingConfiguration({
                               },
                             })
                           }
+                          disabled={!isPPP}
                           styles={{ label: { fontSize: '10px' } }}
                         />
                         <Switch
@@ -742,6 +760,7 @@ export function PostProcessingConfiguration({
                               },
                             })
                           }
+                          disabled={!isPPP}
                           styles={{ label: { fontSize: '10px' } }}
                         />
                         <Switch
@@ -794,6 +813,7 @@ export function PostProcessingConfiguration({
                         { value: 'fix-and-hold', label: 'Fix and Hold' },
                         { value: 'ppp-ar', label: 'PPP-AR' },
                       ]}
+                      disabled={isSingle}
                       styles={{ label: { fontSize: '10px' } }}
                     />
 
@@ -812,6 +832,7 @@ export function PostProcessingConfiguration({
                         { value: 'on', label: 'ON' },
                         { value: 'autocal', label: 'Autocal' },
                       ]}
+                      disabled={isSingle}
                       styles={{ label: { fontSize: '10px' } }}
                     />
 
@@ -829,6 +850,7 @@ export function PostProcessingConfiguration({
                         { value: 'off', label: 'OFF' },
                         { value: 'on', label: 'ON' },
                       ]}
+                      disabled={isSingle}
                       styles={{ label: { fontSize: '10px' } }}
                     />
                   </SimpleGrid>
@@ -847,6 +869,7 @@ export function PostProcessingConfiguration({
                     max={10}
                     step={0.1}
                     decimalScale={1}
+                    disabled={isSingle}
                     styles={{ label: { fontSize: '10px' } }}
                   />
                 </Stack>
@@ -871,6 +894,7 @@ export function PostProcessingConfiguration({
                       step={0.0001}
                       decimalScale={4}
                       hideControls
+                      disabled={isSingle}
                       styles={{ label: { fontSize: '10px' } }}
                     />
                     <NumberInput
@@ -887,6 +911,7 @@ export function PostProcessingConfiguration({
                       step={0.01}
                       decimalScale={2}
                       hideControls
+                      disabled={isSingle}
                       styles={{ label: { fontSize: '10px' } }}
                     />
                   </SimpleGrid>
@@ -904,6 +929,7 @@ export function PostProcessingConfiguration({
                       }
                       min={0}
                       hideControls
+                      disabled={isSingle}
                       styles={{ label: { fontSize: '10px' } }}
                     />
                     <NumberInput
@@ -919,6 +945,7 @@ export function PostProcessingConfiguration({
                       min={0}
                       max={90}
                       hideControls
+                      disabled={isSingle}
                       styles={{ label: { fontSize: '10px' } }}
                     />
                   </SimpleGrid>
@@ -936,6 +963,7 @@ export function PostProcessingConfiguration({
                       }
                       min={0}
                       hideControls
+                      disabled={isSingle}
                       styles={{ label: { fontSize: '10px' } }}
                     />
                     <NumberInput
@@ -951,6 +979,7 @@ export function PostProcessingConfiguration({
                       min={0}
                       max={90}
                       hideControls
+                      disabled={isSingle}
                       styles={{ label: { fontSize: '10px' } }}
                     />
                   </SimpleGrid>
@@ -969,6 +998,7 @@ export function PostProcessingConfiguration({
                       min={0}
                       step={1}
                       hideControls
+                      disabled={isSingle}
                       styles={{ label: { fontSize: '10px' } }}
                     />
                     <NumberInput
@@ -985,6 +1015,7 @@ export function PostProcessingConfiguration({
                       step={0.001}
                       decimalScale={3}
                       hideControls
+                      disabled={isSingle}
                       styles={{ label: { fontSize: '10px' } }}
                     />
                   </SimpleGrid>
@@ -1003,6 +1034,7 @@ export function PostProcessingConfiguration({
                       min={0}
                       step={1}
                       hideControls
+                      disabled={isSingle}
                       styles={{ label: { fontSize: '10px' } }}
                     />
                     <Checkbox
@@ -1015,6 +1047,7 @@ export function PostProcessingConfiguration({
                           setting2: { ...config.setting2, syncSolution: e.currentTarget.checked },
                         })
                       }
+                      disabled={isSingle}
                       styles={{ label: { fontSize: '10px' }, root: { marginTop: '20px' } }}
                     />
                   </SimpleGrid>
@@ -1069,6 +1102,7 @@ export function PostProcessingConfiguration({
                     }
                     min={1}
                     max={10}
+                    disabled={isSingle}
                     styles={{ label: { fontSize: '10px' } }}
                   />
 
@@ -1088,6 +1122,7 @@ export function PostProcessingConfiguration({
                         },
                       })
                     }
+                    disabled={isSingle}
                     styles={{ label: { fontSize: '10px' } }}
                   />
 
@@ -1112,6 +1147,7 @@ export function PostProcessingConfiguration({
                         min={0}
                         step={0.001}
                         decimalScale={3}
+                        disabled={isSingle}
                         styles={{ label: { fontSize: '10px' } }}
                       />
                       <NumberInput
@@ -1133,6 +1169,7 @@ export function PostProcessingConfiguration({
                         min={0}
                         step={0.001}
                         decimalScale={3}
+                        disabled={isSingle}
                         styles={{ label: { fontSize: '10px' } }}
                       />
                     </SimpleGrid>
@@ -1352,6 +1389,7 @@ export function PostProcessingConfiguration({
                       { value: 'egm08', label: 'Earth Grav Model 2008' },
                       { value: 'gsi2000', label: 'GSI2000 (Japan)' },
                     ]}
+                    disabled={isSingle}
                     styles={{ label: { fontSize: '10px' } }}
                   />
                 </Stack>
@@ -1375,6 +1413,7 @@ export function PostProcessingConfiguration({
                       { value: 'single', label: 'Single' },
                       { value: 'fixed', label: 'Fixed' },
                     ]}
+                    disabled={isSingle}
                     styles={{ label: { fontSize: '10px' } }}
                   />
 
@@ -1683,6 +1722,7 @@ export function PostProcessingConfiguration({
                     positions: { ...config.positions, rover: newRover },
                   })
                 }
+                disabled={isSingle}
               />
 
               <StationPositionInput
@@ -1694,6 +1734,7 @@ export function PostProcessingConfiguration({
                     positions: { ...config.positions, base: newBase },
                   })
                 }
+                disabled={isSingle}
               />
 
               <TextInput
@@ -1707,6 +1748,7 @@ export function PostProcessingConfiguration({
                     positions: { ...config.positions, stationPositionFile: e.currentTarget.value },
                   })
                 }
+                disabled={isSingle}
                 styles={{ label: { fontSize: '10px' } }}
               />
             </Stack>
@@ -1849,6 +1891,7 @@ export function PostProcessingConfiguration({
                       { value: 'rtcm-dgps', label: 'RTCM DGPS' },
                       { value: 'rtcm-dgnss', label: 'RTCM DGNSS' },
                     ]}
+                    disabled={isSingle}
                     styles={{ label: { fontSize: '10px' } }}
                   />
 
