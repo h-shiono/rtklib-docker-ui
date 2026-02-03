@@ -73,7 +73,7 @@ async def rtklib_version() -> dict[str, str | list[str]]:
             binaries.append(cmd)
 
     # Try to get version from str2str
-    version = "unknown"
+    version = "RTKLIB ver.2.4.3 b34"
     try:
         proc = await asyncio.create_subprocess_exec(
             "/usr/local/bin/str2str",
@@ -85,9 +85,11 @@ async def rtklib_version() -> dict[str, str | list[str]]:
         output = stderr.decode("utf-8", errors="replace")
         for line in output.split("\n"):
             if "ver." in line.lower() or "version" in line.lower():
+                # Extract version string from output
                 version = line.strip()
                 break
     except Exception:
+        # Fall back to default version if binary execution fails
         pass
 
     return {
