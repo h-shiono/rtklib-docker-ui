@@ -251,7 +251,7 @@ export function PostProcessingConfiguration({
   onConfigChange,
 }: PostProcessingConfigurationProps) {
   const [config, setConfig] = useLocalStorage<Rnx2RtkpConfig>({
-    key: 'rtklib-web-ui-rnx2rtkp-config-v8', // v8: Files tab implemented
+    key: 'rtklib-web-ui-rnx2rtkp-config-v9', // v9: Misc tab completed
     defaultValue: DEFAULT_RNX2RTKP_CONFIG,
   });
 
@@ -1804,69 +1804,178 @@ export function PostProcessingConfiguration({
             </Stack>
           </Tabs.Panel>
 
-          {/* Tab 6: Misc */}
+          {/* Tab 7: Misc */}
           <Tabs.Panel value="misc" pt="xs">
             <Stack gap="xs">
-              <SimpleGrid cols={2} spacing="xs">
-                <Select
-                  size="xs"
-                  label="Time System"
-                  value={config.misc.timeSystem}
-                  onChange={(value) =>
-                    handleConfigChange({
-                      ...config,
-                      misc: {
-                        ...config.misc,
-                        timeSystem: value as 'gpst' | 'utc' | 'jst',
-                      },
-                    })
-                  }
-                  data={[
-                    { value: 'gpst', label: 'GPST' },
-                    { value: 'utc', label: 'UTC' },
-                    { value: 'jst', label: 'JST' },
-                  ]}
-                  styles={{ label: { fontSize: '10px' } }}
-                />
+              {/* Group A: Processing Options */}
+              <Fieldset legend="Processing Options" style={{ fontSize: '10px' }}>
+                <Stack gap="xs">
+                  <Select
+                    size="xs"
+                    label="Time Interpolation of Base Station Data"
+                    value={config.misc.timeInterpolation ? 'on' : 'off'}
+                    onChange={(value: any) =>
+                      handleConfigChange({
+                        ...config,
+                        misc: {
+                          ...config.misc,
+                          timeInterpolation: value === 'on',
+                        },
+                      })
+                    }
+                    data={[
+                      { value: 'off', label: 'OFF' },
+                      { value: 'on', label: 'ON' },
+                    ]}
+                    styles={{ label: { fontSize: '10px' } }}
+                  />
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <Text size="xs" style={{ fontSize: '10px' }}>
-                    Corrections
-                  </Text>
-                  <Group gap="xs">
-                    <Switch
-                      size="xs"
-                      label="Iono"
-                      checked={config.misc.ionosphereCorrection}
-                      onChange={(e) =>
-                        handleConfigChange({
-                          ...config,
-                          misc: {
-                            ...config.misc,
-                            ionosphereCorrection: e.currentTarget.checked,
-                          },
-                        })
-                      }
-                      styles={{ label: { fontSize: '10px' } }}
-                    />
-                    <Switch
-                      size="xs"
-                      label="Tropo"
-                      checked={config.misc.troposphereCorrection}
-                      onChange={(e) =>
-                        handleConfigChange({
-                          ...config,
-                          misc: {
-                            ...config.misc,
-                            troposphereCorrection: e.currentTarget.checked,
-                          },
-                        })
-                      }
-                      styles={{ label: { fontSize: '10px' } }}
-                    />
-                  </Group>
-                </div>
-              </SimpleGrid>
+                  <Select
+                    size="xs"
+                    label="DGPS/DGNSS Corrections"
+                    value={config.misc.dgpsCorrections}
+                    onChange={(value: any) =>
+                      handleConfigChange({
+                        ...config,
+                        misc: {
+                          ...config.misc,
+                          dgpsCorrections: value,
+                        },
+                      })
+                    }
+                    data={[
+                      { value: 'off', label: 'OFF' },
+                      { value: 'sbas', label: 'SBAS' },
+                      { value: 'rtcm-dgps', label: 'RTCM DGPS' },
+                      { value: 'rtcm-dgnss', label: 'RTCM DGNSS' },
+                    ]}
+                    styles={{ label: { fontSize: '10px' } }}
+                  />
+
+                  <NumberInput
+                    size="xs"
+                    label="SBAS Satellite Selection (0: All)"
+                    value={config.misc.sbasSatSelection}
+                    onChange={(value: any) =>
+                      handleConfigChange({
+                        ...config,
+                        misc: {
+                          ...config.misc,
+                          sbasSatSelection: Number(value),
+                        },
+                      })
+                    }
+                    min={0}
+                    max={255}
+                    step={1}
+                    hideControls
+                    styles={{ label: { fontSize: '10px' } }}
+                  />
+                </Stack>
+              </Fieldset>
+
+              {/* Group B: RINEX Reading Options */}
+              <Fieldset legend="RINEX Reading Options" style={{ fontSize: '10px' }}>
+                <Stack gap="xs">
+                  <TextInput
+                    size="xs"
+                    label="RINEX Opt (Rover)"
+                    placeholder="-E -GL ..."
+                    value={config.misc.rinexOptRover}
+                    onChange={(e: any) =>
+                      handleConfigChange({
+                        ...config,
+                        misc: {
+                          ...config.misc,
+                          rinexOptRover: e.currentTarget.value,
+                        },
+                      })
+                    }
+                    styles={{ label: { fontSize: '10px' } }}
+                  />
+
+                  <TextInput
+                    size="xs"
+                    label="RINEX Opt (Base)"
+                    placeholder="-E -GL ..."
+                    value={config.misc.rinexOptBase}
+                    onChange={(e: any) =>
+                      handleConfigChange({
+                        ...config,
+                        misc: {
+                          ...config.misc,
+                          rinexOptBase: e.currentTarget.value,
+                        },
+                      })
+                    }
+                    styles={{ label: { fontSize: '10px' } }}
+                  />
+                </Stack>
+              </Fieldset>
+
+              {/* Legacy fields kept for backward compatibility */}
+              <Fieldset legend="System Settings" style={{ fontSize: '10px' }}>
+                <SimpleGrid cols={2} spacing="xs">
+                  <Select
+                    size="xs"
+                    label="Time System"
+                    value={config.misc.timeSystem}
+                    onChange={(value: any) =>
+                      handleConfigChange({
+                        ...config,
+                        misc: {
+                          ...config.misc,
+                          timeSystem: value as 'gpst' | 'utc' | 'jst',
+                        },
+                      })
+                    }
+                    data={[
+                      { value: 'gpst', label: 'GPST' },
+                      { value: 'utc', label: 'UTC' },
+                      { value: 'jst', label: 'JST' },
+                    ]}
+                    styles={{ label: { fontSize: '10px' } }}
+                  />
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <Text size="xs" style={{ fontSize: '10px' }}>
+                      Corrections
+                    </Text>
+                    <Group gap="xs">
+                      <Switch
+                        size="xs"
+                        label="Iono"
+                        checked={config.misc.ionosphereCorrection}
+                        onChange={(e: any) =>
+                          handleConfigChange({
+                            ...config,
+                            misc: {
+                              ...config.misc,
+                              ionosphereCorrection: e.currentTarget.checked,
+                            },
+                          })
+                        }
+                        styles={{ label: { fontSize: '10px' } }}
+                      />
+                      <Switch
+                        size="xs"
+                        label="Tropo"
+                        checked={config.misc.troposphereCorrection}
+                        onChange={(e: any) =>
+                          handleConfigChange({
+                            ...config,
+                            misc: {
+                              ...config.misc,
+                              troposphereCorrection: e.currentTarget.checked,
+                            },
+                          })
+                        }
+                        styles={{ label: { fontSize: '10px' } }}
+                      />
+                    </Group>
+                  </div>
+                </SimpleGrid>
+              </Fieldset>
             </Stack>
           </Tabs.Panel>
         </Tabs>

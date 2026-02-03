@@ -199,6 +199,11 @@ class MiscConfig(BaseModel):
     time_system: str = Field(default="gpst")
     ionosphere_correction: bool = Field(default=True)
     troposphere_correction: bool = Field(default=True)
+    time_interpolation: bool = Field(default=False)
+    dgps_corrections: str = Field(default="off")
+    sbas_sat_selection: int = Field(default=0)
+    rinex_opt_rover: str = Field(default="")
+    rinex_opt_base: str = Field(default="")
 
 
 class Rnx2RtkpConfig(BaseModel):

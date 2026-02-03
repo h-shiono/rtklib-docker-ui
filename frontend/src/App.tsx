@@ -239,6 +239,11 @@ function PostProcessingPanel() {
           time_system: config.misc.timeSystem,
           ionosphere_correction: config.misc.ionosphereCorrection,
           troposphere_correction: config.misc.troposphereCorrection,
+          time_interpolation: config.misc.timeInterpolation,
+          dgps_corrections: config.misc.dgpsCorrections,
+          sbas_sat_selection: config.misc.sbasSatSelection,
+          rinex_opt_rover: config.misc.rinexOptRover,
+          rinex_opt_base: config.misc.rinexOptBase,
         },
       };
 

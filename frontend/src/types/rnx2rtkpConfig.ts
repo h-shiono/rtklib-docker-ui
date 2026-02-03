@@ -214,6 +214,11 @@ export interface MiscConfig {
   timeSystem: 'gpst' | 'utc' | 'jst';
   ionosphereCorrection: boolean;
   troposphereCorrection: boolean;
+  timeInterpolation: boolean;
+  dgpsCorrections: string;
+  sbasSatSelection: number;
+  rinexOptRover: string;
+  rinexOptBase: string;
 }
 
 export interface Rnx2RtkpConfig {
@@ -402,6 +407,11 @@ export const DEFAULT_MISC: MiscConfig = {
   timeSystem: 'gpst',
   ionosphereCorrection: true,
   troposphereCorrection: true,
+  timeInterpolation: false,
+  dgpsCorrections: 'off',
+  sbasSatSelection: 0,
+  rinexOptRover: '',
+  rinexOptBase: '',
 };
 
 export const DEFAULT_RNX2RTKP_CONFIG: Rnx2RtkpConfig = {
