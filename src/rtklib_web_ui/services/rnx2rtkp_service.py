@@ -105,6 +105,7 @@ class Setting2Config(BaseModel):
     reject_threshold_innovation: float = Field(default=30.0)
 
     # Section C: Advanced Filter
+    max_ar_iter: int = Field(default=1)
     num_filter_iterations: int = Field(default=1)
     baseline_length_constraint: BaselineLengthConstraint = Field(default_factory=BaselineLengthConstraint)
 

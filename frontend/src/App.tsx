@@ -168,6 +168,7 @@ function PostProcessingPanel() {
           sync_solution: config.setting2.syncSolution,
           reject_threshold_gdop: config.setting2.rejectThresholdGdop,
           reject_threshold_innovation: config.setting2.rejectThresholdInnovation,
+          max_ar_iter: config.setting2.maxArIter,
           num_filter_iterations: config.setting2.numFilterIterations,
           baseline_length_constraint: {
             enabled: config.setting2.baselineLengthConstraint.enabled,

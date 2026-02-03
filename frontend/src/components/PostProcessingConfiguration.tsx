@@ -269,7 +269,11 @@ export function PostProcessingConfiguration({
 
   // Conditional logic based on positioning mode
   const isSingle = config.setting1.positioningMode === 'single';
-  const isPPP = ['ppp-kinematic', 'ppp-static'].includes(config.setting1.positioningMode);
+  const isDGPS = config.setting1.positioningMode === 'dgps';
+  const isPPP = ['ppp-kinematic', 'ppp-static', 'ppp-fixed'].includes(config.setting1.positioningMode);
+  const isCarrierBased = !isSingle && !isDGPS;
+  const isGpsFixAndHold = config.setting2.gpsArMode === 'fix-and-hold';
+  const isPppAr = config.setting2.gpsArMode === 'ppp-ar';
   const isReceiverDynamicsEnabled =
     config.setting1.positioningMode === 'kinematic' ||
     config.setting1.positioningMode === 'ppp-kinematic';
@@ -926,7 +930,7 @@ export function PostProcessingConfiguration({
                         { value: 'fix-and-hold', label: 'Fix and Hold' },
                         { value: 'ppp-ar', label: 'PPP-AR' },
                       ]}
-                      disabled={isSingle}
+                      disabled={isSingle || isDGPS}
                       styles={{ label: { fontSize: '10px' } }}
                     />
 
@@ -945,7 +949,7 @@ export function PostProcessingConfiguration({
                         { value: 'on', label: 'ON' },
                         { value: 'autocal', label: 'Autocal' },
                       ]}
-                      disabled={isSingle}
+                      disabled={isSingle || isDGPS || !config.setting1.constellations.glonass}
                       styles={{ label: { fontSize: '10px' } }}
                     />
 
@@ -963,7 +967,7 @@ export function PostProcessingConfiguration({
                         { value: 'off', label: 'OFF' },
                         { value: 'on', label: 'ON' },
                       ]}
-                      disabled={isSingle}
+                      disabled={isSingle || isDGPS || !config.setting1.constellations.beidou}
                       styles={{ label: { fontSize: '10px' } }}
                     />
                   </SimpleGrid>
@@ -982,7 +986,7 @@ export function PostProcessingConfiguration({
                     max={10}
                     step={0.1}
                     decimalScale={1}
-                    disabled={isSingle}
+                    disabled={isSingle || isDGPS}
                     styles={{ label: { fontSize: '10px' } }}
                   />
                 </Stack>
@@ -1007,7 +1011,7 @@ export function PostProcessingConfiguration({
                       step={0.0001}
                       decimalScale={4}
                       hideControls
-                      disabled={isSingle}
+                      disabled={isSingle || isDGPS || isPppAr}
                       styles={{ label: { fontSize: '10px' } }}
                     />
                     <NumberInput
@@ -1024,7 +1028,7 @@ export function PostProcessingConfiguration({
                       step={0.01}
                       decimalScale={2}
                       hideControls
-                      disabled={isSingle}
+                      disabled={isSingle || isDGPS || !isPppAr}
                       styles={{ label: { fontSize: '10px' } }}
                     />
                   </SimpleGrid>
@@ -1042,7 +1046,7 @@ export function PostProcessingConfiguration({
                       }
                       min={0}
                       hideControls
-                      disabled={isSingle}
+                      disabled={isSingle || isDGPS}
                       styles={{ label: { fontSize: '10px' } }}
                     />
                     <NumberInput
@@ -1058,7 +1062,7 @@ export function PostProcessingConfiguration({
                       min={0}
                       max={90}
                       hideControls
-                      disabled={isSingle}
+                      disabled={isSingle || isDGPS}
                       styles={{ label: { fontSize: '10px' } }}
                     />
                   </SimpleGrid>
@@ -1076,7 +1080,7 @@ export function PostProcessingConfiguration({
                       }
                       min={0}
                       hideControls
-                      disabled={isSingle}
+                      disabled={isSingle || isDGPS || !isGpsFixAndHold}
                       styles={{ label: { fontSize: '10px' } }}
                     />
                     <NumberInput
@@ -1092,7 +1096,7 @@ export function PostProcessingConfiguration({
                       min={0}
                       max={90}
                       hideControls
-                      disabled={isSingle}
+                      disabled={isSingle || isDGPS || !isGpsFixAndHold}
                       styles={{ label: { fontSize: '10px' } }}
                     />
                   </SimpleGrid>
@@ -1111,7 +1115,7 @@ export function PostProcessingConfiguration({
                       min={0}
                       step={1}
                       hideControls
-                      disabled={isSingle}
+                      disabled={isSingle || isDGPS}
                       styles={{ label: { fontSize: '10px' } }}
                     />
                     <NumberInput
@@ -1128,7 +1132,7 @@ export function PostProcessingConfiguration({
                       step={0.001}
                       decimalScale={3}
                       hideControls
-                      disabled={isSingle}
+                      disabled={isSingle || isDGPS}
                       styles={{ label: { fontSize: '10px' } }}
                     />
                   </SimpleGrid>
@@ -1147,7 +1151,7 @@ export function PostProcessingConfiguration({
                       min={0}
                       step={1}
                       hideControls
-                      disabled={isSingle}
+                      disabled={isSingle || isDGPS}
                       styles={{ label: { fontSize: '10px' } }}
                     />
                     <Checkbox
@@ -1160,7 +1164,7 @@ export function PostProcessingConfiguration({
                           setting2: { ...config.setting2, syncSolution: e.currentTarget.checked },
                         })
                       }
-                      disabled={isSingle}
+                      disabled={isSingle || isDGPS}
                       styles={{ label: { fontSize: '10px' }, root: { marginTop: '20px' } }}
                     />
                   </SimpleGrid>
@@ -1194,6 +1198,42 @@ export function PostProcessingConfiguration({
                       min={0}
                       step={1}
                       hideControls
+                      disabled={isSingle}
+                      styles={{ label: { fontSize: '10px' } }}
+                    />
+                  </SimpleGrid>
+
+                  <SimpleGrid cols={2} spacing="xs">
+                    <NumberInput
+                      size="xs"
+                      label="Max # AR Iter"
+                      value={config.setting2.maxArIter}
+                      onChange={(value: any) =>
+                        handleConfigChange({
+                          ...config,
+                          setting2: { ...config.setting2, maxArIter: Number(value) },
+                        })
+                      }
+                      min={1}
+                      max={10}
+                      hideControls
+                      disabled={isSingle || isDGPS}
+                      styles={{ label: { fontSize: '10px' } }}
+                    />
+                    <NumberInput
+                      size="xs"
+                      label="Filter Iter"
+                      value={config.setting2.numFilterIterations}
+                      onChange={(value: any) =>
+                        handleConfigChange({
+                          ...config,
+                          setting2: { ...config.setting2, numFilterIterations: Number(value) },
+                        })
+                      }
+                      min={1}
+                      max={10}
+                      hideControls
+                      disabled={isSingle}
                       styles={{ label: { fontSize: '10px' } }}
                     />
                   </SimpleGrid>
@@ -1203,22 +1243,6 @@ export function PostProcessingConfiguration({
               {/* Section C: Advanced Filter */}
               <Fieldset legend="Advanced Filter" style={{ fontSize: '10px' }}>
                 <Stack gap="xs">
-                  <NumberInput
-                    size="xs"
-                    label="Number of Filter Iteration"
-                    value={config.setting2.numFilterIterations}
-                    onChange={(value: any) =>
-                      handleConfigChange({
-                        ...config,
-                        setting2: { ...config.setting2, numFilterIterations: Number(value) },
-                      })
-                    }
-                    min={1}
-                    max={10}
-                    disabled={isSingle}
-                    styles={{ label: { fontSize: '10px' } }}
-                  />
-
                   <Checkbox
                     size="xs"
                     label="Baseline Length Constraint"
@@ -1235,7 +1259,7 @@ export function PostProcessingConfiguration({
                         },
                       })
                     }
-                    disabled={isSingle}
+                    disabled={isSingle || isDGPS}
                     styles={{ label: { fontSize: '10px' } }}
                   />
 
@@ -1260,7 +1284,7 @@ export function PostProcessingConfiguration({
                         min={0}
                         step={0.001}
                         decimalScale={3}
-                        disabled={isSingle}
+                        disabled={isSingle || isDGPS}
                         styles={{ label: { fontSize: '10px' } }}
                       />
                       <NumberInput
@@ -1282,7 +1306,7 @@ export function PostProcessingConfiguration({
                         min={0}
                         step={0.001}
                         decimalScale={3}
-                        disabled={isSingle}
+                        disabled={isSingle || isDGPS}
                         styles={{ label: { fontSize: '10px' } }}
                       />
                     </SimpleGrid>

@@ -127,6 +127,7 @@ export interface Setting2Config {
   rejectThresholdInnovation: number; // meters
 
   // Section C: Advanced Filter
+  maxArIter: number;
   numFilterIterations: number;
   baselineLengthConstraint: BaselineLengthConstraint;
 }
@@ -320,6 +321,7 @@ export const DEFAULT_SETTING2: Setting2Config = {
   rejectThresholdInnovation: 30.0,
 
   // Section C: Advanced Filter
+  maxArIter: 1,
   numFilterIterations: 1,
   baselineLengthConstraint: {
     enabled: false,
