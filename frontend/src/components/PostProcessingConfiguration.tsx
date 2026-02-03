@@ -333,13 +333,14 @@ export function PostProcessingConfiguration({
                     }
                     data={[
                       { value: 'single', label: 'Single' },
-                      { value: 'dgps', label: 'DGPS' },
+                      { value: 'dgps', label: 'DGPS/DGNSS' },
                       { value: 'kinematic', label: 'Kinematic' },
                       { value: 'static', label: 'Static' },
                       { value: 'moving-base', label: 'Moving-Base' },
                       { value: 'fixed', label: 'Fixed' },
                       { value: 'ppp-kinematic', label: 'PPP-Kinematic' },
                       { value: 'ppp-static', label: 'PPP-Static' },
+                      { value: 'ppp-fixed', label: 'PPP-Fixed' },
                     ]}
                     styles={{ label: { fontSize: '10px' } }}
                   />
@@ -384,10 +385,10 @@ export function PostProcessingConfiguration({
                               <Table.Tr>
                                 <Table.Th style={{ fontSize: '9px', padding: '4px' }}></Table.Th>
                                 <Table.Th style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>L1</Table.Th>
-                                <Table.Th style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>2</Table.Th>
-                                <Table.Th style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>3</Table.Th>
-                                <Table.Th style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>4</Table.Th>
-                                <Table.Th style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>5</Table.Th>
+                                <Table.Th style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>L2</Table.Th>
+                                <Table.Th style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>L3</Table.Th>
+                                <Table.Th style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>L4</Table.Th>
+                                <Table.Th style={{ fontSize: '9px', padding: '4px', textAlign: 'center' }}>L5</Table.Th>
                               </Table.Tr>
                             </Table.Thead>
                             <Table.Tbody>
@@ -527,9 +528,10 @@ export function PostProcessingConfiguration({
                       { value: 'off', label: 'OFF' },
                       { value: 'broadcast', label: 'Broadcast' },
                       { value: 'sbas', label: 'SBAS' },
-                      { value: 'dual-freq', label: 'Dual-Frequency' },
+                      { value: 'dual-freq', label: 'Iono-Free LC' },
                       { value: 'est-stec', label: 'Estimate STEC' },
                       { value: 'ionex-tec', label: 'IONEX TEC' },
+                      { value: 'qzs-brdc', label: 'QZSS Broadcast' },
                     ]}
                     styles={{ label: { fontSize: '10px' } }}
                   />
