@@ -172,6 +172,27 @@ export interface StatsConfig {
   satelliteClockStability: number; // s/s
 }
 
+export type PositionType =
+  | 'llh'
+  | 'xyz'
+  | 'rtcm'
+  | 'rinex'
+  | 'average';
+
+export interface StationPosition {
+  mode: PositionType;
+  values: [number, number, number]; // [lat/x, lon/y, height/z]
+  antennaTypeEnabled: boolean;
+  antennaType: string;
+  antennaDelta: [number, number, number]; // [E, N, U] in meters
+}
+
+export interface PositionsConfig {
+  rover: StationPosition;
+  base: StationPosition;
+  stationPositionFile: string;
+}
+
 export interface BasePositionConfig {
   latitude: number;
   longitude: number;
@@ -197,6 +218,7 @@ export interface Rnx2RtkpConfig {
   setting2: Setting2Config;
   output: OutputConfig;
   stats: StatsConfig;
+  positions: PositionsConfig;
   basePosition: BasePositionConfig;
   files: FilesConfig;
   misc: MiscConfig;
@@ -338,6 +360,24 @@ export const DEFAULT_STATS: StatsConfig = {
   satelliteClockStability: 5e-12,
 };
 
+export const DEFAULT_POSITIONS: PositionsConfig = {
+  rover: {
+    mode: 'llh',
+    values: [0, 0, 0],
+    antennaTypeEnabled: false,
+    antennaType: '',
+    antennaDelta: [0, 0, 0],
+  },
+  base: {
+    mode: 'llh',
+    values: [0, 0, 0],
+    antennaTypeEnabled: false,
+    antennaType: '',
+    antennaDelta: [0, 0, 0],
+  },
+  stationPositionFile: '',
+};
+
 export const DEFAULT_BASE_POSITION: BasePositionConfig = {
   latitude: 0,
   longitude: 0,
@@ -358,6 +398,7 @@ export const DEFAULT_RNX2RTKP_CONFIG: Rnx2RtkpConfig = {
   setting2: DEFAULT_SETTING2,
   output: DEFAULT_OUTPUT,
   stats: DEFAULT_STATS,
+  positions: DEFAULT_POSITIONS,
   basePosition: DEFAULT_BASE_POSITION,
   files: DEFAULT_FILES,
   misc: DEFAULT_MISC,

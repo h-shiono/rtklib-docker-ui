@@ -48,6 +48,8 @@ import type {
   StaticSolutionMode,
   DebugTraceLevel,
   SnrMaskConfig,
+  PositionType,
+  StationPosition,
 } from '../types/rnx2rtkpConfig';
 import { DEFAULT_RNX2RTKP_CONFIG } from '../types/rnx2rtkpConfig';
 import { SnrMaskModal } from './SnrMaskModal';
@@ -56,11 +58,156 @@ interface PostProcessingConfigurationProps {
   onConfigChange: (config: Rnx2RtkpConfig) => void;
 }
 
+interface StationPositionInputProps {
+  label: string;
+  value: StationPosition;
+  onChange: (value: StationPosition) => void;
+}
+
+function StationPositionInput({ label, value, onChange }: StationPositionInputProps) {
+  const isManualInput = value.mode === 'llh' || value.mode === 'xyz';
+  const coordinateLabels = value.mode === 'xyz'
+    ? ['X-ECEF (m)', 'Y-ECEF (m)', 'Z-ECEF (m)']
+    : ['Latitude (deg)', 'Longitude (deg)', 'Height (m)'];
+
+  return (
+    <Fieldset legend={label} style={{ fontSize: '10px' }}>
+      <Stack gap="xs">
+        <Select
+          size="xs"
+          label="Position Type"
+          value={value.mode}
+          onChange={(val: any) => onChange({ ...value, mode: val as PositionType })}
+          data={[
+            { value: 'llh', label: 'Lat/Lon/Height' },
+            { value: 'xyz', label: 'XYZ-ECEF' },
+            { value: 'rtcm', label: 'RTCM Antenna Pos' },
+            { value: 'rinex', label: 'RINEX Header Pos' },
+            { value: 'average', label: 'Average of Single Pos' },
+          ]}
+          styles={{ label: { fontSize: '10px' } }}
+        />
+
+        <SimpleGrid cols={3} spacing="xs">
+          <NumberInput
+            size="xs"
+            label={coordinateLabels[0]}
+            value={value.values[0]}
+            onChange={(val: any) =>
+              onChange({ ...value, values: [Number(val), value.values[1], value.values[2]] })
+            }
+            disabled={!isManualInput}
+            step={value.mode === 'xyz' ? 1 : 0.0001}
+            decimalScale={value.mode === 'xyz' ? 3 : 6}
+            hideControls
+            styles={{ label: { fontSize: '10px' } }}
+          />
+          <NumberInput
+            size="xs"
+            label={coordinateLabels[1]}
+            value={value.values[1]}
+            onChange={(val: any) =>
+              onChange({ ...value, values: [value.values[0], Number(val), value.values[2]] })
+            }
+            disabled={!isManualInput}
+            step={value.mode === 'xyz' ? 1 : 0.0001}
+            decimalScale={value.mode === 'xyz' ? 3 : 6}
+            hideControls
+            styles={{ label: { fontSize: '10px' } }}
+          />
+          <NumberInput
+            size="xs"
+            label={coordinateLabels[2]}
+            value={value.values[2]}
+            onChange={(val: any) =>
+              onChange({ ...value, values: [value.values[0], value.values[1], Number(val)] })
+            }
+            disabled={!isManualInput}
+            step={0.001}
+            decimalScale={3}
+            hideControls
+            styles={{ label: { fontSize: '10px' } }}
+          />
+        </SimpleGrid>
+
+        <Checkbox
+          size="xs"
+          label="Antenna Type"
+          checked={value.antennaTypeEnabled}
+          onChange={(e: any) => onChange({ ...value, antennaTypeEnabled: e.currentTarget.checked })}
+          styles={{ label: { fontSize: '10px' } }}
+        />
+
+        {value.antennaTypeEnabled && (
+          <TextInput
+            size="xs"
+            placeholder="Antenna type identifier"
+            value={value.antennaType}
+            onChange={(e: any) => onChange({ ...value, antennaType: e.currentTarget.value })}
+            styles={{ label: { fontSize: '10px' } }}
+          />
+        )}
+
+        <Text size="xs" style={{ fontSize: '10px', marginTop: '4px' }}>
+          Antenna Delta (m)
+        </Text>
+        <SimpleGrid cols={3} spacing="xs">
+          <NumberInput
+            size="xs"
+            label="E"
+            value={value.antennaDelta[0]}
+            onChange={(val: any) =>
+              onChange({
+                ...value,
+                antennaDelta: [Number(val), value.antennaDelta[1], value.antennaDelta[2]],
+              })
+            }
+            step={0.001}
+            decimalScale={3}
+            hideControls
+            styles={{ label: { fontSize: '10px' } }}
+          />
+          <NumberInput
+            size="xs"
+            label="N"
+            value={value.antennaDelta[1]}
+            onChange={(val: any) =>
+              onChange({
+                ...value,
+                antennaDelta: [value.antennaDelta[0], Number(val), value.antennaDelta[2]],
+              })
+            }
+            step={0.001}
+            decimalScale={3}
+            hideControls
+            styles={{ label: { fontSize: '10px' } }}
+          />
+          <NumberInput
+            size="xs"
+            label="U"
+            value={value.antennaDelta[2]}
+            onChange={(val: any) =>
+              onChange({
+                ...value,
+                antennaDelta: [value.antennaDelta[0], value.antennaDelta[1], Number(val)],
+              })
+            }
+            step={0.001}
+            decimalScale={3}
+            hideControls
+            styles={{ label: { fontSize: '10px' } }}
+          />
+        </SimpleGrid>
+      </Stack>
+    </Fieldset>
+  );
+}
+
 export function PostProcessingConfiguration({
   onConfigChange,
 }: PostProcessingConfigurationProps) {
   const [config, setConfig] = useLocalStorage<Rnx2RtkpConfig>({
-    key: 'rtklib-web-ui-rnx2rtkp-config-v6', // v6: Stats tab added
+    key: 'rtklib-web-ui-rnx2rtkp-config-v7', // v7: Positions tab added
     defaultValue: DEFAULT_RNX2RTKP_CONFIG,
   });
 
@@ -1483,83 +1630,41 @@ export function PostProcessingConfiguration({
           {/* Tab 5: Positions */}
           <Tabs.Panel value="positions" pt="xs">
             <Stack gap="xs">
-              <Switch
-                size="xs"
-                label="Use RINEX Header for Base Position"
-                checked={config.basePosition.useRinexHeader}
-                onChange={(e) =>
+              <StationPositionInput
+                label="Rover Station"
+                value={config.positions.rover}
+                onChange={(newRover) =>
                   handleConfigChange({
                     ...config,
-                    basePosition: {
-                      ...config.basePosition,
-                      useRinexHeader: e.currentTarget.checked,
-                    },
+                    positions: { ...config.positions, rover: newRover },
+                  })
+                }
+              />
+
+              <StationPositionInput
+                label="Base Station"
+                value={config.positions.base}
+                onChange={(newBase) =>
+                  handleConfigChange({
+                    ...config,
+                    positions: { ...config.positions, base: newBase },
+                  })
+                }
+              />
+
+              <TextInput
+                size="xs"
+                label="Station Position File"
+                placeholder="Path to station position file"
+                value={config.positions.stationPositionFile}
+                onChange={(e: any) =>
+                  handleConfigChange({
+                    ...config,
+                    positions: { ...config.positions, stationPositionFile: e.currentTarget.value },
                   })
                 }
                 styles={{ label: { fontSize: '10px' } }}
               />
-
-              {!config.basePosition.useRinexHeader && (
-                <SimpleGrid cols={3} spacing="xs">
-                  <NumberInput
-                    size="xs"
-                    label="Latitude (deg)"
-                    value={config.basePosition.latitude}
-                    onChange={(value) =>
-                      handleConfigChange({
-                        ...config,
-                        basePosition: {
-                          ...config.basePosition,
-                          latitude: Number(value),
-                        },
-                      })
-                    }
-                    min={-90}
-                    max={90}
-                    step={0.0001}
-                    decimalScale={6}
-                    styles={{ label: { fontSize: '10px' } }}
-                  />
-
-                  <NumberInput
-                    size="xs"
-                    label="Longitude (deg)"
-                    value={config.basePosition.longitude}
-                    onChange={(value) =>
-                      handleConfigChange({
-                        ...config,
-                        basePosition: {
-                          ...config.basePosition,
-                          longitude: Number(value),
-                        },
-                      })
-                    }
-                    min={-180}
-                    max={180}
-                    step={0.0001}
-                    decimalScale={6}
-                    styles={{ label: { fontSize: '10px' } }}
-                  />
-
-                  <NumberInput
-                    size="xs"
-                    label="Height (m)"
-                    value={config.basePosition.height}
-                    onChange={(value) =>
-                      handleConfigChange({
-                        ...config,
-                        basePosition: {
-                          ...config.basePosition,
-                          height: Number(value),
-                        },
-                      })
-                    }
-                    step={0.001}
-                    decimalScale={3}
-                    styles={{ label: { fontSize: '10px' } }}
-                  />
-                </SimpleGrid>
-              )}
             </Stack>
           </Tabs.Panel>
 

@@ -154,6 +154,24 @@ class StatsConfig(BaseModel):
     satellite_clock_stability: float = Field(default=5e-12)
 
 
+class StationPosition(BaseModel):
+    """Station position configuration."""
+
+    mode: str = Field(default="llh")  # llh, xyz, rtcm, rinex, average
+    values: list[float] = Field(default=[0.0, 0.0, 0.0])
+    antenna_type_enabled: bool = Field(default=False)
+    antenna_type: str = Field(default="")
+    antenna_delta: list[float] = Field(default=[0.0, 0.0, 0.0])  # E, N, U in meters
+
+
+class PositionsConfig(BaseModel):
+    """Rover and base station positions configuration."""
+
+    rover: StationPosition = Field(default_factory=StationPosition)
+    base: StationPosition = Field(default_factory=StationPosition)
+    station_position_file: str = Field(default="")
+
+
 class BasePositionConfig(BaseModel):
     """Base station position configuration."""
 
@@ -187,6 +205,7 @@ class Rnx2RtkpConfig(BaseModel):
     setting2: Setting2Config = Field(default_factory=Setting2Config)
     output: OutputConfig = Field(default_factory=OutputConfig)
     stats: StatsConfig = Field(default_factory=StatsConfig)
+    positions: PositionsConfig = Field(default_factory=PositionsConfig)
     base_position: BasePositionConfig = Field(default_factory=BasePositionConfig)
     files: FilesConfig = Field(default_factory=FilesConfig)
     misc: MiscConfig = Field(default_factory=MiscConfig)

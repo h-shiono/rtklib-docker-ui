@@ -211,6 +211,23 @@ function PostProcessingPanel() {
           tropospheric_delay: config.stats.troposphericDelay,
           satellite_clock_stability: config.stats.satelliteClockStability,
         },
+        positions: {
+          rover: {
+            mode: config.positions.rover.mode,
+            values: config.positions.rover.values,
+            antenna_type_enabled: config.positions.rover.antennaTypeEnabled,
+            antenna_type: config.positions.rover.antennaType,
+            antenna_delta: config.positions.rover.antennaDelta,
+          },
+          base: {
+            mode: config.positions.base.mode,
+            values: config.positions.base.values,
+            antenna_type_enabled: config.positions.base.antennaTypeEnabled,
+            antenna_type: config.positions.base.antennaType,
+            antenna_delta: config.positions.base.antennaDelta,
+          },
+          station_position_file: config.positions.stationPositionFile,
+        },
         base_position: {
           latitude: config.basePosition.latitude,
           longitude: config.basePosition.longitude,
