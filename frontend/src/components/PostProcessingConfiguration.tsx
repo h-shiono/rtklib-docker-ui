@@ -67,6 +67,8 @@ interface StationPositionInputProps {
   value: StationPosition;
   onChange: (value: StationPosition) => void;
   disabled?: boolean;
+  disableCoordinates?: boolean;
+  disableAntenna?: boolean;
 }
 
 interface FileInputRowProps {
@@ -76,11 +78,22 @@ interface FileInputRowProps {
   placeholder?: string;
 }
 
-function StationPositionInput({ label, value, onChange, disabled = false }: StationPositionInputProps) {
+function StationPositionInput({
+  label,
+  value,
+  onChange,
+  disabled = false,
+  disableCoordinates = false,
+  disableAntenna = false,
+}: StationPositionInputProps) {
   const isManualInput = value.mode === 'llh' || value.mode === 'xyz';
   const coordinateLabels = value.mode === 'xyz'
     ? ['X-ECEF (m)', 'Y-ECEF (m)', 'Z-ECEF (m)']
     : ['Latitude (deg)', 'Longitude (deg)', 'Height (m)'];
+
+  // Determine effective disable states
+  const coordsDisabled = disabled || disableCoordinates;
+  const antennaDisabled = disabled || disableAntenna;
 
   return (
     <Fieldset legend={label} style={{ fontSize: '10px' }}>
@@ -97,7 +110,7 @@ function StationPositionInput({ label, value, onChange, disabled = false }: Stat
             { value: 'rinex', label: 'RINEX Header Pos' },
             { value: 'average', label: 'Average of Single Pos' },
           ]}
-          disabled={disabled}
+          disabled={coordsDisabled}
           styles={{ label: { fontSize: '10px' } }}
         />
 
@@ -109,7 +122,7 @@ function StationPositionInput({ label, value, onChange, disabled = false }: Stat
             onChange={(val: any) =>
               onChange({ ...value, values: [Number(val), value.values[1], value.values[2]] })
             }
-            disabled={disabled || !isManualInput}
+            disabled={coordsDisabled || !isManualInput}
             step={value.mode === 'xyz' ? 1 : 0.0001}
             decimalScale={value.mode === 'xyz' ? 3 : 6}
             hideControls
@@ -122,7 +135,7 @@ function StationPositionInput({ label, value, onChange, disabled = false }: Stat
             onChange={(val: any) =>
               onChange({ ...value, values: [value.values[0], Number(val), value.values[2]] })
             }
-            disabled={disabled || !isManualInput}
+            disabled={coordsDisabled || !isManualInput}
             step={value.mode === 'xyz' ? 1 : 0.0001}
             decimalScale={value.mode === 'xyz' ? 3 : 6}
             hideControls
@@ -135,7 +148,7 @@ function StationPositionInput({ label, value, onChange, disabled = false }: Stat
             onChange={(val: any) =>
               onChange({ ...value, values: [value.values[0], value.values[1], Number(val)] })
             }
-            disabled={disabled || !isManualInput}
+            disabled={coordsDisabled || !isManualInput}
             step={0.001}
             decimalScale={3}
             hideControls
@@ -148,7 +161,7 @@ function StationPositionInput({ label, value, onChange, disabled = false }: Stat
           label="Antenna Type"
           checked={value.antennaTypeEnabled}
           onChange={(e: any) => onChange({ ...value, antennaTypeEnabled: e.currentTarget.checked })}
-          disabled={disabled}
+          disabled={antennaDisabled}
           styles={{ label: { fontSize: '10px' } }}
         />
 
@@ -158,7 +171,7 @@ function StationPositionInput({ label, value, onChange, disabled = false }: Stat
             placeholder="Antenna type identifier"
             value={value.antennaType}
             onChange={(e: any) => onChange({ ...value, antennaType: e.currentTarget.value })}
-            disabled={disabled}
+            disabled={antennaDisabled}
             styles={{ label: { fontSize: '10px' } }}
           />
         )}
@@ -180,7 +193,7 @@ function StationPositionInput({ label, value, onChange, disabled = false }: Stat
             step={0.001}
             decimalScale={3}
             hideControls
-            disabled={disabled}
+            disabled={antennaDisabled}
             styles={{ label: { fontSize: '10px' } }}
           />
           <NumberInput
@@ -196,7 +209,7 @@ function StationPositionInput({ label, value, onChange, disabled = false }: Stat
             step={0.001}
             decimalScale={3}
             hideControls
-            disabled={disabled}
+            disabled={antennaDisabled}
             styles={{ label: { fontSize: '10px' } }}
           />
           <NumberInput
@@ -212,7 +225,7 @@ function StationPositionInput({ label, value, onChange, disabled = false }: Stat
             step={0.001}
             decimalScale={3}
             hideControls
-            disabled={disabled}
+            disabled={antennaDisabled}
             styles={{ label: { fontSize: '10px' } }}
           />
         </SimpleGrid>
@@ -281,6 +294,9 @@ export function PostProcessingConfiguration({
   const isStaticMode = ['static', 'ppp-static'].includes(config.setting1.positioningMode);
   const isSolLLH = config.output.solutionFormat === 'llh';
   const isSolNMEA = config.output.solutionFormat === 'nmea';
+
+  // Positions tab conditional logic
+  const isFixedMode = ['fixed', 'ppp-fixed'].includes(config.setting1.positioningMode);
 
   const handleConfigChange = (newConfig: Rnx2RtkpConfig) => {
     setConfig(newConfig);
@@ -1888,7 +1904,8 @@ export function PostProcessingConfiguration({
                     positions: { ...config.positions, rover: newRover },
                   })
                 }
-                disabled={isSingle}
+                disableCoordinates={!isFixedMode}
+                disableAntenna={isSingle}
               />
 
               <StationPositionInput
