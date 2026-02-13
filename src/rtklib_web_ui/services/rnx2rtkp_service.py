@@ -450,8 +450,16 @@ class Rnx2RtkpService:
 
         # Base position
         # postype: 0=llh, 1=xyz, 2=single, 3=posfile, 4=rinexhead, 5=rtcm
+        # Modes that don't use a base station: single, ppp-kinematic, ppp-static
+        no_base_modes = {"single", "ppp-kinematic", "ppp-static"}
         bp = config.base_position
-        if bp.use_rinex_header:
+        if s1.positioning_mode in no_base_modes:
+            # No base station needed — use safe default (llh with zeros)
+            lines.append("ant2-postype=0")
+            lines.append("ant2-pos1=0")
+            lines.append("ant2-pos2=0")
+            lines.append("ant2-pos3=0")
+        elif bp.use_rinex_header:
             lines.append("ant2-postype=4")  # RINEX header position
         else:
             base_postype_map = {"llh": "0", "xyz": "1", "single": "2", "posfile": "3", "rinex": "4", "rtcm": "5"}
