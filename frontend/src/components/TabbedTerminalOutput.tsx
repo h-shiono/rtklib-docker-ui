@@ -54,8 +54,8 @@ export function TabbedTerminalOutput({
 
   const traceFilePath = outputFilePath ? `${outputFilePath}.trace` : null;
 
-  // Content height = maxHeight minus header (~36px) minus tabs (~34px)
-  const contentHeight = maxHeight - 70;
+  // Content height = maxHeight minus header row (~36px)
+  const contentHeight = maxHeight - 36;
 
   return (
     <Box
@@ -65,90 +65,87 @@ export function TabbedTerminalOutput({
         overflow: 'hidden',
       }}
     >
-      {/* Terminal Header - macOS Title Bar */}
-      <Group
-        justify="space-between"
-        px="sm"
-        py="xs"
-        style={{
-          backgroundColor: 'var(--mantine-color-dark-7)',
-          borderBottom: '1px solid var(--mantine-color-dark-6)',
-        }}
-      >
-        <Group gap="xs">
-          <Box w={12} h={12} style={{ borderRadius: '50%', backgroundColor: '#ff5f57' }} />
-          <Box w={12} h={12} style={{ borderRadius: '50%', backgroundColor: '#febc2e' }} />
-          <Box w={12} h={12} style={{ borderRadius: '50%', backgroundColor: '#28c840' }} />
-        </Group>
-        <Group gap="xs">
-          {activeTab === 'console' ? (
-            <>
-              <ActionIcon
-                variant="subtle"
-                color="gray"
-                size="sm"
-                onClick={handleCopyLog}
-                title="Copy to clipboard"
-              >
-                <IconCopy size={14} />
-              </ActionIcon>
-              {onClearLog && (
-                <ActionIcon
-                  variant="subtle"
-                  color="gray"
-                  size="sm"
-                  onClick={onClearLog}
-                  title="Clear terminal"
-                >
-                  <IconTrash size={14} />
-                </ActionIcon>
-              )}
-            </>
-          ) : (
-            <ActionIcon
-              variant="subtle"
-              color="gray"
-              size="sm"
-              onClick={handleRefresh}
-              title="Refresh"
-            >
-              <IconRefresh size={14} />
-            </ActionIcon>
-          )}
-        </Group>
-      </Group>
-
-      {/* Tabs */}
       <Tabs
         value={activeTab}
         onChange={setActiveTab}
         keepMounted={false}
-        styles={{
-          list: {
+      >
+        {/* Single header row: tabs on left, action buttons on right */}
+        <Group
+          justify="space-between"
+          wrap="nowrap"
+          px="sm"
+          style={{
             backgroundColor: 'var(--mantine-color-dark-7)',
             borderBottom: '1px solid var(--mantine-color-dark-6)',
-          },
-          tab: {
-            fontSize: '11px',
-            padding: '4px 10px',
-            color: 'var(--mantine-color-gray-5)',
-            '&[dataActive]': {
-              color: 'var(--mantine-color-gray-1)',
-            },
-          },
-        }}
-      >
-        <Tabs.List px="sm">
-          <Tabs.Tab value="console" leftSection={<IconTerminal2 size={13} />}>
-            Console
-          </Tabs.Tab>
-          <Tabs.Tab value="result" leftSection={<IconFileText size={13} />}>
-            Result
-          </Tabs.Tab>
-          <Tabs.Tab value="trace" leftSection={<IconBug size={13} />}>
-            Trace
-          </Tabs.Tab>
-        </Tabs.List>
+          }}
+        >
+          <Tabs.List
+            style={{
+              borderBottom: 'none',
+              flexWrap: 'nowrap',
+            }}
+          >
+            <Tabs.Tab
+              value="console"
+              leftSection={<IconTerminal2 size={13} />}
+              style={{ fontSize: '11px', padding: '6px 10px' }}
+            >
+              Console
+            </Tabs.Tab>
+            <Tabs.Tab
+              value="result"
+              leftSection={<IconFileText size={13} />}
+              style={{ fontSize: '11px', padding: '6px 10px' }}
+            >
+              Result
+            </Tabs.Tab>
+            <Tabs.Tab
+              value="trace"
+              leftSection={<IconBug size={13} />}
+              style={{ fontSize: '11px', padding: '6px 10px' }}
+            >
+              Trace
+            </Tabs.Tab>
+          </Tabs.List>
+
+          <Group gap="xs" wrap="nowrap">
+            {activeTab === 'console' ? (
+              <>
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
+                  size="sm"
+                  onClick={handleCopyLog}
+                  title="Copy to clipboard"
+                >
+                  <IconCopy size={14} />
+                </ActionIcon>
+                {onClearLog && (
+                  <ActionIcon
+                    variant="subtle"
+                    color="gray"
+                    size="sm"
+                    onClick={onClearLog}
+                    title="Clear terminal"
+                  >
+                    <IconTrash size={14} />
+                  </ActionIcon>
+                )}
+              </>
+            ) : (
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                size="sm"
+                onClick={handleRefresh}
+                title="Refresh"
+              >
+                <IconRefresh size={14} />
+              </ActionIcon>
+            )}
+          </Group>
+        </Group>
 
         <Tabs.Panel value="console">
           <ScrollArea h={contentHeight} viewportRef={viewportRef} p="sm">
