@@ -35,7 +35,7 @@ import {
   IconInfoCircle,
   IconFolderOpen,
 } from '@tabler/icons-react';
-import { TerminalOutput, StatusIndicator, StreamConfiguration, PostProcessingConfiguration, FileBrowserModal } from './components';
+import { TerminalOutput, StatusIndicator, StreamConfiguration, PostProcessingConfiguration, FileBrowserModal, TabbedTerminalOutput } from './components';
 import type { ProcessStatus } from './components';
 import { useWebSocket } from './hooks';
 import type { LogMessage } from './hooks';
@@ -533,12 +533,15 @@ function PostProcessingPanel() {
             </Card>
           )}
 
-          {/* Terminal Output - Full Height */}
+          {/* Terminal Output - Tabbed (Console / Result / Trace) */}
           <Card withBorder p={0} style={{ flex: 1 }}>
-            <TerminalOutput
-              lines={logLines}
+            <TabbedTerminalOutput
+              logLines={logLines}
               maxHeight={600}
-              onClear={() => setLogLines([])}
+              onClearLog={() => setLogLines([])}
+              outputFilePath={outputFile}
+              traceEnabled={config.output.debugTrace !== 'off'}
+              processStatus={processStatus}
             />
           </Card>
 

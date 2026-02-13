@@ -102,3 +102,52 @@ async def download_file(path: str) -> FileResponse:
         filename=target_path.name,
         media_type="application/octet-stream",
     )
+
+
+class FileReadResponse(BaseModel):
+    """Response for reading file text contents."""
+
+    path: str
+    content: str
+    total_lines: int
+    returned_lines: int
+    truncated: bool
+    file_size: int
+
+
+@router.get("/read", response_model=FileReadResponse)
+async def read_file(path: str, max_lines: int = 5000) -> FileReadResponse:
+    """Read text contents of a file in the workspace.
+
+    Args:
+        path: File path relative to /workspace
+        max_lines: Maximum number of lines to return (default 5000)
+
+    Returns:
+        File contents as text with metadata
+    """
+    target_path = _resolve_workspace_path(path)
+
+    # Security check: ensure path is within workspace
+    if not str(target_path).startswith(str(WORKSPACE_ROOT)):
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    if not target_path.exists():
+        raise HTTPException(status_code=404, detail="File not found")
+
+    if not target_path.is_file():
+        raise HTTPException(status_code=400, detail="Path is not a file")
+
+    file_size = target_path.stat().st_size
+    lines = target_path.read_text(errors="replace").splitlines()
+    total_lines = len(lines)
+    selected = lines[:max_lines]
+
+    return FileReadResponse(
+        path=f"/{str(target_path.relative_to(WORKSPACE_ROOT))}",
+        content="\n".join(selected),
+        total_lines=total_lines,
+        returned_lines=len(selected),
+        truncated=max_lines < total_lines,
+        file_size=file_size,
+    )

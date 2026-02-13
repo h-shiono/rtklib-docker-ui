@@ -31,3 +31,27 @@ export async function browseDirectory(path: string = '/'): Promise<DirectoryList
   const response = await fetch(`${API_BASE}/browse?path=${encodeURIComponent(path)}`);
   return handleResponse<DirectoryListing>(response);
 }
+
+export interface FileReadResponse {
+  path: string;
+  content: string;
+  total_lines: number;
+  returned_lines: number;
+  truncated: boolean;
+  file_size: number;
+}
+
+/**
+ * Read text contents of a file in /workspace
+ */
+export async function readFile(
+  path: string,
+  maxLines: number = 5000,
+): Promise<FileReadResponse> {
+  const params = new URLSearchParams({
+    path,
+    max_lines: String(maxLines),
+  });
+  const response = await fetch(`${API_BASE}/read?${params}`);
+  return handleResponse<FileReadResponse>(response);
+}

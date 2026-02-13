@@ -7,3 +7,5 @@ export { FileNamingHelper } from './FileNamingHelper';
 export { PostProcessingConfiguration } from './PostProcessingConfiguration';
 export { SnrMaskModal } from './SnrMaskModal';
 export { FileBrowserModal } from './FileBrowserModal';
+export { FilePreview } from './FilePreview';
+export { TabbedTerminalOutput } from './TabbedTerminalOutput';
