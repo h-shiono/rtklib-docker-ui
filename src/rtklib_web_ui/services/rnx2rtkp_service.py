@@ -330,8 +330,8 @@ class Rnx2RtkpService:
         height_map = {"ellipsoidal": "0", "geodetic": "1"}
         geoid_map = {"internal": "0", "egm96": "1", "egm08_2.5": "2", "egm08_1": "3", "gsi2000": "4"}
         sol_static_map = {"all": "0", "single": "1"}
-        sol_status_map = {"off": "0", "state": "1", "residual": "2"}
-        trace_map = {"off": "0", "1": "1", "2": "2", "3": "3", "4": "4", "5": "5"}
+        sol_status_map = {"off": "0", "level1": "1", "level2": "2"}
+        trace_map = {"off": "0", "level1": "1", "level2": "2", "level3": "3", "level4": "4", "level5": "5"}
 
         def _bool(v: bool) -> str:
             return "1" if v else "0"

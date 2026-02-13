@@ -14,7 +14,6 @@ import {
   useMantineColorScheme,
   ActionIcon,
   Badge,
-  Checkbox,
   Code,
   Tooltip,
   Alert,
@@ -66,8 +65,13 @@ function PostProcessingPanel() {
   const [outputFile, setOutputFile] = useState('/workspace/output.pos');
   const [processStatus, setProcessStatus] = useState<ProcessStatus>('idle');
   const [logLines, setLogLines] = useState<string[]>([]);
-  const [useBase, setUseBase] = useState(false);
   const [config, setConfig] = useState<Rnx2RtkpConfig>(DEFAULT_RNX2RTKP_CONFIG);
+
+  // Modes that require a base station
+  const needsBase = ['dgps', 'kinematic', 'static', 'fixed', 'moving-base'].includes(
+    config.setting1.positioningMode,
+  );
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [jobId, setJobId] = useState<string | null>(null);
@@ -147,8 +151,8 @@ function PostProcessingPanel() {
       return;
     }
 
-    if (useBase && !baseFile) {
-      setError('Please provide base station file or uncheck "Use Base Station"');
+    if (needsBase && !baseFile) {
+      setError('Please provide base station observation file for the selected positioning mode');
       return;
     }
 
@@ -287,7 +291,7 @@ function PostProcessingPanel() {
       const response = await rnx2rtkpApi.executeRnx2Rtkp({
         input_files: {
           rover_obs_file: roverFile,
-          base_obs_file: useBase ? baseFile : undefined,
+          base_obs_file: needsBase ? baseFile : undefined,
           nav_file: navFile,
           output_file: outputFile,
         },
@@ -393,17 +397,8 @@ function PostProcessingPanel() {
                 </div>
               </SimpleGrid>
 
-              <Checkbox
-                size="xs"
-                label="Use Base Station"
-                checked={useBase}
-                onChange={(e) => setUseBase(e.currentTarget.checked)}
-                styles={{ label: { fontSize: '10px' } }}
-              />
-
-              {useBase && (
-                <div>
-                  <Text size="xs" style={{ fontSize: '10px', marginBottom: '4px' }}>Base OBS</Text>
+              <div>
+                  <Text size="xs" style={{ fontSize: '10px', marginBottom: '4px' }} c={!needsBase ? 'dimmed' : undefined}>Base OBS</Text>
                   <Group gap="xs" wrap="nowrap">
                     <TextInput
                       size="xs"
@@ -412,13 +407,13 @@ function PostProcessingPanel() {
                       onChange={(e) => setBaseFile(e.currentTarget.value)}
                       leftSection={<IconFile size={12} />}
                       style={{ flex: 1 }}
+                      disabled={!needsBase}
                     />
-                    <ActionIcon variant="filled" color="blue" size="lg" onClick={() => openFileBrowser(setBaseFile)}>
+                    <ActionIcon variant="filled" color="blue" size="lg" onClick={() => openFileBrowser(setBaseFile)} disabled={!needsBase}>
                       <IconFolderOpen size={16} />
                     </ActionIcon>
                   </Group>
                 </div>
-              )}
 
               <div>
                 <Text size="xs" style={{ fontSize: '10px', marginBottom: '4px' }}>Output *</Text>
