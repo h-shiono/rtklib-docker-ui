@@ -449,9 +449,10 @@ class Rnx2RtkpService:
         lines.append(f"ant1-antdelu={pos.rover.antenna_delta[2]}")
 
         # Base position
+        # postype: 0=llh, 1=xyz, 2=single, 3=posfile, 4=rinexhead, 5=rtcm
         bp = config.base_position
         if bp.use_rinex_header:
-            lines.append("ant2-postype=3")  # RINEX header position
+            lines.append("ant2-postype=4")  # RINEX header position
         else:
             base_postype_map = {"llh": "0", "xyz": "1", "single": "2", "posfile": "3", "rinex": "4", "rtcm": "5"}
             lines.append(f"ant2-postype={base_postype_map.get(pos.base.mode, '0')}")
@@ -464,24 +465,16 @@ class Rnx2RtkpService:
         lines.append(f"ant2-antdeln={pos.base.antenna_delta[1]}")
         lines.append(f"ant2-antdelu={pos.base.antenna_delta[2]}")
 
-        # --- file: Auxiliary files ---
+        # --- file: Auxiliary files (always output, empty string = not used) ---
         f = config.files
-        if f.antex1:
-            lines.append(f"file-satantfile={f.antex1}")
-        if f.antex2:
-            lines.append(f"file-rcvantfile={f.antex2}")
-        if f.geoid:
-            lines.append(f"file-geoidfile={f.geoid}")
-        if f.dcb:
-            lines.append(f"file-dcbfile={f.dcb}")
-        if f.eop:
-            lines.append(f"file-eopfile={f.eop}")
-        if f.blq:
-            lines.append(f"file-blqfile={f.blq}")
-        if f.ionosphere:
-            lines.append(f"file-ionofile={f.ionosphere}")
-        if pos.station_position_file:
-            lines.append(f"file-staposfile={pos.station_position_file}")
+        lines.append(f"file-satantfile={f.antex1}")
+        lines.append(f"file-rcvantfile={f.antex2}")
+        lines.append(f"file-geoidfile={f.geoid}")
+        lines.append(f"file-dcbfile={f.dcb}")
+        lines.append(f"file-eopfile={f.eop}")
+        lines.append(f"file-blqfile={f.blq}")
+        lines.append(f"file-ionofile={f.ionosphere}")
+        lines.append(f"file-staposfile={pos.station_position_file}")
 
         # --- misc ---
         m = config.misc
