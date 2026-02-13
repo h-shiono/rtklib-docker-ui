@@ -80,6 +80,12 @@ function PostProcessingPanel() {
     ratio: number | null;
   } | null>(null);
 
+  // Use ref for jobId to avoid WebSocket reconnection when jobId changes
+  const jobIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    jobIdRef.current = jobId;
+  }, [jobId]);
+
   const openFileBrowser = useCallback((onSelect: (path: string) => void) => {
     fileBrowserCallbackRef.current = onSelect;
     setFileBrowserOpened(true);
@@ -95,8 +101,8 @@ function PostProcessingPanel() {
   // WebSocket connection for real-time logs
   useWebSocket({
     onMessage: useCallback((message: LogMessage) => {
-      // Only process messages for our job
-      if (message.process_id === jobId) {
+      // Only process messages for our job (use ref to avoid reconnection)
+      if (message.process_id === jobIdRef.current) {
         if (message.type === 'log' && message.message) {
           setLogLines((prev) => [...prev.slice(-500), message.message!]);
         }
@@ -122,7 +128,7 @@ function PostProcessingPanel() {
           }
         }
       }
-    }, [jobId]),
+    }, []),
     onConnect: useCallback(() => {
       console.log('WebSocket connected (Post-Processing)');
     }, []),
