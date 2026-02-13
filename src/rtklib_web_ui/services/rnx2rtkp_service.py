@@ -536,6 +536,12 @@ class Rnx2RtkpService:
                 job.input_files.rover_obs_file,
             ]
 
+            # Add trace level via -x flag (conf file alone doesn't enable trace)
+            _trace_levels = {"level1": "1", "level2": "2", "level3": "3", "level4": "4", "level5": "5"}
+            trace_level = _trace_levels.get(job.config.output.debug_trace)
+            if trace_level:
+                cmd.extend(["-x", trace_level])
+
             # Add base observation file if provided
             if job.input_files.base_obs_file:
                 cmd.append(job.input_files.base_obs_file)
