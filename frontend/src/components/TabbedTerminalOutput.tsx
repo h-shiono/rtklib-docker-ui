@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Box, Code, ScrollArea, Group, ActionIcon, Text, Tabs } from '@mantine/core';
-import { IconTrash, IconCopy, IconRefresh, IconTerminal2, IconFileText, IconBug } from '@tabler/icons-react';
+import { IconTrash, IconCopy, IconRefresh, IconTerminal2, IconFileText, IconBug, IconChartDots } from '@tabler/icons-react';
 import { FilePreview } from './FilePreview';
+import { ResultViewer } from './viewer';
 import type { ProcessStatus } from './StatusIndicator';
 
 interface TabbedTerminalOutputProps {
@@ -107,6 +108,13 @@ export function TabbedTerminalOutput({
             >
               Trace
             </Tabs.Tab>
+            <Tabs.Tab
+              value="viewer"
+              leftSection={<IconChartDots size={13} />}
+              style={{ fontSize: '11px', padding: '6px 10px' }}
+            >
+              Map/Chart
+            </Tabs.Tab>
           </Tabs.List>
 
           <Group gap="xs" wrap="nowrap">
@@ -191,6 +199,14 @@ export function TabbedTerminalOutput({
                 ? 'Trace output is disabled. Set Debug Trace level > 0 in the Output tab.'
                 : undefined
             }
+          />
+        </Tabs.Panel>
+
+        <Tabs.Panel value="viewer">
+          <ResultViewer
+            filePath={outputFilePath}
+            maxHeight={contentHeight}
+            refreshKey={refreshKey}
           />
         </Tabs.Panel>
       </Tabs>
