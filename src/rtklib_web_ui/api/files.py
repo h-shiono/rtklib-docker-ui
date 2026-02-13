@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Literal
 
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 router = APIRouter()
@@ -59,4 +60,33 @@ async def browse_directory(path: str = "/") -> DirectoryListing:
     return DirectoryListing(
         path=f"/{str(target_path.relative_to(WORKSPACE_ROOT))}",
         items=items,
+    )
+
+
+@router.get("/download")
+async def download_file(path: str) -> FileResponse:
+    """Download a file from the workspace.
+
+    Args:
+        path: File path relative to /workspace (e.g., "/output.pos")
+
+    Returns:
+        File response for browser download
+    """
+    target_path = (WORKSPACE_ROOT / path.lstrip("/")).resolve()
+
+    # Security check: ensure path is within workspace
+    if not str(target_path).startswith(str(WORKSPACE_ROOT)):
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    if not target_path.exists():
+        raise HTTPException(status_code=404, detail="File not found")
+
+    if not target_path.is_file():
+        raise HTTPException(status_code=400, detail="Path is not a file")
+
+    return FileResponse(
+        path=target_path,
+        filename=target_path.name,
+        media_type="application/octet-stream",
     )

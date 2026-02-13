@@ -558,6 +558,9 @@ function PostProcessingPanel() {
                   variant="light"
                   leftSection={<IconDownload size={12} />}
                   size="xs"
+                  component="a"
+                  href={`/api/files/download?path=${encodeURIComponent(outputFile)}`}
+                  download
                 >
                   Download Result
                 </Button>

@@ -54,6 +54,11 @@ async def _run_rnx2rtkp_job(job_id: str, job: Rnx2RtkpJob) -> Rnx2RtkpJobRespons
     Returns:
         Job response with status and results
     """
+    # Brief delay to ensure HTTP response reaches the frontend
+    # before we start sending WebSocket messages (avoids race condition
+    # where WS messages arrive before the frontend knows the job ID)
+    await asyncio.sleep(0.2)
+
     service = Rnx2RtkpService()
 
     # Create log callback that broadcasts to WebSocket

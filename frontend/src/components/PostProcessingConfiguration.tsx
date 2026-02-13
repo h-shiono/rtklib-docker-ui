@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocalStorage } from '@mantine/hooks';
 import {
   Card,
@@ -311,9 +311,15 @@ export function PostProcessingConfiguration({
   // Positions tab conditional logic
   const isFixedMode = ['fixed', 'ppp-fixed'].includes(config.setting1.positioningMode);
 
+  // Sync config to parent whenever it changes, including initial localStorage load.
+  // Without this, the parent keeps the default config (kinematic) even if the user
+  // previously saved a different mode (e.g., single) in localStorage.
+  useEffect(() => {
+    onConfigChange(config);
+  }, [config, onConfigChange]);
+
   const handleConfigChange = (newConfig: Rnx2RtkpConfig) => {
     setConfig(newConfig);
-    onConfigChange(newConfig);
   };
 
   return (
