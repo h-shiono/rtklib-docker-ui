@@ -81,10 +81,8 @@ function PostProcessingPanel() {
   } | null>(null);
 
   // Use ref for jobId to avoid WebSocket reconnection when jobId changes
+  // Updated synchronously in handleStart (not via useEffect) to avoid timing gaps
   const jobIdRef = useRef<string | null>(null);
-  useEffect(() => {
-    jobIdRef.current = jobId;
-  }, [jobId]);
 
   const openFileBrowser = useCallback((onSelect: (path: string) => void) => {
     fileBrowserCallbackRef.current = onSelect;
@@ -296,6 +294,9 @@ function PostProcessingPanel() {
         config: backendConfig as any,
       });
 
+      // Set ref synchronously BEFORE state update so WebSocket handler can
+      // match messages immediately (useEffect would run after next render)
+      jobIdRef.current = response.job_id;
       setJobId(response.job_id);
       setLogLines((prev) => [...prev, `[INFO] Job started: ${response.job_id}`]);
     } catch (err) {
@@ -307,8 +308,40 @@ function PostProcessingPanel() {
     }
   };
 
+  // Polling fallback: check job status via REST API when running.
+  // This catches completion even if WebSocket messages are missed.
+  useEffect(() => {
+    if (processStatus !== 'running' || !jobId) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/rnx2rtkp/status/${jobId}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.status === 'completed' || data.status === 'failed') {
+          const statusMap: Record<string, ProcessStatus> = {
+            completed: 'success',
+            failed: 'error',
+          };
+          setProcessStatus(statusMap[data.status] || 'idle');
+          setIsLoading(false);
+          if (data.status === 'completed') {
+            setLogLines((prev) => [...prev, `[INFO] Processing completed (return code: ${data.return_code ?? 0})`]);
+          } else {
+            setLogLines((prev) => [...prev, `[ERROR] Processing failed: ${data.error_message || 'see logs'}`]);
+          }
+        }
+      } catch {
+        // Ignore polling errors
+      }
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [processStatus, jobId]);
+
   const handleStop = () => {
     setProcessStatus('idle');
+    jobIdRef.current = null;
     setLogLines((prev) => [...prev, '[INFO] Process stopped by user']);
     setIsLoading(false);
   };

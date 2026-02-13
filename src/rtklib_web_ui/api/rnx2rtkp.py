@@ -119,9 +119,9 @@ async def _run_rnx2rtkp_job(job_id: str, job: Rnx2RtkpJob) -> Rnx2RtkpJobRespons
         )
 
     finally:
-        # Clean up job from active jobs
-        if job_id in _active_jobs:
-            del _active_jobs[job_id]
+        # Keep job in _active_jobs so status endpoint can return final result.
+        # The task.done() check in get_job_status will return the result.
+        pass
 
 
 @router.post("/execute", response_model=Rnx2RtkpJobResponse)
