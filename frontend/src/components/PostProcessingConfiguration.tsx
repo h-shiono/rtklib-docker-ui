@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useLocalStorage } from '@mantine/hooks';
 import {
   Card,
@@ -57,6 +57,7 @@ import type {
 } from '../types/rnx2rtkpConfig';
 import { DEFAULT_RNX2RTKP_CONFIG } from '../types/rnx2rtkpConfig';
 import { SnrMaskModal } from './SnrMaskModal';
+import { FileBrowserModal } from './FileBrowserModal';
 
 interface PostProcessingConfigurationProps {
   onConfigChange: (config: Rnx2RtkpConfig) => void;
@@ -76,6 +77,7 @@ interface FileInputRowProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  onBrowse?: () => void;
 }
 
 function StationPositionInput({
@@ -234,7 +236,7 @@ function StationPositionInput({
   );
 }
 
-function FileInputRow({ label, value, onChange, placeholder }: FileInputRowProps) {
+function FileInputRow({ label, value, onChange, placeholder, onBrowse }: FileInputRowProps) {
   return (
     <div>
       {label && (
@@ -258,10 +260,7 @@ function FileInputRow({ label, value, onChange, placeholder }: FileInputRowProps
           variant="filled"
           color="blue"
           size="lg"
-          onClick={() => {
-            // TODO: Open file picker modal
-            console.log('File picker clicked');
-          }}
+          onClick={onBrowse}
         >
           <IconFolderOpen size={16} />
         </ActionIcon>
@@ -279,6 +278,20 @@ export function PostProcessingConfiguration({
   });
 
   const [snrMaskModalOpened, setSnrMaskModalOpened] = useState(false);
+  const [fileBrowserOpened, setFileBrowserOpened] = useState(false);
+  const fileBrowserCallbackRef = useRef<((path: string) => void) | null>(null);
+
+  const openFileBrowser = useCallback((onSelect: (path: string) => void) => {
+    fileBrowserCallbackRef.current = onSelect;
+    setFileBrowserOpened(true);
+  }, []);
+
+  const handleFileBrowserSelect = useCallback((path: string) => {
+    if (fileBrowserCallbackRef.current) {
+      fileBrowserCallbackRef.current(path);
+      fileBrowserCallbackRef.current = null;
+    }
+  }, []);
 
   // Conditional logic based on positioning mode
   const isSingle = config.setting1.positioningMode === 'single';
@@ -1920,19 +1933,22 @@ export function PostProcessingConfiguration({
                 disabled={isSingle}
               />
 
-              <TextInput
-                size="xs"
+              <FileInputRow
                 label="Station Position File"
                 placeholder="Path to station position file"
                 value={config.positions.stationPositionFile}
-                onChange={(e: any) =>
+                onChange={(val) =>
                   handleConfigChange({
                     ...config,
-                    positions: { ...config.positions, stationPositionFile: e.currentTarget.value },
+                    positions: { ...config.positions, stationPositionFile: val },
                   })
                 }
-                disabled={isSingle}
-                styles={{ label: { fontSize: '10px' } }}
+                onBrowse={() => openFileBrowser((path) =>
+                  handleConfigChange({
+                    ...config,
+                    positions: { ...config.positions, stationPositionFile: path },
+                  })
+                )}
               />
             </Stack>
           </Tabs.Panel>
@@ -1954,6 +1970,9 @@ export function PostProcessingConfiguration({
                         files: { ...config.files, antex1: val },
                       })
                     }
+                    onBrowse={() => openFileBrowser((path) =>
+                      handleConfigChange({ ...config, files: { ...config.files, antex1: path } })
+                    )}
                   />
                   <FileInputRow
                     value={config.files.antex2}
@@ -1963,6 +1982,9 @@ export function PostProcessingConfiguration({
                         files: { ...config.files, antex2: val },
                       })
                     }
+                    onBrowse={() => openFileBrowser((path) =>
+                      handleConfigChange({ ...config, files: { ...config.files, antex2: path } })
+                    )}
                   />
                 </Stack>
               </div>
@@ -1977,6 +1999,9 @@ export function PostProcessingConfiguration({
                     files: { ...config.files, geoid: val },
                   })
                 }
+                onBrowse={() => openFileBrowser((path) =>
+                  handleConfigChange({ ...config, files: { ...config.files, geoid: path } })
+                )}
               />
 
               {/* DCB Data File */}
@@ -1989,6 +2014,9 @@ export function PostProcessingConfiguration({
                     files: { ...config.files, dcb: val },
                   })
                 }
+                onBrowse={() => openFileBrowser((path) =>
+                  handleConfigChange({ ...config, files: { ...config.files, dcb: path } })
+                )}
               />
 
               {/* EOP Data File */}
@@ -2001,6 +2029,9 @@ export function PostProcessingConfiguration({
                     files: { ...config.files, eop: val },
                   })
                 }
+                onBrowse={() => openFileBrowser((path) =>
+                  handleConfigChange({ ...config, files: { ...config.files, eop: path } })
+                )}
               />
 
               {/* OTL BLQ File */}
@@ -2013,6 +2044,9 @@ export function PostProcessingConfiguration({
                     files: { ...config.files, blq: val },
                   })
                 }
+                onBrowse={() => openFileBrowser((path) =>
+                  handleConfigChange({ ...config, files: { ...config.files, blq: path } })
+                )}
               />
 
               {/* Ionosphere Data File */}
@@ -2025,6 +2059,9 @@ export function PostProcessingConfiguration({
                     files: { ...config.files, ionosphere: val },
                   })
                 }
+                onBrowse={() => openFileBrowser((path) =>
+                  handleConfigChange({ ...config, files: { ...config.files, ionosphere: path } })
+                )}
               />
             </Stack>
           </Tabs.Panel>
@@ -2154,6 +2191,13 @@ export function PostProcessingConfiguration({
             setting1: { ...config.setting1, snrMask: newSnrMask },
           })
         }
+      />
+
+      <FileBrowserModal
+        opened={fileBrowserOpened}
+        onClose={() => setFileBrowserOpened(false)}
+        onSelect={handleFileBrowserSelect}
+        title="Select File"
       />
     </>
   );

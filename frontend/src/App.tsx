@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   AppShell,
   Box,
@@ -33,8 +33,9 @@ import {
   IconPlugConnectedX,
   IconTestPipe,
   IconInfoCircle,
+  IconFolderOpen,
 } from '@tabler/icons-react';
-import { TerminalOutput, StatusIndicator, StreamConfiguration, PostProcessingConfiguration } from './components';
+import { TerminalOutput, StatusIndicator, StreamConfiguration, PostProcessingConfiguration, FileBrowserModal } from './components';
 import type { ProcessStatus } from './components';
 import { useWebSocket } from './hooks';
 import type { LogMessage } from './hooks';
@@ -70,6 +71,20 @@ function PostProcessingPanel() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [jobId, setJobId] = useState<string | null>(null);
+  const [fileBrowserOpened, setFileBrowserOpened] = useState(false);
+  const fileBrowserCallbackRef = useRef<((path: string) => void) | null>(null);
+
+  const openFileBrowser = useCallback((onSelect: (path: string) => void) => {
+    fileBrowserCallbackRef.current = onSelect;
+    setFileBrowserOpened(true);
+  }, []);
+
+  const handleFileBrowserSelect = useCallback((path: string) => {
+    if (fileBrowserCallbackRef.current) {
+      fileBrowserCallbackRef.current(path);
+      fileBrowserCallbackRef.current = null;
+    }
+  }, []);
 
   // WebSocket connection for real-time logs
   useWebSocket({
@@ -278,6 +293,7 @@ function PostProcessingPanel() {
   };
 
   return (
+    <>
     <Grid gutter="md">
       {/* Left Column: Configuration & Control */}
       <Grid.Col span={{ base: 12, md: 6 }}>
@@ -288,27 +304,39 @@ function PostProcessingPanel() {
               <Title order={6} size="xs">Input Files</Title>
 
               <SimpleGrid cols={2} spacing="xs">
-                <TextInput
-                  size="xs"
-                  label="Rover OBS"
-                  placeholder="/workspace/rover.obs"
-                  value={roverFile}
-                  onChange={(e) => setRoverFile(e.currentTarget.value)}
-                  leftSection={<IconFile size={12} />}
-                  styles={{ label: { fontSize: '10px' } }}
-                  required
-                />
+                <div>
+                  <Text size="xs" style={{ fontSize: '10px', marginBottom: '4px' }}>Rover OBS *</Text>
+                  <Group gap="xs" wrap="nowrap">
+                    <TextInput
+                      size="xs"
+                      placeholder="/workspace/rover.obs"
+                      value={roverFile}
+                      onChange={(e) => setRoverFile(e.currentTarget.value)}
+                      leftSection={<IconFile size={12} />}
+                      style={{ flex: 1 }}
+                    />
+                    <ActionIcon variant="filled" color="blue" size="lg" onClick={() => openFileBrowser(setRoverFile)}>
+                      <IconFolderOpen size={16} />
+                    </ActionIcon>
+                  </Group>
+                </div>
 
-                <TextInput
-                  size="xs"
-                  label="Navigation"
-                  placeholder="/workspace/nav.nav"
-                  value={navFile}
-                  onChange={(e) => setNavFile(e.currentTarget.value)}
-                  leftSection={<IconFile size={12} />}
-                  styles={{ label: { fontSize: '10px' } }}
-                  required
-                />
+                <div>
+                  <Text size="xs" style={{ fontSize: '10px', marginBottom: '4px' }}>Navigation *</Text>
+                  <Group gap="xs" wrap="nowrap">
+                    <TextInput
+                      size="xs"
+                      placeholder="/workspace/nav.nav"
+                      value={navFile}
+                      onChange={(e) => setNavFile(e.currentTarget.value)}
+                      leftSection={<IconFile size={12} />}
+                      style={{ flex: 1 }}
+                    />
+                    <ActionIcon variant="filled" color="blue" size="lg" onClick={() => openFileBrowser(setNavFile)}>
+                      <IconFolderOpen size={16} />
+                    </ActionIcon>
+                  </Group>
+                </div>
               </SimpleGrid>
 
               <Checkbox
@@ -320,27 +348,40 @@ function PostProcessingPanel() {
               />
 
               {useBase && (
-                <TextInput
-                  size="xs"
-                  label="Base OBS"
-                  placeholder="/workspace/base.obs"
-                  value={baseFile}
-                  onChange={(e) => setBaseFile(e.currentTarget.value)}
-                  leftSection={<IconFile size={12} />}
-                  styles={{ label: { fontSize: '10px' } }}
-                />
+                <div>
+                  <Text size="xs" style={{ fontSize: '10px', marginBottom: '4px' }}>Base OBS</Text>
+                  <Group gap="xs" wrap="nowrap">
+                    <TextInput
+                      size="xs"
+                      placeholder="/workspace/base.obs"
+                      value={baseFile}
+                      onChange={(e) => setBaseFile(e.currentTarget.value)}
+                      leftSection={<IconFile size={12} />}
+                      style={{ flex: 1 }}
+                    />
+                    <ActionIcon variant="filled" color="blue" size="lg" onClick={() => openFileBrowser(setBaseFile)}>
+                      <IconFolderOpen size={16} />
+                    </ActionIcon>
+                  </Group>
+                </div>
               )}
 
-              <TextInput
-                size="xs"
-                label="Output"
-                placeholder="/workspace/output.pos"
-                value={outputFile}
-                onChange={(e) => setOutputFile(e.currentTarget.value)}
-                leftSection={<IconFile size={12} />}
-                styles={{ label: { fontSize: '10px' } }}
-                required
-              />
+              <div>
+                <Text size="xs" style={{ fontSize: '10px', marginBottom: '4px' }}>Output *</Text>
+                <Group gap="xs" wrap="nowrap">
+                  <TextInput
+                    size="xs"
+                    placeholder="/workspace/output.pos"
+                    value={outputFile}
+                    onChange={(e) => setOutputFile(e.currentTarget.value)}
+                    leftSection={<IconFile size={12} />}
+                    style={{ flex: 1 }}
+                  />
+                  <ActionIcon variant="filled" color="blue" size="lg" onClick={() => openFileBrowser(setOutputFile)}>
+                    <IconFolderOpen size={16} />
+                  </ActionIcon>
+                </Group>
+              </div>
             </Stack>
           </Card>
 
@@ -429,7 +470,16 @@ function PostProcessingPanel() {
           )}
         </Stack>
       </Grid.Col>
+
     </Grid>
+
+    <FileBrowserModal
+      opened={fileBrowserOpened}
+      onClose={() => setFileBrowserOpened(false)}
+      onSelect={handleFileBrowserSelect}
+      title="Select File"
+    />
+    </>
   );
 }
 
