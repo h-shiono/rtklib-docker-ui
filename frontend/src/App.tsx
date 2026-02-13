@@ -267,10 +267,10 @@ function PostProcessingPanel() {
 
       const response = await rnx2rtkpApi.executeRnx2Rtkp({
         input_files: {
-          roverObsFile: roverFile,
-          baseObsFile: useBase ? baseFile : undefined,
-          navFile: navFile,
-          outputFile: outputFile,
+          rover_obs_file: roverFile,
+          base_obs_file: useBase ? baseFile : undefined,
+          nav_file: navFile,
+          output_file: outputFile,
         },
         config: backendConfig as any,
       });

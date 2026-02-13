@@ -236,10 +236,10 @@ export interface Rnx2RtkpConfig {
 }
 
 export interface Rnx2RtkpInputFiles {
-  roverObsFile: string;
-  baseObsFile?: string;
-  navFile: string;
-  outputFile: string;
+  rover_obs_file: string;
+  base_obs_file?: string;
+  nav_file: string;
+  output_file: string;
 }
 
 export interface Rnx2RtkpTimeRange {

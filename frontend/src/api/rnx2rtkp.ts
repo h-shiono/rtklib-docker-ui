@@ -24,7 +24,18 @@ export interface Rnx2RtkpExecuteRequest {
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: response.statusText }));
-    throw new Error(error.detail || 'API request failed');
+    // FastAPI validation errors return detail as an array of objects
+    let message = 'API request failed';
+    if (typeof error.detail === 'string') {
+      message = error.detail;
+    } else if (Array.isArray(error.detail)) {
+      message = error.detail
+        .map((e: { msg?: string; loc?: string[] }) =>
+          e.loc ? `${e.loc.join('.')}: ${e.msg}` : e.msg || String(e)
+        )
+        .join('; ');
+    }
+    throw new Error(message);
   }
   return response.json();
 }
