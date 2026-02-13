@@ -12,6 +12,19 @@ router = APIRouter()
 WORKSPACE_ROOT = Path("/workspace")
 
 
+def _resolve_workspace_path(path: str) -> Path:
+    """Resolve a path to an absolute path within /workspace.
+
+    Handles both "/workspace/foo/bar" and "foo/bar" style paths.
+    """
+    stripped = path
+    if stripped.startswith("/workspace/"):
+        stripped = stripped[len("/workspace/"):]
+    elif stripped.startswith("/workspace"):
+        stripped = stripped[len("/workspace"):]
+    return (WORKSPACE_ROOT / stripped.lstrip("/")).resolve()
+
+
 class FileInfo(BaseModel):
     """File or directory information."""
 
@@ -31,8 +44,7 @@ class DirectoryListing(BaseModel):
 @router.get("/browse", response_model=DirectoryListing)
 async def browse_directory(path: str = "/") -> DirectoryListing:
     """Browse files and directories in the workspace."""
-    # Resolve path relative to workspace root
-    target_path = (WORKSPACE_ROOT / path.lstrip("/")).resolve()
+    target_path = _resolve_workspace_path(path)
 
     # Security check: ensure path is within workspace
     if not str(target_path).startswith(str(WORKSPACE_ROOT)):
@@ -73,7 +85,7 @@ async def download_file(path: str) -> FileResponse:
     Returns:
         File response for browser download
     """
-    target_path = (WORKSPACE_ROOT / path.lstrip("/")).resolve()
+    target_path = _resolve_workspace_path(path)
 
     # Security check: ensure path is within workspace
     if not str(target_path).startswith(str(WORKSPACE_ROOT)):
