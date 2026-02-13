@@ -1,6 +1,7 @@
 """API endpoints for rnx2rtkp post-processing."""
 
 import asyncio
+import glob as glob_mod
 import uuid
 from pathlib import Path
 
@@ -161,30 +162,37 @@ async def execute_rnx2rtkp(request: Rnx2RtkpExecuteRequest) -> Rnx2RtkpJobRespon
             stripped = stripped[len("/workspace"):]
         return workspace / stripped.lstrip("/")
 
-    rover_path = resolve_workspace_path(request.input_files.rover_obs_file)
-    nav_path = resolve_workspace_path(request.input_files.nav_file)
+    def validate_input_path(file_path: str, label: str) -> str:
+        """Validate an input file path, supporting wildcards.
 
-    if not rover_path.exists():
-        raise HTTPException(
-            status_code=400,
-            detail=f"Rover observation file not found: {request.input_files.rover_obs_file}",
-        )
+        Returns the original path string (wildcards are passed through to rnx2rtkp).
+        """
+        resolved = resolve_workspace_path(file_path)
+        resolved_str = str(resolved)
+        # Check if path contains glob wildcards
+        if any(c in resolved_str for c in ("*", "?", "[")):
+            matches = glob_mod.glob(resolved_str)
+            if not matches:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"{label} not found (no files match pattern): {file_path}",
+                )
+            return resolved_str
+        else:
+            if not resolved.exists():
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"{label} not found: {file_path}",
+                )
+            return resolved_str
 
-    if not nav_path.exists():
-        raise HTTPException(
-            status_code=400,
-            detail=f"Navigation file not found: {request.input_files.nav_file}",
-        )
+    rover_resolved = validate_input_path(request.input_files.rover_obs_file, "Rover observation file")
+    nav_resolved = validate_input_path(request.input_files.nav_file, "Navigation file")
 
     # Validate base obs file if provided
-    base_path = None
+    base_resolved = None
     if request.input_files.base_obs_file:
-        base_path = resolve_workspace_path(request.input_files.base_obs_file)
-        if not base_path.exists():
-            raise HTTPException(
-                status_code=400,
-                detail=f"Base observation file not found: {request.input_files.base_obs_file}",
-            )
+        base_resolved = validate_input_path(request.input_files.base_obs_file, "Base observation file")
 
     # Ensure output file path is absolute and within workspace
     output_path = resolve_workspace_path(request.input_files.output_file)
@@ -192,9 +200,9 @@ async def execute_rnx2rtkp(request: Rnx2RtkpExecuteRequest) -> Rnx2RtkpJobRespon
     # Create job
     job = Rnx2RtkpJob(
         input_files=Rnx2RtkpInputFiles(
-            rover_obs_file=str(rover_path),
-            base_obs_file=str(base_path) if base_path else None,
-            nav_file=str(nav_path),
+            rover_obs_file=rover_resolved,
+            base_obs_file=base_resolved,
+            nav_file=nav_resolved,
             output_file=str(output_path),
         ),
         config=request.config,
