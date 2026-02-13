@@ -546,6 +546,9 @@ class Rnx2RtkpService:
             if log_callback:
                 await log_callback(f"[CMD] {' '.join(cmd)}")
                 await log_callback(f"[INFO] Configuration file: {conf_path}")
+                # Log generated conf content for debugging
+                for conf_line in conf_content.split("\n"):
+                    await log_callback(f"[CONF] {conf_line}")
 
             # Run rnx2rtkp
             process = await asyncio.create_subprocess_exec(
