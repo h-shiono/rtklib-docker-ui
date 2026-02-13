@@ -912,17 +912,21 @@ function App() {
           </Tabs.List>
         </Tabs>
 
-        {/* Tab Content */}
-        {activeTab === 'post-processing' && <PostProcessingPanel />}
-        {activeTab === 'stream-server' && (
+        {/* Tab Content - keep all panels mounted to preserve state */}
+        <div style={{ display: activeTab === 'post-processing' ? undefined : 'none' }}>
+          <PostProcessingPanel />
+        </div>
+        <div style={{ display: activeTab === 'stream-server' ? undefined : 'none' }}>
           <StreamServerPanel
             processId={streamProcessId}
             setProcessId={setStreamProcessId}
             processState={streamProcessState}
             setProcessState={setStreamProcessState}
           />
-        )}
-        {activeTab === 'conversion' && <ConversionPanel />}
+        </div>
+        <div style={{ display: activeTab === 'conversion' ? undefined : 'none' }}>
+          <ConversionPanel />
+        </div>
       </AppShell.Main>
     </AppShell>
   );
