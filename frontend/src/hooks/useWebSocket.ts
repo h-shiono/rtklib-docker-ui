@@ -1,11 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 export interface LogMessage {
-  type: 'log' | 'status' | 'connected' | 'ack';
+  type: 'log' | 'status' | 'connected' | 'ack' | 'progress';
   process_id?: string;
   message?: string;
   status?: string;
   timestamp: string;
+  // Progress fields (type === 'progress')
+  epoch?: string;
+  quality?: number;
+  ns?: number | null;
+  ratio?: number | null;
 }
 
 export interface UseWebSocketOptions {
@@ -74,8 +79,8 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
       try {
         const message = JSON.parse(event.data) as LogMessage;
 
-        // Only add log messages to the list
-        if (message.type === 'log' || message.type === 'status') {
+        // Only add log/status/progress messages to the list
+        if (message.type === 'log' || message.type === 'status' || message.type === 'progress') {
           setMessages((prev) => [...prev, message]);
         }
 

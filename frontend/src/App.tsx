@@ -73,6 +73,12 @@ function PostProcessingPanel() {
   const [jobId, setJobId] = useState<string | null>(null);
   const [fileBrowserOpened, setFileBrowserOpened] = useState(false);
   const fileBrowserCallbackRef = useRef<((path: string) => void) | null>(null);
+  const [progress, setProgress] = useState<{
+    epoch: string;
+    quality: number;
+    ns: number | null;
+    ratio: number | null;
+  } | null>(null);
 
   const openFileBrowser = useCallback((onSelect: (path: string) => void) => {
     fileBrowserCallbackRef.current = onSelect;
@@ -93,6 +99,14 @@ function PostProcessingPanel() {
       if (message.process_id === jobId) {
         if (message.type === 'log' && message.message) {
           setLogLines((prev) => [...prev.slice(-500), message.message!]);
+        }
+        if (message.type === 'progress') {
+          setProgress({
+            epoch: message.epoch || '',
+            quality: message.quality ?? 0,
+            ns: message.ns ?? null,
+            ratio: message.ratio ?? null,
+          });
         }
         if (message.type === 'status' && message.status) {
           // Map backend status to UI status
@@ -137,6 +151,7 @@ function PostProcessingPanel() {
     setIsLoading(true);
     setError(null);
     setLogLines([]);
+    setProgress(null);
     setProcessStatus('running');
 
     try {
@@ -436,6 +451,48 @@ function PostProcessingPanel() {
               </Badge>
             </Group>
           </Card>
+
+          {/* Processing Progress */}
+          {processStatus === 'running' && progress && (
+            <Card withBorder p="xs">
+              <Group justify="space-between" gap="xs">
+                <Group gap="xs">
+                  <Text size="xs" fw={500} style={{ fontFamily: 'var(--mantine-font-family-monospace)', fontSize: '11px' }}>
+                    {progress.epoch}
+                  </Text>
+                </Group>
+                <Group gap="xs">
+                  <Badge
+                    size="sm"
+                    color={
+                      progress.quality === 1 ? 'green' :
+                      progress.quality === 2 ? 'yellow' :
+                      progress.quality === 4 ? 'cyan' :
+                      progress.quality === 5 ? 'orange' :
+                      'gray'
+                    }
+                  >
+                    Q={progress.quality}
+                    {progress.quality === 1 ? ' Fix' :
+                     progress.quality === 2 ? ' Float' :
+                     progress.quality === 4 ? ' DGPS' :
+                     progress.quality === 5 ? ' Single' :
+                     progress.quality === 0 ? ' None' : ''}
+                  </Badge>
+                  {progress.ns !== null && (
+                    <Badge size="sm" variant="light" color="blue">
+                      ns={progress.ns}
+                    </Badge>
+                  )}
+                  {progress.ratio !== null && (
+                    <Badge size="sm" variant="light" color={progress.ratio >= 3 ? 'green' : 'gray'}>
+                      ratio={progress.ratio.toFixed(1)}
+                    </Badge>
+                  )}
+                </Group>
+              </Group>
+            </Card>
+          )}
 
           {/* Terminal Output - Full Height */}
           <Card withBorder p={0} style={{ flex: 1 }}>

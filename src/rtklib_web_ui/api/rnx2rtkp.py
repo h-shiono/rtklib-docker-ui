@@ -60,6 +60,10 @@ async def _run_rnx2rtkp_job(job_id: str, job: Rnx2RtkpJob) -> Rnx2RtkpJobRespons
     async def log_callback(message: str) -> None:
         await ws_manager.broadcast_log(job_id, message)
 
+    # Create progress callback that broadcasts structured progress
+    async def progress_callback(progress: dict) -> None:
+        await ws_manager.broadcast_progress(job_id, progress)
+
     try:
         # Broadcast job start status
         await ws_manager.broadcast_status(
@@ -72,7 +76,9 @@ async def _run_rnx2rtkp_job(job_id: str, job: Rnx2RtkpJob) -> Rnx2RtkpJobRespons
         )
 
         # Run rnx2rtkp
-        result = await service.run_rnx2rtkp(job, log_callback=log_callback)
+        result = await service.run_rnx2rtkp(
+            job, log_callback=log_callback, progress_callback=progress_callback
+        )
 
         # Broadcast completion status
         await ws_manager.broadcast_status(

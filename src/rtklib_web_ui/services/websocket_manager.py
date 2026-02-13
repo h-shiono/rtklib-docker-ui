@@ -118,6 +118,23 @@ class WebSocketManager:
 
         await self.broadcast(message)
 
+    async def broadcast_progress(
+        self, process_id: str, progress: dict[str, Any]
+    ) -> None:
+        """Broadcast processing progress update.
+
+        Args:
+            process_id: ID of the process
+            progress: Progress data (epoch, quality, ns, ratio)
+        """
+        await self.broadcast(
+            {
+                "type": "progress",
+                "process_id": process_id,
+                **progress,
+            }
+        )
+
     async def _send_to_client(
         self, websocket: WebSocket, message: dict[str, Any]
     ) -> None:

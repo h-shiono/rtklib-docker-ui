@@ -4,14 +4,41 @@ rnx2rtkp service for post-processing GNSS data.
 
 import asyncio
 import logging
+import re
 import subprocess
 import tempfile
+import time
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
+
+# Pattern to match rnx2rtkp progress output:
+# "processing : 2024/01/01 00:00:00.0 Q=1 ns=10 ratio=50.0"
+_PROGRESS_PATTERN = re.compile(
+    r"(\d{4}/\d{2}/\d{2}\s+\d{2}:\d{2}:\d{2}(?:\.\d+)?)"  # epoch time
+    r".*?Q=(\d+)"                                             # quality
+    r"(?:.*?ns=\s*(\d+))?"                                    # num satellites (optional)
+    r"(?:.*?ratio=\s*([\d.]+))?"                              # AR ratio (optional)
+)
+
+
+def parse_progress(line: str) -> dict[str, Any] | None:
+    """Parse rnx2rtkp progress output line.
+
+    Returns dict with epoch, quality, ns, ratio if matched, else None.
+    """
+    m = _PROGRESS_PATTERN.search(line)
+    if not m:
+        return None
+    return {
+        "epoch": m.group(1).strip(),
+        "quality": int(m.group(2)),
+        "ns": int(m.group(3)) if m.group(3) else None,
+        "ratio": float(m.group(4)) if m.group(4) else None,
+    }
 
 
 class ConstellationSelection(BaseModel):
@@ -343,12 +370,14 @@ class Rnx2RtkpService:
         self,
         job: Rnx2RtkpJob,
         log_callback: Optional[callable] = None,
+        progress_callback: Optional[callable] = None,
     ) -> subprocess.CompletedProcess:
         """Run rnx2rtkp with the given job configuration.
 
         Args:
             job: Job specification
             log_callback: Optional callback for log messages
+            progress_callback: Optional callback for progress updates (dict)
 
         Returns:
             CompletedProcess object
@@ -396,8 +425,8 @@ class Rnx2RtkpService:
                 stderr=asyncio.subprocess.PIPE,
             )
 
-            # Stream output
-            async def read_stream(stream, callback):
+            # Stream stdout (normal \n-delimited output)
+            async def read_stdout(stream, callback):
                 while True:
                     line = await stream.readline()
                     if not line:
@@ -405,10 +434,54 @@ class Rnx2RtkpService:
                     if callback:
                         await callback(line.decode().strip())
 
+            # Stream stderr with \r handling for rnx2rtkp progress
+            async def read_stderr_with_progress(stream, log_cb, progress_cb):
+                buf = b""
+                last_progress_time = 0.0
+                while True:
+                    chunk = await stream.read(1024)
+                    if not chunk:
+                        break
+                    buf += chunk
+                    # Split on \r or \n
+                    while b"\r" in buf or b"\n" in buf:
+                        # Find earliest delimiter
+                        r_pos = buf.find(b"\r")
+                        n_pos = buf.find(b"\n")
+                        if r_pos == -1:
+                            pos = n_pos
+                        elif n_pos == -1:
+                            pos = r_pos
+                        else:
+                            pos = min(r_pos, n_pos)
+                        line = buf[:pos].decode(errors="replace").strip()
+                        # Skip \r\n combo
+                        if pos + 1 < len(buf) and buf[pos:pos + 2] == b"\r\n":
+                            buf = buf[pos + 2:]
+                        else:
+                            buf = buf[pos + 1:]
+                        if not line:
+                            continue
+                        # Try parsing progress
+                        progress = parse_progress(line)
+                        if progress and progress_cb:
+                            now = time.monotonic()
+                            # Throttle progress updates to ~2/sec
+                            if now - last_progress_time >= 0.5:
+                                last_progress_time = now
+                                await progress_cb(progress)
+                        elif log_cb:
+                            await log_cb(line)
+                # Flush remaining buffer
+                if buf.strip() and log_cb:
+                    await log_cb(buf.decode(errors="replace").strip())
+
             if log_callback:
                 await asyncio.gather(
-                    read_stream(process.stdout, log_callback),
-                    read_stream(process.stderr, log_callback),
+                    read_stdout(process.stdout, log_callback),
+                    read_stderr_with_progress(
+                        process.stderr, log_callback, progress_callback
+                    ),
                 )
 
             await process.wait()
