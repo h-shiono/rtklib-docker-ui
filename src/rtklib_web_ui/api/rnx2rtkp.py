@@ -138,10 +138,20 @@ async def execute_rnx2rtkp(request: Rnx2RtkpExecuteRequest) -> Rnx2RtkpJobRespon
     # Generate job ID
     job_id = request.job_id or f"rnx2rtkp-{uuid.uuid4().hex[:8]}"
 
-    # Validate input files exist (relative to /workspace)
+    # Normalize path: handle both "/workspace/obs/file.obs" and "obs/file.obs"
     workspace = Path("/workspace")
-    rover_path = workspace / request.input_files.rover_obs_file.lstrip("/")
-    nav_path = workspace / request.input_files.nav_file.lstrip("/")
+
+    def resolve_workspace_path(file_path: str) -> Path:
+        """Resolve a file path relative to /workspace, handling /workspace prefix."""
+        stripped = file_path
+        if stripped.startswith("/workspace/"):
+            stripped = stripped[len("/workspace/"):]
+        elif stripped.startswith("/workspace"):
+            stripped = stripped[len("/workspace"):]
+        return workspace / stripped.lstrip("/")
+
+    rover_path = resolve_workspace_path(request.input_files.rover_obs_file)
+    nav_path = resolve_workspace_path(request.input_files.nav_file)
 
     if not rover_path.exists():
         raise HTTPException(
@@ -156,8 +166,9 @@ async def execute_rnx2rtkp(request: Rnx2RtkpExecuteRequest) -> Rnx2RtkpJobRespon
         )
 
     # Validate base obs file if provided
+    base_path = None
     if request.input_files.base_obs_file:
-        base_path = workspace / request.input_files.base_obs_file.lstrip("/")
+        base_path = resolve_workspace_path(request.input_files.base_obs_file)
         if not base_path.exists():
             raise HTTPException(
                 status_code=400,
@@ -165,19 +176,15 @@ async def execute_rnx2rtkp(request: Rnx2RtkpExecuteRequest) -> Rnx2RtkpJobRespon
             )
 
     # Ensure output file path is absolute and within workspace
-    output_file = request.input_files.output_file
-    if not output_file.startswith("/workspace/"):
-        output_file = f"/workspace/{output_file.lstrip('/')}"
+    output_path = resolve_workspace_path(request.input_files.output_file)
 
     # Create job
     job = Rnx2RtkpJob(
         input_files=Rnx2RtkpInputFiles(
             rover_obs_file=str(rover_path),
-            base_obs_file=str(workspace / request.input_files.base_obs_file.lstrip("/"))
-            if request.input_files.base_obs_file
-            else None,
+            base_obs_file=str(base_path) if base_path else None,
             nav_file=str(nav_path),
-            output_file=output_file,
+            output_file=str(output_path),
         ),
         config=request.config,
         time_range=request.time_range,
