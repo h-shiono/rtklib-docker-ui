@@ -316,7 +316,7 @@ export function ResultViewer({
                 },
               }}
             >
-              {Q_LABELS[Number(q)] || `Q${q}`}: {count}
+              {Q_LABELS[Number(q)] || `Q${q}`}: {(count / epochs.length * 100).toFixed(1)}% ({count})
             </Badge>
           ))}
       </Group>
