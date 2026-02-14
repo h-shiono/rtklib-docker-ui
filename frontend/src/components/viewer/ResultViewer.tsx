@@ -82,33 +82,21 @@ export function ResultViewer({
   // Shared X-axis range for ENU charts (null = auto/full range)
   const [xRange, setXRange] = useState<[number, number] | null>(null);
 
-  // Per-metric Y-axis range settings
-  const [yRanges, setYRanges] = useState<Record<ChartMetric, YRangeSettings>>({
-    e: { ...DEFAULT_Y_RANGE },
-    n: { ...DEFAULT_Y_RANGE },
-    u: { ...DEFAULT_Y_RANGE },
-    ns: { ...DEFAULT_Y_RANGE },
-  });
+  // Unified Y-axis range for ENU charts (ns is always auto)
+  const [enuYRange, setEnuYRange] = useState<YRangeSettings>({ ...DEFAULT_Y_RANGE });
   const [yAxisPopoverOpened, setYAxisPopoverOpened] = useState(false);
 
   const handleXRangeChange = useCallback((range: [number, number] | null) => {
     setXRange(range);
   }, []);
 
-  const updateYRange = useCallback((metric: ChartMetric, update: Partial<YRangeSettings>) => {
-    setYRanges((prev) => ({
-      ...prev,
-      [metric]: { ...prev[metric], ...update },
-    }));
-  }, []);
-
   // Convert Y-range settings to ChartView prop format
   const getYRange = useCallback(
     (metric: ChartMetric): [number, number] | null => {
-      const s = yRanges[metric];
-      return s.auto ? null : [s.min, s.max];
+      if (metric === 'ns') return null; // ns is always auto
+      return enuYRange.auto ? null : [enuYRange.min, enuYRange.max];
     },
-    [yRanges],
+    [enuYRange],
   );
 
   // Load .pos file
@@ -226,13 +214,6 @@ export function ResultViewer({
 
   const isManual = refMode === 'manual-llh' || refMode === 'manual-xyz';
 
-  const METRIC_LABELS: Record<ChartMetric, string> = {
-    e: 'East',
-    n: 'North',
-    u: 'Up',
-    ns: '# Sat',
-  };
-
   return (
     <Stack gap={0} h={maxHeight}>
       {/* Control bar */}
@@ -291,45 +272,40 @@ export function ResultViewer({
               </Popover.Target>
               <Popover.Dropdown>
                 <Stack gap="xs">
-                  <Text size="xs" fw={500}>Y-Axis Range</Text>
-                  {METRICS.map((metric) => (
-                    <Box key={metric}>
-                      <Group justify="space-between" mb={2}>
-                        <Text size="xs" fw={500}>{METRIC_LABELS[metric]}</Text>
-                        <Switch
-                          size="xs"
-                          label="Auto"
-                          checked={yRanges[metric].auto}
-                          onChange={(e) =>
-                            updateYRange(metric, { auto: e.currentTarget.checked })
-                          }
-                          styles={{ label: { fontSize: '10px', paddingLeft: 4 } }}
-                        />
-                      </Group>
-                      {!yRanges[metric].auto && (
-                        <Group gap={4}>
-                          <NumberInput
-                            size="xs"
-                            label="Min"
-                            value={yRanges[metric].min}
-                            onChange={(v) => updateYRange(metric, { min: Number(v) })}
-                            decimalScale={4}
-                            hideControls
-                            styles={{ root: { flex: 1 }, label: { fontSize: '10px' } }}
-                          />
-                          <NumberInput
-                            size="xs"
-                            label="Max"
-                            value={yRanges[metric].max}
-                            onChange={(v) => updateYRange(metric, { max: Number(v) })}
-                            decimalScale={4}
-                            hideControls
-                            styles={{ root: { flex: 1 }, label: { fontSize: '10px' } }}
-                          />
-                        </Group>
-                      )}
-                    </Box>
-                  ))}
+                  <Group justify="space-between">
+                    <Text size="xs" fw={500}>ENU Y-Axis Range</Text>
+                    <Switch
+                      size="xs"
+                      label="Auto"
+                      checked={enuYRange.auto}
+                      onChange={(e) =>
+                        setEnuYRange((prev) => ({ ...prev, auto: e.currentTarget.checked }))
+                      }
+                      styles={{ label: { fontSize: '10px', paddingLeft: 4 } }}
+                    />
+                  </Group>
+                  {!enuYRange.auto && (
+                    <Group gap={4}>
+                      <NumberInput
+                        size="xs"
+                        label="Min (m)"
+                        value={enuYRange.min}
+                        onChange={(v) => setEnuYRange((prev) => ({ ...prev, min: Number(v) }))}
+                        decimalScale={4}
+                        hideControls
+                        styles={{ root: { flex: 1 }, label: { fontSize: '10px' } }}
+                      />
+                      <NumberInput
+                        size="xs"
+                        label="Max (m)"
+                        value={enuYRange.max}
+                        onChange={(v) => setEnuYRange((prev) => ({ ...prev, max: Number(v) }))}
+                        decimalScale={4}
+                        hideControls
+                        styles={{ root: { flex: 1 }, label: { fontSize: '10px' } }}
+                      />
+                    </Group>
+                  )}
                 </Stack>
               </Popover.Dropdown>
             </Popover>
@@ -420,6 +396,7 @@ export function ResultViewer({
                 xRange={xRange}
                 yRange={getYRange(metric)}
                 onXRangeChange={handleXRangeChange}
+                cursorSyncKey="enu-sync"
               />
             ))}
           </Stack>

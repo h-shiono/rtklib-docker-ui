@@ -16,6 +16,8 @@ interface ChartViewProps {
   yRange?: [number, number] | null;
   /** Called when user zooms/resets on X axis (for cross-chart sync) */
   onXRangeChange?: (range: [number, number] | null) => void;
+  /** Shared cursor sync key (all charts with same key sync their cursors) */
+  cursorSyncKey?: string;
 }
 
 const METRIC_LABELS: Record<ChartMetric, string> = {
@@ -133,6 +135,7 @@ export function ChartView({
   xRange = null,
   yRange = null,
   onXRangeChange,
+  cursorSyncKey,
 }: ChartViewProps) {
   const { ref: containerRef, width } = useElementSize();
   const chartRef = useRef<HTMLDivElement>(null);
@@ -179,9 +182,13 @@ export function ChartView({
       legend: { show: false },
       cursor: {
         drag: { x: true, y: false },
+        ...(cursorSyncKey ? { sync: { key: cursorSyncKey } } : {}),
       },
       scales: {
         x: { time: true },
+        y: metric === 'ns' ? {
+          range: (_u: uPlot, _min: number, max: number) => [0, max] as uPlot.Range.MinMax,
+        } : {},
       },
       hooks: {
         setScale: [
@@ -264,7 +271,7 @@ export function ChartView({
     };
     // Do NOT include xRange/yRange — those are applied imperatively below
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [plotData, width, height, isDark, metric]);
+  }, [plotData, width, height, isDark, metric, cursorSyncKey]);
 
   // Apply shared X-range changes imperatively (from other charts' zoom)
   useEffect(() => {
