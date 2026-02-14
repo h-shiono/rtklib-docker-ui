@@ -452,21 +452,18 @@ class Rnx2RtkpService:
         # postype: 0=llh, 1=xyz, 2=single, 3=posfile, 4=rinexhead, 5=rtcm
         # Modes that don't use a base station: single, ppp-kinematic, ppp-static
         no_base_modes = {"single", "ppp-kinematic", "ppp-static"}
-        bp = config.base_position
+        base_postype_map = {"llh": "0", "xyz": "1", "single": "2", "posfile": "3", "rinex": "4", "rtcm": "5"}
         if s1.positioning_mode in no_base_modes:
             # No base station needed — use safe default (llh with zeros)
             lines.append("ant2-postype=0")
             lines.append("ant2-pos1=0")
             lines.append("ant2-pos2=0")
             lines.append("ant2-pos3=0")
-        elif bp.use_rinex_header:
-            lines.append("ant2-postype=4")  # RINEX header position
         else:
-            base_postype_map = {"llh": "0", "xyz": "1", "single": "2", "posfile": "3", "rinex": "4", "rtcm": "5"}
             lines.append(f"ant2-postype={base_postype_map.get(pos.base.mode, '0')}")
-            lines.append(f"ant2-pos1={bp.latitude}")
-            lines.append(f"ant2-pos2={bp.longitude}")
-            lines.append(f"ant2-pos3={bp.height}")
+            lines.append(f"ant2-pos1={pos.base.values[0]}")
+            lines.append(f"ant2-pos2={pos.base.values[1]}")
+            lines.append(f"ant2-pos3={pos.base.values[2]}")
         if pos.base.antenna_type_enabled and pos.base.antenna_type:
             lines.append(f"ant2-anttype={pos.base.antenna_type}")
         lines.append(f"ant2-antdele={pos.base.antenna_delta[0]}")

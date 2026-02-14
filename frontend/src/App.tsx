@@ -139,6 +139,136 @@ function PostProcessingPanel() {
     }, []),
   });
 
+  // Convert frontend config to backend format (camelCase -> snake_case)
+  const buildBackendConfig = useCallback(() => {
+    return {
+      setting1: {
+        positioning_mode: config.setting1.positioningMode,
+        frequency: config.setting1.frequency,
+        filter_type: config.setting1.filterType,
+        constellations: config.setting1.constellations,
+        excluded_satellites: config.setting1.excludedSatellites,
+        elevation_mask: config.setting1.elevationMask,
+        snr_mask: {
+          enable_rover: config.setting1.snrMask.enableRover,
+          enable_base: config.setting1.snrMask.enableBase,
+          mask: config.setting1.snrMask.mask,
+        },
+        ionosphere_correction: config.setting1.ionosphereCorrection,
+        troposphere_correction: config.setting1.troposphereCorrection,
+        ephemeris_option: config.setting1.ephemerisOption,
+        earth_tides_correction: config.setting1.earthTidesCorrection,
+        receiver_dynamics: config.setting1.receiverDynamics,
+        satellite_pcv: config.setting1.satellitePcv,
+        receiver_pcv: config.setting1.receiverPcv,
+        phase_windup: config.setting1.phaseWindup,
+        reject_eclipse: config.setting1.rejectEclipse,
+        raim_fde: config.setting1.raimFde,
+        db_corr: config.setting1.dbCorr,
+      },
+      setting2: {
+        gps_ar_mode: config.setting2.gpsArMode,
+        glo_ar_mode: config.setting2.gloArMode,
+        bds_ar_mode: config.setting2.bdsArMode,
+        min_ratio_to_fix: config.setting2.minRatioToFix,
+        min_confidence: config.setting2.minConfidence,
+        max_fcb: config.setting2.maxFcb,
+        min_lock_to_fix: config.setting2.minLockToFix,
+        min_elevation_to_fix: config.setting2.minElevationToFix,
+        min_fix_to_hold: config.setting2.minFixToHold,
+        min_elevation_to_hold: config.setting2.minElevationToHold,
+        outage_to_reset: config.setting2.outageToReset,
+        slip_threshold: config.setting2.slipThreshold,
+        max_age_diff: config.setting2.maxAgeDiff,
+        sync_solution: config.setting2.syncSolution,
+        reject_threshold_gdop: config.setting2.rejectThresholdGdop,
+        reject_threshold_innovation: config.setting2.rejectThresholdInnovation,
+        max_ar_iter: config.setting2.maxArIter,
+        num_filter_iterations: config.setting2.numFilterIterations,
+        baseline_length_constraint: {
+          enabled: config.setting2.baselineLengthConstraint.enabled,
+          length: config.setting2.baselineLengthConstraint.length,
+          sigma: config.setting2.baselineLengthConstraint.sigma,
+        },
+      },
+      output: {
+        solution_format: config.output.solutionFormat,
+        output_header: config.output.outputHeader,
+        output_processing_options: config.output.outputProcessingOptions,
+        time_format: config.output.timeFormat,
+        num_decimals: config.output.numDecimals,
+        lat_lon_format: config.output.latLonFormat,
+        field_separator: config.output.fieldSeparator,
+        output_velocity: config.output.outputVelocity,
+        datum: config.output.datum,
+        height: config.output.height,
+        geoid_model: config.output.geoidModel,
+        static_solution_mode: config.output.staticSolutionMode,
+        output_single_on_outage: config.output.outputSingleOnOutage,
+        nmea_interval_rmc_gga: config.output.nmeaIntervalRmcGga,
+        nmea_interval_gsa_gsv: config.output.nmeaIntervalGsaGsv,
+        output_solution_status: config.output.outputSolutionStatus,
+        debug_trace: config.output.debugTrace,
+      },
+      stats: {
+        code_phase_ratio_l1: config.stats.codePhaseRatioL1,
+        code_phase_ratio_l2: config.stats.codePhaseRatioL2,
+        phase_error_a: config.stats.phaseErrorA,
+        phase_error_b: config.stats.phaseErrorB,
+        phase_error_baseline: config.stats.phaseErrorBaseline,
+        doppler_frequency: config.stats.dopplerFrequency,
+        receiver_accel_horiz: config.stats.receiverAccelHoriz,
+        receiver_accel_vert: config.stats.receiverAccelVert,
+        carrier_phase_bias: config.stats.carrierPhaseBias,
+        ionospheric_delay: config.stats.ionosphericDelay,
+        tropospheric_delay: config.stats.troposphericDelay,
+        satellite_clock_stability: config.stats.satelliteClockStability,
+      },
+      positions: {
+        rover: {
+          mode: config.positions.rover.mode,
+          values: config.positions.rover.values,
+          antenna_type_enabled: config.positions.rover.antennaTypeEnabled,
+          antenna_type: config.positions.rover.antennaType,
+          antenna_delta: config.positions.rover.antennaDelta,
+        },
+        base: {
+          mode: config.positions.base.mode,
+          values: config.positions.base.values,
+          antenna_type_enabled: config.positions.base.antennaTypeEnabled,
+          antenna_type: config.positions.base.antennaType,
+          antenna_delta: config.positions.base.antennaDelta,
+        },
+        station_position_file: config.positions.stationPositionFile,
+      },
+      base_position: {
+        latitude: config.basePosition.latitude,
+        longitude: config.basePosition.longitude,
+        height: config.basePosition.height,
+        use_rinex_header: config.basePosition.useRinexHeader,
+      },
+      files: config.files,
+      misc: {
+        time_system: config.misc.timeSystem,
+        ionosphere_correction: config.misc.ionosphereCorrection,
+        troposphere_correction: config.misc.troposphereCorrection,
+        time_interpolation: config.misc.timeInterpolation,
+        dgps_corrections: config.misc.dgpsCorrections,
+        sbas_sat_selection: config.misc.sbasSatSelection,
+        rinex_opt_rover: config.misc.rinexOptRover,
+        rinex_opt_base: config.misc.rinexOptBase,
+      },
+    };
+  }, [config]);
+
+  const handleExportConf = async () => {
+    try {
+      await rnx2rtkpApi.exportConf(buildBackendConfig());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to export conf');
+    }
+  };
+
   const handleStart = async () => {
     if (!config) {
       setError('Configuration not set');
@@ -163,130 +293,7 @@ function PostProcessingPanel() {
     setProcessStatus('running');
 
     try {
-      // Convert frontend config to backend format (camelCase -> snake_case)
-      const backendConfig = {
-        setting1: {
-          positioning_mode: config.setting1.positioningMode,
-          frequency: config.setting1.frequency,
-          filter_type: config.setting1.filterType,
-          constellations: config.setting1.constellations,
-          excluded_satellites: config.setting1.excludedSatellites,
-          elevation_mask: config.setting1.elevationMask,
-          snr_mask: {
-            enable_rover: config.setting1.snrMask.enableRover,
-            enable_base: config.setting1.snrMask.enableBase,
-            mask: config.setting1.snrMask.mask,
-          },
-          ionosphere_correction: config.setting1.ionosphereCorrection,
-          troposphere_correction: config.setting1.troposphereCorrection,
-          ephemeris_option: config.setting1.ephemerisOption,
-          earth_tides_correction: config.setting1.earthTidesCorrection,
-          receiver_dynamics: config.setting1.receiverDynamics,
-          satellite_pcv: config.setting1.satellitePcv,
-          receiver_pcv: config.setting1.receiverPcv,
-          phase_windup: config.setting1.phaseWindup,
-          reject_eclipse: config.setting1.rejectEclipse,
-          raim_fde: config.setting1.raimFde,
-          db_corr: config.setting1.dbCorr,
-        },
-        setting2: {
-          gps_ar_mode: config.setting2.gpsArMode,
-          glo_ar_mode: config.setting2.gloArMode,
-          bds_ar_mode: config.setting2.bdsArMode,
-          min_ratio_to_fix: config.setting2.minRatioToFix,
-          min_confidence: config.setting2.minConfidence,
-          max_fcb: config.setting2.maxFcb,
-          min_lock_to_fix: config.setting2.minLockToFix,
-          min_elevation_to_fix: config.setting2.minElevationToFix,
-          min_fix_to_hold: config.setting2.minFixToHold,
-          min_elevation_to_hold: config.setting2.minElevationToHold,
-          outage_to_reset: config.setting2.outageToReset,
-          slip_threshold: config.setting2.slipThreshold,
-          max_age_diff: config.setting2.maxAgeDiff,
-          sync_solution: config.setting2.syncSolution,
-          reject_threshold_gdop: config.setting2.rejectThresholdGdop,
-          reject_threshold_innovation: config.setting2.rejectThresholdInnovation,
-          max_ar_iter: config.setting2.maxArIter,
-          num_filter_iterations: config.setting2.numFilterIterations,
-          baseline_length_constraint: {
-            enabled: config.setting2.baselineLengthConstraint.enabled,
-            length: config.setting2.baselineLengthConstraint.length,
-            sigma: config.setting2.baselineLengthConstraint.sigma,
-          },
-        },
-        output: {
-          // Group A: Format Configuration
-          solution_format: config.output.solutionFormat,
-          output_header: config.output.outputHeader,
-          output_processing_options: config.output.outputProcessingOptions,
-          time_format: config.output.timeFormat,
-          num_decimals: config.output.numDecimals,
-          lat_lon_format: config.output.latLonFormat,
-          field_separator: config.output.fieldSeparator,
-          output_velocity: config.output.outputVelocity,
-          // Group B: Datum & Geoid
-          datum: config.output.datum,
-          height: config.output.height,
-          geoid_model: config.output.geoidModel,
-          // Group C: Output Control
-          static_solution_mode: config.output.staticSolutionMode,
-          output_single_on_outage: config.output.outputSingleOnOutage,
-          nmea_interval_rmc_gga: config.output.nmeaIntervalRmcGga,
-          nmea_interval_gsa_gsv: config.output.nmeaIntervalGsaGsv,
-          output_solution_status: config.output.outputSolutionStatus,
-          debug_trace: config.output.debugTrace,
-        },
-        stats: {
-          // Group A: Measurement Errors (1-sigma)
-          code_phase_ratio_l1: config.stats.codePhaseRatioL1,
-          code_phase_ratio_l2: config.stats.codePhaseRatioL2,
-          phase_error_a: config.stats.phaseErrorA,
-          phase_error_b: config.stats.phaseErrorB,
-          phase_error_baseline: config.stats.phaseErrorBaseline,
-          doppler_frequency: config.stats.dopplerFrequency,
-          // Group B: Process Noises (1-sigma/sqrt(s))
-          receiver_accel_horiz: config.stats.receiverAccelHoriz,
-          receiver_accel_vert: config.stats.receiverAccelVert,
-          carrier_phase_bias: config.stats.carrierPhaseBias,
-          ionospheric_delay: config.stats.ionosphericDelay,
-          tropospheric_delay: config.stats.troposphericDelay,
-          satellite_clock_stability: config.stats.satelliteClockStability,
-        },
-        positions: {
-          rover: {
-            mode: config.positions.rover.mode,
-            values: config.positions.rover.values,
-            antenna_type_enabled: config.positions.rover.antennaTypeEnabled,
-            antenna_type: config.positions.rover.antennaType,
-            antenna_delta: config.positions.rover.antennaDelta,
-          },
-          base: {
-            mode: config.positions.base.mode,
-            values: config.positions.base.values,
-            antenna_type_enabled: config.positions.base.antennaTypeEnabled,
-            antenna_type: config.positions.base.antennaType,
-            antenna_delta: config.positions.base.antennaDelta,
-          },
-          station_position_file: config.positions.stationPositionFile,
-        },
-        base_position: {
-          latitude: config.basePosition.latitude,
-          longitude: config.basePosition.longitude,
-          height: config.basePosition.height,
-          use_rinex_header: config.basePosition.useRinexHeader,
-        },
-        files: config.files,
-        misc: {
-          time_system: config.misc.timeSystem,
-          ionosphere_correction: config.misc.ionosphereCorrection,
-          troposphere_correction: config.misc.troposphereCorrection,
-          time_interpolation: config.misc.timeInterpolation,
-          dgps_corrections: config.misc.dgpsCorrections,
-          sbas_sat_selection: config.misc.sbasSatSelection,
-          rinex_opt_rover: config.misc.rinexOptRover,
-          rinex_opt_base: config.misc.rinexOptBase,
-        },
-      };
+      const backendConfig = buildBackendConfig();
 
       const response = await rnx2rtkpApi.executeRnx2Rtkp({
         input_files: {
@@ -444,30 +451,43 @@ function PostProcessingPanel() {
             </Alert>
           )}
 
-          {/* Execute Button */}
+          {/* Execute / Export Buttons */}
           <Card withBorder p="xs">
-            <Group grow>
-              {processStatus === 'running' ? (
-                <Button
-                  size="xs"
-                  color="red"
-                  leftSection={<IconPlayerStop size={12} />}
-                  onClick={handleStop}
-                  loading={isLoading}
+            <Group>
+              <Group grow style={{ flex: 1 }}>
+                {processStatus === 'running' ? (
+                  <Button
+                    size="xs"
+                    color="red"
+                    leftSection={<IconPlayerStop size={12} />}
+                    onClick={handleStop}
+                    loading={isLoading}
+                  >
+                    Stop
+                  </Button>
+                ) : (
+                  <Button
+                    size="xs"
+                    color="green"
+                    leftSection={<IconPlayerPlay size={12} />}
+                    onClick={handleStart}
+                    loading={isLoading}
+                  >
+                    Execute
+                  </Button>
+                )}
+              </Group>
+              <Tooltip label="Download .conf file">
+                <ActionIcon
+                  variant="light"
+                  color="blue"
+                  size="lg"
+                  onClick={handleExportConf}
+                  disabled={processStatus === 'running'}
                 >
-                  Stop
-                </Button>
-              ) : (
-                <Button
-                  size="xs"
-                  color="green"
-                  leftSection={<IconPlayerPlay size={12} />}
-                  onClick={handleStart}
-                  loading={isLoading}
-                >
-                  Execute
-                </Button>
-              )}
+                  <IconDownload size={16} />
+                </ActionIcon>
+              </Tooltip>
             </Group>
           </Card>
         </Stack>

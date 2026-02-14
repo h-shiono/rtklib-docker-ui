@@ -6,6 +6,7 @@ import uuid
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, Field
 
 from rtklib_web_ui.services import ws_manager
@@ -265,3 +266,29 @@ async def list_jobs() -> list[str]:
         List of active job IDs
     """
     return list(_active_jobs.keys())
+
+
+class ExportConfRequest(BaseModel):
+    """Request to export configuration as .conf file."""
+
+    config: Rnx2RtkpConfig
+
+
+@router.post("/export-conf")
+async def export_conf(request: ExportConfRequest) -> PlainTextResponse:
+    """Generate and return RTKLIB .conf file content from configuration.
+
+    Args:
+        request: Configuration to export
+
+    Returns:
+        Plain text .conf file content with download headers
+    """
+    service = Rnx2RtkpService()
+    content = service.generate_conf_file(request.config)
+    return PlainTextResponse(
+        content=content,
+        headers={
+            "Content-Disposition": 'attachment; filename="rtklib.conf"',
+        },
+    )

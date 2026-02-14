@@ -67,3 +67,25 @@ export async function listJobs(): Promise<string[]> {
   const response = await fetch(`${API_BASE}/jobs`);
   return handleResponse<string[]>(response);
 }
+
+/**
+ * Export configuration as .conf file download
+ */
+export async function exportConf(config: Record<string, unknown>): Promise<void> {
+  const response = await fetch(`${API_BASE}/export-conf`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ config }),
+  });
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: response.statusText }));
+    throw new Error(typeof error.detail === 'string' ? error.detail : 'Failed to export conf');
+  }
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'rtklib.conf';
+  a.click();
+  URL.revokeObjectURL(url);
+}
