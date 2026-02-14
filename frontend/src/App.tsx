@@ -696,7 +696,7 @@ function StreamServerPanel({
   return (
     <Grid gutter="md">
       {/* Left Pane: Configuration */}
-      <Grid.Col span={{ base: 12, md: 5 }}>
+      <Grid.Col span={{ base: 12, md: 6 }}>
         <Stack gap="md">
           <Card withBorder padding="xs">
             <Group justify="space-between">
@@ -763,7 +763,7 @@ function StreamServerPanel({
       </Grid.Col>
 
       {/* Right Pane: Monitor */}
-      <Grid.Col span={{ base: 12, md: 7 }}>
+      <Grid.Col span={{ base: 12, md: 6 }}>
         <Stack gap="md" h="100%">
           {/* Status Bar */}
           <Card withBorder>
