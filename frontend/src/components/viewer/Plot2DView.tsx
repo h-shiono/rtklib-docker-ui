@@ -79,10 +79,10 @@ export function Plot2DView({ data, height }: Plot2DViewProps) {
     if (!ctx) return;
     ctx.scale(dpr, dpr);
 
-    const textColor = isDark ? 'rgba(255,255,255,0.65)' : 'rgba(0,0,0,0.65)';
-    const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
+    const textColor = isDark ? 'rgba(255,255,255,0.65)' : 'rgba(0,0,0,0.7)';
+    const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.12)';
     const bgColor = isDark ? '#1a1b1e' : '#ffffff';
-    const axisColor = isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)';
+    const axisColor = isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.25)';
 
     ctx.fillStyle = bgColor;
     ctx.fillRect(0, 0, size, size);

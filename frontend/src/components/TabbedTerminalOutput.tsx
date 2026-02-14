@@ -61,7 +61,7 @@ export function TabbedTerminalOutput({
   return (
     <Box
       style={{
-        backgroundColor: 'var(--mantine-color-dark-8)',
+        backgroundColor: 'light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-8))',
         borderRadius: 'var(--mantine-radius-sm)',
         overflow: 'hidden',
       }}
@@ -77,8 +77,8 @@ export function TabbedTerminalOutput({
           wrap="nowrap"
           px="sm"
           style={{
-            backgroundColor: 'var(--mantine-color-dark-7)',
-            borderBottom: '1px solid var(--mantine-color-dark-6)',
+            backgroundColor: 'light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-7))',
+            borderBottom: 'light-dark(1px solid var(--mantine-color-gray-3), 1px solid var(--mantine-color-dark-6))',
           }}
         >
           <Tabs.List
@@ -166,7 +166,7 @@ export function TabbedTerminalOutput({
                 block
                 style={{
                   backgroundColor: 'transparent',
-                  color: 'var(--mantine-color-green-4)',
+                  color: 'light-dark(var(--mantine-color-dark-8), var(--mantine-color-green-4))',
                   whiteSpace: 'pre-wrap',
                   wordBreak: 'break-all',
                   fontSize: '12px',
