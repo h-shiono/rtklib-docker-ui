@@ -29,7 +29,6 @@ import type {
   ENUEpoch,
   ReferencePosition,
   ReferenceMode,
-  ChartMetric,
 } from './types';
 import { Q_COLORS, Q_LABELS } from './types';
 
@@ -38,13 +37,6 @@ interface ResultViewerProps {
   maxHeight: number;
   refreshKey?: number;
 }
-
-const METRIC_OPTIONS = [
-  { value: 'e', label: 'East' },
-  { value: 'n', label: 'North' },
-  { value: 'u', label: 'Up' },
-  { value: 'ns', label: '# Sat' },
-];
 
 const REFERENCE_OPTIONS = [
   { value: 'mean', label: 'Mean' },
@@ -66,7 +58,6 @@ export function ResultViewer({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('2d');
-  const [chartMetric, setChartMetric] = useState<ChartMetric>('e');
   const [refMode, setRefMode] = useState<ReferenceMode>('mean');
   const [manualLat, setManualLat] = useState<number>(0);
   const [manualLon, setManualLon] = useState<number>(0);
@@ -206,16 +197,6 @@ export function ResultViewer({
               { label: 'Map', value: 'map' },
             ]}
           />
-          {viewMode === 'enu' && (
-            <Select
-              size="xs"
-              value={chartMetric}
-              onChange={(v) => v && setChartMetric(v as ChartMetric)}
-              data={METRIC_OPTIONS}
-              w={90}
-              styles={{ input: { fontSize: '11px' } }}
-            />
-          )}
         </Group>
 
         <Group gap="xs">
@@ -288,12 +269,17 @@ export function ResultViewer({
       </Group>
 
       {/* Visualization area */}
-      <div style={{ flex: 1, minHeight: 0 }}>
+      <div style={{ flex: 1, minHeight: 0, overflow: viewMode === 'enu' ? 'auto' : undefined }}>
         {viewMode === '2d' && (
           <Plot2DView data={enuData} height={vizHeight} />
         )}
         {viewMode === 'enu' && (
-          <ChartView data={enuData} height={vizHeight} metric={chartMetric} />
+          <Stack gap={0}>
+            <ChartView data={enuData} height={Math.floor(vizHeight / 4)} metric="e" />
+            <ChartView data={enuData} height={Math.floor(vizHeight / 4)} metric="n" />
+            <ChartView data={enuData} height={Math.floor(vizHeight / 4)} metric="u" />
+            <ChartView data={enuData} height={Math.floor(vizHeight / 4)} metric="ns" />
+          </Stack>
         )}
         {viewMode === 'map' && (
           <MapView data={epochs} height={vizHeight} />

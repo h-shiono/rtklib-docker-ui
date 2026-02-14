@@ -13,19 +13,22 @@ const PADDING = { top: 10, right: 10, bottom: 30, left: 50 };
 
 export function Plot2DView({ data, height }: Plot2DViewProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { ref: containerRef, width } = useElementSize();
+  const { ref: containerRef, width: containerWidth } = useElementSize();
   const { colorScheme } = useMantineColorScheme();
   const isDark = colorScheme === 'dark';
 
+  // Use the smaller of width/height to make a square plot
+  const size = Math.min(containerWidth, height);
+
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
-    if (!canvas || data.length === 0 || width < 100) return;
+    if (!canvas || data.length === 0 || size < 100) return;
 
     const dpr = window.devicePixelRatio || 1;
-    canvas.width = width * dpr;
-    canvas.height = height * dpr;
-    canvas.style.width = `${width}px`;
-    canvas.style.height = `${height}px`;
+    canvas.width = size * dpr;
+    canvas.height = size * dpr;
+    canvas.style.width = `${size}px`;
+    canvas.style.height = `${size}px`;
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
@@ -39,7 +42,7 @@ export function Plot2DView({ data, height }: Plot2DViewProps) {
 
     // Clear canvas
     ctx.fillStyle = bgColor;
-    ctx.fillRect(0, 0, width, height);
+    ctx.fillRect(0, 0, size, size);
 
     // Compute E/N bounds
     let minE = Infinity, maxE = -Infinity;
@@ -60,9 +63,9 @@ export function Plot2DView({ data, height }: Plot2DViewProps) {
     minN -= rangeN * padFrac;
     maxN += rangeN * padFrac;
 
-    // Enforce equal aspect ratio (1:1 scale for E and N)
-    const plotW = width - PADDING.left - PADDING.right;
-    const plotH = height - PADDING.top - PADDING.bottom;
+    // Square plot area — equal aspect ratio guaranteed
+    const plotW = size - PADDING.left - PADDING.right;
+    const plotH = size - PADDING.top - PADDING.bottom;
     const scaleE = plotW / (maxE - minE);
     const scaleN = plotH / (maxN - minN);
     const scale = Math.min(scaleE, scaleN);
@@ -98,7 +101,7 @@ export function Plot2DView({ data, height }: Plot2DViewProps) {
       ctx.moveTo(x, PADDING.top);
       ctx.lineTo(x, PADDING.top + plotH);
       ctx.stroke();
-      ctx.fillText(formatAxisValue(val), x, height - 5);
+      ctx.fillText(formatAxisValue(val), x, size - 5);
     }
 
     // Horizontal grid (N axis)
@@ -148,21 +151,21 @@ export function Plot2DView({ data, height }: Plot2DViewProps) {
     ctx.fillStyle = textColor;
     ctx.font = '11px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('East (m)', PADDING.left + plotW / 2, height - 1);
+    ctx.fillText('East (m)', PADDING.left + plotW / 2, size - 1);
 
     ctx.save();
     ctx.translate(12, PADDING.top + plotH / 2);
     ctx.rotate(-Math.PI / 2);
     ctx.fillText('North (m)', 0, 0);
     ctx.restore();
-  }, [data, width, height, isDark]);
+  }, [data, size, isDark]);
 
   useEffect(() => {
     draw();
   }, [draw]);
 
   return (
-    <div ref={containerRef} style={{ width: '100%', height }}>
+    <div ref={containerRef} style={{ width: '100%', height, display: 'flex', justifyContent: 'center' }}>
       <canvas ref={canvasRef} style={{ display: 'block' }} />
     </div>
   );
