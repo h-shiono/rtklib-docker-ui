@@ -10,6 +10,12 @@ interface ChartViewProps {
   data: ENUEpoch[];
   height: number;
   metric: ChartMetric;
+  /** Shared X-axis range [min, max] in unix seconds. null = auto */
+  xRange?: [number, number] | null;
+  /** Y-axis range [min, max]. null = auto */
+  yRange?: [number, number] | null;
+  /** Called when user zooms/resets on X axis (for cross-chart sync) */
+  onXRangeChange?: (range: [number, number] | null) => void;
 }
 
 const METRIC_LABELS: Record<ChartMetric, string> = {
@@ -47,12 +53,24 @@ function qColorPlugin(qValues: number[]): uPlot.Plugin {
   };
 }
 
-export function ChartView({ data, height, metric }: ChartViewProps) {
+export function ChartView({
+  data,
+  height,
+  metric,
+  xRange = null,
+  yRange = null,
+  onXRangeChange,
+}: ChartViewProps) {
   const { ref: containerRef, width } = useElementSize();
   const chartRef = useRef<HTMLDivElement>(null);
   const uplotRef = useRef<uPlot | null>(null);
   const { colorScheme } = useMantineColorScheme();
   const isDark = colorScheme === 'dark';
+
+  // Refs to avoid stale closures in uPlot hooks
+  const programmaticRef = useRef(false);
+  const onXRangeChangeRef = useRef(onXRangeChange);
+  onXRangeChangeRef.current = onXRangeChange;
 
   // Prepare uPlot data arrays
   const plotData = useMemo(() => {
@@ -83,10 +101,31 @@ export function ChartView({ data, height, metric }: ChartViewProps) {
       height: height - 8,
       plugins: [qColorPlugin(plotData.qValues)],
       cursor: {
-        drag: { x: true, y: true },
+        drag: { x: true, y: false },
       },
       scales: {
         x: { time: true },
+      },
+      hooks: {
+        setScale: [
+          (u: uPlot, key: string) => {
+            if (key === 'x' && !programmaticRef.current && onXRangeChangeRef.current) {
+              const min = u.scales.x.min;
+              const max = u.scales.x.max;
+              if (min != null && max != null) {
+                // Check if it's a full-range reset (double-click)
+                const xData = u.data[0];
+                const fullMin = xData[0];
+                const fullMax = xData[xData.length - 1];
+                if (min === fullMin && max === fullMax) {
+                  onXRangeChangeRef.current(null);
+                } else {
+                  onXRangeChangeRef.current([min, max]);
+                }
+              }
+            }
+          },
+        ],
       },
       axes: [
         {
@@ -130,13 +169,64 @@ export function ChartView({ data, height, metric }: ChartViewProps) {
 
     uplotRef.current = new uPlot(opts, uplotData, chartRef.current);
 
+    // Apply initial ranges after creation
+    if (xRange) {
+      programmaticRef.current = true;
+      uplotRef.current.setScale('x', { min: xRange[0], max: xRange[1] });
+      programmaticRef.current = false;
+    }
+    if (yRange) {
+      uplotRef.current.setScale('y', { min: yRange[0], max: yRange[1] });
+    }
+
     return () => {
       if (uplotRef.current) {
         uplotRef.current.destroy();
         uplotRef.current = null;
       }
     };
+    // Do NOT include xRange/yRange — those are applied imperatively below
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plotData, width, height, isDark, metric]);
+
+  // Apply shared X-range changes imperatively (from other charts' zoom)
+  useEffect(() => {
+    if (!uplotRef.current) return;
+    programmaticRef.current = true;
+    if (xRange) {
+      uplotRef.current.setScale('x', { min: xRange[0], max: xRange[1] });
+    } else {
+      // Reset to full data range
+      const xData = uplotRef.current.data[0];
+      if (xData && xData.length > 0) {
+        uplotRef.current.setScale('x', { min: xData[0], max: xData[xData.length - 1] });
+      }
+    }
+    programmaticRef.current = false;
+  }, [xRange]);
+
+  // Apply Y-range changes imperatively
+  useEffect(() => {
+    if (!uplotRef.current) return;
+    if (yRange) {
+      uplotRef.current.setScale('y', { min: yRange[0], max: yRange[1] });
+    } else {
+      // Reset to auto: compute from visible data
+      const yData = uplotRef.current.data[1];
+      if (yData && yData.length > 0) {
+        let min = Infinity,
+          max = -Infinity;
+        for (const v of yData) {
+          if (v != null) {
+            if (v < min) min = v as number;
+            if (v > max) max = v as number;
+          }
+        }
+        const padding = (max - min) * 0.05 || 1;
+        uplotRef.current.setScale('y', { min: min - padding, max: max + padding });
+      }
+    }
+  }, [yRange]);
 
   return (
     <div ref={containerRef} style={{ width: '100%', height }}>

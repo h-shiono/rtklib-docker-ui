@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Stack,
   Group,
@@ -11,8 +11,9 @@ import {
   Popover,
   ActionIcon,
   Box,
+  Switch,
 } from '@mantine/core';
-import { IconSettings } from '@tabler/icons-react';
+import { IconSettings, IconAdjustments } from '@tabler/icons-react';
 import { readFile } from '../../api/files';
 import { parsePosFile } from './posParser';
 import {
@@ -29,6 +30,7 @@ import type {
   ENUEpoch,
   ReferencePosition,
   ReferenceMode,
+  ChartMetric,
 } from './types';
 import { Q_COLORS, Q_LABELS } from './types';
 
@@ -46,7 +48,17 @@ const REFERENCE_OPTIONS = [
   { value: 'manual-xyz', label: 'Manual (XYZ)' },
 ];
 
+const METRICS: ChartMetric[] = ['e', 'n', 'u', 'ns'];
+
 type ViewMode = '2d' | 'enu' | 'map';
+
+interface YRangeSettings {
+  auto: boolean;
+  min: number;
+  max: number;
+}
+
+const DEFAULT_Y_RANGE: YRangeSettings = { auto: true, min: 0, max: 0 };
 
 export function ResultViewer({
   filePath,
@@ -66,6 +78,38 @@ export function ResultViewer({
   const [manualY, setManualY] = useState<number>(0);
   const [manualZ, setManualZ] = useState<number>(0);
   const [refPopoverOpened, setRefPopoverOpened] = useState(false);
+
+  // Shared X-axis range for ENU charts (null = auto/full range)
+  const [xRange, setXRange] = useState<[number, number] | null>(null);
+
+  // Per-metric Y-axis range settings
+  const [yRanges, setYRanges] = useState<Record<ChartMetric, YRangeSettings>>({
+    e: { ...DEFAULT_Y_RANGE },
+    n: { ...DEFAULT_Y_RANGE },
+    u: { ...DEFAULT_Y_RANGE },
+    ns: { ...DEFAULT_Y_RANGE },
+  });
+  const [yAxisPopoverOpened, setYAxisPopoverOpened] = useState(false);
+
+  const handleXRangeChange = useCallback((range: [number, number] | null) => {
+    setXRange(range);
+  }, []);
+
+  const updateYRange = useCallback((metric: ChartMetric, update: Partial<YRangeSettings>) => {
+    setYRanges((prev) => ({
+      ...prev,
+      [metric]: { ...prev[metric], ...update },
+    }));
+  }, []);
+
+  // Convert Y-range settings to ChartView prop format
+  const getYRange = useCallback(
+    (metric: ChartMetric): [number, number] | null => {
+      const s = yRanges[metric];
+      return s.auto ? null : [s.min, s.max];
+    },
+    [yRanges],
+  );
 
   // Load .pos file
   useEffect(() => {
@@ -104,6 +148,11 @@ export function ResultViewer({
       cancelled = true;
     };
   }, [filePath, refreshKey]);
+
+  // Reset X range when data changes
+  useEffect(() => {
+    setXRange(null);
+  }, [epochs]);
 
   // Compute reference position based on selected mode
   const referencePos = useMemo((): ReferencePosition | null => {
@@ -177,6 +226,13 @@ export function ResultViewer({
 
   const isManual = refMode === 'manual-llh' || refMode === 'manual-xyz';
 
+  const METRIC_LABELS: Record<ChartMetric, string> = {
+    e: 'East',
+    n: 'North',
+    u: 'Up',
+    ns: '# Sat',
+  };
+
   return (
     <Stack gap={0} h={maxHeight}>
       {/* Control bar */}
@@ -200,6 +256,73 @@ export function ResultViewer({
         </Group>
 
         <Group gap="xs">
+          {/* Y-Axis settings (ENU mode only) */}
+          {viewMode === 'enu' && (
+            <Popover
+              opened={yAxisPopoverOpened}
+              onChange={setYAxisPopoverOpened}
+              position="bottom-end"
+              withArrow
+              shadow="md"
+              width={300}
+            >
+              <Popover.Target>
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
+                  size="xs"
+                  onClick={() => setYAxisPopoverOpened((o) => !o)}
+                >
+                  <IconAdjustments size={14} />
+                </ActionIcon>
+              </Popover.Target>
+              <Popover.Dropdown>
+                <Stack gap="xs">
+                  <Text size="xs" fw={500}>Y-Axis Range</Text>
+                  {METRICS.map((metric) => (
+                    <Box key={metric}>
+                      <Group justify="space-between" mb={2}>
+                        <Text size="xs" fw={500}>{METRIC_LABELS[metric]}</Text>
+                        <Switch
+                          size="xs"
+                          label="Auto"
+                          checked={yRanges[metric].auto}
+                          onChange={(e) =>
+                            updateYRange(metric, { auto: e.currentTarget.checked })
+                          }
+                          styles={{ label: { fontSize: '10px', paddingLeft: 4 } }}
+                        />
+                      </Group>
+                      {!yRanges[metric].auto && (
+                        <Group gap={4}>
+                          <NumberInput
+                            size="xs"
+                            label="Min"
+                            value={yRanges[metric].min}
+                            onChange={(v) => updateYRange(metric, { min: Number(v) })}
+                            decimalScale={4}
+                            hideControls
+                            styles={{ root: { flex: 1 }, label: { fontSize: '10px' } }}
+                          />
+                          <NumberInput
+                            size="xs"
+                            label="Max"
+                            value={yRanges[metric].max}
+                            onChange={(v) => updateYRange(metric, { max: Number(v) })}
+                            decimalScale={4}
+                            hideControls
+                            styles={{ root: { flex: 1 }, label: { fontSize: '10px' } }}
+                          />
+                        </Group>
+                      )}
+                    </Box>
+                  ))}
+                </Stack>
+              </Popover.Dropdown>
+            </Popover>
+          )}
+
+          {/* Reference coordinate settings */}
           {viewMode !== 'map' && (
             <Popover
               opened={refPopoverOpened}
@@ -275,10 +398,17 @@ export function ResultViewer({
         )}
         {viewMode === 'enu' && (
           <Stack gap={0}>
-            <ChartView data={enuData} height={Math.floor(vizHeight / 4)} metric="e" />
-            <ChartView data={enuData} height={Math.floor(vizHeight / 4)} metric="n" />
-            <ChartView data={enuData} height={Math.floor(vizHeight / 4)} metric="u" />
-            <ChartView data={enuData} height={Math.floor(vizHeight / 4)} metric="ns" />
+            {METRICS.map((metric) => (
+              <ChartView
+                key={metric}
+                data={enuData}
+                height={Math.floor(vizHeight / 4)}
+                metric={metric}
+                xRange={xRange}
+                yRange={getYRange(metric)}
+                onXRangeChange={handleXRangeChange}
+              />
+            ))}
           </Stack>
         )}
         {viewMode === 'map' && (
