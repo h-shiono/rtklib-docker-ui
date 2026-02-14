@@ -3,20 +3,20 @@ import { useElementSize } from '@mantine/hooks';
 import { useMantineColorScheme } from '@mantine/core';
 import uPlot from 'uplot';
 import 'uplot/dist/uPlot.min.css';
-import type { PosEpoch, ChartMetric } from './types';
+import type { ENUEpoch, ChartMetric } from './types';
 import { Q_COLORS } from './types';
 
 interface ChartViewProps {
-  data: PosEpoch[];
+  data: ENUEpoch[];
   height: number;
   metric: ChartMetric;
 }
 
 const METRIC_LABELS: Record<ChartMetric, string> = {
-  height: 'Height (m)',
-  sdn: 'Std Dev North (m)',
-  sde: 'Std Dev East (m)',
-  sdu: 'Std Dev Up (m)',
+  e: 'East (m)',
+  n: 'North (m)',
+  u: 'Up (m)',
+  ns: '# Satellites',
 };
 
 /** uPlot plugin to draw Q-flag colored points */
@@ -24,7 +24,7 @@ function qColorPlugin(qValues: number[]): uPlot.Plugin {
   return {
     hooks: {
       drawSeries: (u: uPlot, seriesIdx: number) => {
-        if (seriesIdx !== 1) return; // Only draw for the data series
+        if (seriesIdx !== 1) return;
         const ctx = u.ctx;
         const xData = u.data[0];
         const yData = u.data[seriesIdx];
@@ -80,7 +80,7 @@ export function ChartView({ data, height, metric }: ChartViewProps) {
 
     const opts: uPlot.Options = {
       width,
-      height: height - 8, // small padding
+      height: height - 8,
       plugins: [qColorPlugin(plotData.qValues)],
       cursor: {
         drag: { x: true, y: true },
@@ -113,7 +113,6 @@ export function ChartView({ data, height, metric }: ChartViewProps) {
       series: [
         {},
         {
-          // Hide the default line/points — we draw custom colored points via plugin
           stroke: 'transparent',
           points: { show: false },
         },
@@ -125,7 +124,6 @@ export function ChartView({ data, height, metric }: ChartViewProps) {
       Array.from(plotData.yValues),
     ];
 
-    // Destroy previous instance
     if (uplotRef.current) {
       uplotRef.current.destroy();
     }

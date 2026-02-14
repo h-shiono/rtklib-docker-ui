@@ -26,6 +26,34 @@ export interface PosEpoch {
   ratio: number;
 }
 
+/** Parsed .pos file data including header info */
+export interface PosFileData {
+  epochs: PosEpoch[];
+  headerRefPos: ReferencePosition | null;
+}
+
+/** A geodetic reference position (WGS84) */
+export interface ReferencePosition {
+  lat: number;
+  lon: number;
+  height: number;
+}
+
+/** Epoch with ENU coordinates relative to a reference point */
+export interface ENUEpoch {
+  time: Date;
+  timeUnix: number;
+  e: number;
+  n: number;
+  u: number;
+  Q: number;
+  ns: number;
+  ratio: number;
+}
+
+/** Reference coordinate mode for ENU conversion */
+export type ReferenceMode = 'mean' | 'median' | 'rinex-header' | 'manual-llh' | 'manual-xyz';
+
 /** Color mapping for Q flags */
 export const Q_COLORS: Record<number, string> = {
   1: '#40c057', // green - fix
@@ -46,5 +74,5 @@ export const Q_LABELS: Record<number, string> = {
   6: 'PPP',
 };
 
-/** Which metric to plot on chart Y-axis */
-export type ChartMetric = 'height' | 'sdn' | 'sde' | 'sdu';
+/** Which metric to plot on ENU chart Y-axis */
+export type ChartMetric = 'e' | 'n' | 'u' | 'ns';

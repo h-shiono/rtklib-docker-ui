@@ -1,10 +1,36 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Stack, Group, Badge, Text, Loader, SegmentedControl, Select } from '@mantine/core';
+import {
+  Stack,
+  Group,
+  Badge,
+  Text,
+  Loader,
+  SegmentedControl,
+  Select,
+  NumberInput,
+  Popover,
+  ActionIcon,
+  Box,
+} from '@mantine/core';
+import { IconSettings } from '@tabler/icons-react';
 import { readFile } from '../../api/files';
 import { parsePosFile } from './posParser';
+import {
+  convertToENU,
+  computeMeanReference,
+  computeMedianReference,
+  xyzToLlh,
+} from './enuUtils';
 import { MapView } from './MapView';
 import { ChartView } from './ChartView';
-import type { PosEpoch, ChartMetric } from './types';
+import { Plot2DView } from './Plot2DView';
+import type {
+  PosEpoch,
+  ENUEpoch,
+  ReferencePosition,
+  ReferenceMode,
+  ChartMetric,
+} from './types';
 import { Q_COLORS, Q_LABELS } from './types';
 
 interface ResultViewerProps {
@@ -14,26 +40,47 @@ interface ResultViewerProps {
 }
 
 const METRIC_OPTIONS = [
-  { value: 'height', label: 'Height' },
-  { value: 'sdn', label: 'Std N' },
-  { value: 'sde', label: 'Std E' },
-  { value: 'sdu', label: 'Std U' },
+  { value: 'e', label: 'East' },
+  { value: 'n', label: 'North' },
+  { value: 'u', label: 'Up' },
+  { value: 'ns', label: '# Sat' },
 ];
+
+const REFERENCE_OPTIONS = [
+  { value: 'mean', label: 'Mean' },
+  { value: 'median', label: 'Median' },
+  { value: 'rinex-header', label: 'RINEX Header' },
+  { value: 'manual-llh', label: 'Manual (LLH)' },
+  { value: 'manual-xyz', label: 'Manual (XYZ)' },
+];
+
+type ViewMode = '2d' | 'enu' | 'map';
 
 export function ResultViewer({
   filePath,
   maxHeight,
   refreshKey = 0,
 }: ResultViewerProps) {
-  const [data, setData] = useState<PosEpoch[]>([]);
+  const [epochs, setEpochs] = useState<PosEpoch[]>([]);
+  const [headerRefPos, setHeaderRefPos] = useState<ReferencePosition | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'map' | 'chart'>('map');
-  const [chartMetric, setChartMetric] = useState<ChartMetric>('height');
+  const [viewMode, setViewMode] = useState<ViewMode>('2d');
+  const [chartMetric, setChartMetric] = useState<ChartMetric>('e');
+  const [refMode, setRefMode] = useState<ReferenceMode>('mean');
+  const [manualLat, setManualLat] = useState<number>(0);
+  const [manualLon, setManualLon] = useState<number>(0);
+  const [manualHeight, setManualHeight] = useState<number>(0);
+  const [manualX, setManualX] = useState<number>(0);
+  const [manualY, setManualY] = useState<number>(0);
+  const [manualZ, setManualZ] = useState<number>(0);
+  const [refPopoverOpened, setRefPopoverOpened] = useState(false);
 
+  // Load .pos file
   useEffect(() => {
     if (!filePath) {
-      setData([]);
+      setEpochs([]);
+      setHeaderRefPos(null);
       setError(null);
       return;
     }
@@ -46,14 +93,16 @@ export function ResultViewer({
       .then((res) => {
         if (cancelled) return;
         const parsed = parsePosFile(res.content);
-        setData(parsed);
-        if (parsed.length === 0) {
+        setEpochs(parsed.epochs);
+        setHeaderRefPos(parsed.headerRefPos);
+        if (parsed.epochs.length === 0) {
           setError('No position data found in file');
         }
       })
       .catch((err) => {
         if (cancelled) return;
-        setData([]);
+        setEpochs([]);
+        setHeaderRefPos(null);
         setError(err instanceof Error ? err.message : 'Failed to load file');
       })
       .finally(() => {
@@ -65,20 +114,47 @@ export function ResultViewer({
     };
   }, [filePath, refreshKey]);
 
-  // Compute Q-flag statistics
+  // Compute reference position based on selected mode
+  const referencePos = useMemo((): ReferencePosition | null => {
+    if (epochs.length === 0) return null;
+
+    switch (refMode) {
+      case 'mean':
+        return computeMeanReference(epochs);
+      case 'median':
+        return computeMedianReference(epochs);
+      case 'rinex-header':
+        return headerRefPos || computeMeanReference(epochs);
+      case 'manual-llh':
+        return { lat: manualLat, lon: manualLon, height: manualHeight };
+      case 'manual-xyz':
+        return xyzToLlh(manualX, manualY, manualZ);
+      default:
+        return computeMeanReference(epochs);
+    }
+  }, [epochs, refMode, headerRefPos, manualLat, manualLon, manualHeight, manualX, manualY, manualZ]);
+
+  // Convert to ENU
+  const enuData = useMemo((): ENUEpoch[] => {
+    if (!referencePos || epochs.length === 0) return [];
+    return convertToENU(epochs, referencePos);
+  }, [epochs, referencePos]);
+
+  // Q-flag statistics
   const qStats = useMemo(() => {
     const counts: Record<number, number> = {};
-    for (const epoch of data) {
+    for (const epoch of epochs) {
       counts[epoch.Q] = (counts[epoch.Q] || 0) + 1;
     }
     return counts;
-  }, [data]);
+  }, [epochs]);
 
-  // Layout heights
+  // Layout
   const controlBarHeight = 32;
   const legendHeight = 28;
   const vizHeight = maxHeight - controlBarHeight - legendHeight;
 
+  // Placeholder states
   if (!filePath) {
     return (
       <Stack align="center" justify="center" h={maxHeight} gap="xs">
@@ -98,7 +174,7 @@ export function ResultViewer({
     );
   }
 
-  if (error && data.length === 0) {
+  if (error && epochs.length === 0) {
     return (
       <Stack align="center" justify="center" h={maxHeight} gap="xs">
         <Text size="sm" c="dimmed" fs="italic" ff="monospace">
@@ -107,6 +183,8 @@ export function ResultViewer({
       </Stack>
     );
   }
+
+  const isManual = refMode === 'manual-llh' || refMode === 'manual-xyz';
 
   return (
     <Stack gap={0} h={maxHeight}>
@@ -117,38 +195,108 @@ export function ResultViewer({
         py={4}
         style={{ height: controlBarHeight, flexShrink: 0 }}
       >
-        <SegmentedControl
-          size="xs"
-          value={viewMode}
-          onChange={(v) => setViewMode(v as 'map' | 'chart')}
-          data={[
-            { label: 'Map', value: 'map' },
-            { label: 'Chart', value: 'chart' },
-          ]}
-        />
         <Group gap="xs">
-          {viewMode === 'chart' && (
+          <SegmentedControl
+            size="xs"
+            value={viewMode}
+            onChange={(v) => setViewMode(v as ViewMode)}
+            data={[
+              { label: '2D', value: '2d' },
+              { label: 'ENU', value: 'enu' },
+              { label: 'Map', value: 'map' },
+            ]}
+          />
+          {viewMode === 'enu' && (
             <Select
               size="xs"
               value={chartMetric}
               onChange={(v) => v && setChartMetric(v as ChartMetric)}
               data={METRIC_OPTIONS}
-              w={100}
+              w={90}
               styles={{ input: { fontSize: '11px' } }}
             />
           )}
+        </Group>
+
+        <Group gap="xs">
+          {viewMode !== 'map' && (
+            <Popover
+              opened={refPopoverOpened}
+              onChange={setRefPopoverOpened}
+              position="bottom-end"
+              withArrow
+              shadow="md"
+              width={280}
+            >
+              <Popover.Target>
+                <Group
+                  gap={4}
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => setRefPopoverOpened((o) => !o)}
+                >
+                  <Text size="xs" c="dimmed" style={{ fontSize: '10px' }}>
+                    Ref: {REFERENCE_OPTIONS.find((o) => o.value === refMode)?.label}
+                  </Text>
+                  <ActionIcon variant="subtle" color="gray" size="xs">
+                    <IconSettings size={12} />
+                  </ActionIcon>
+                </Group>
+              </Popover.Target>
+              <Popover.Dropdown>
+                <Stack gap="xs">
+                  <Select
+                    size="xs"
+                    label="Reference Coordinates"
+                    value={refMode}
+                    onChange={(v) => v && setRefMode(v as ReferenceMode)}
+                    data={REFERENCE_OPTIONS}
+                    styles={{ label: { fontSize: '10px' } }}
+                  />
+                  {refMode === 'manual-llh' && (
+                    <Box>
+                      <Text size="xs" c="dimmed" mb={4}>WGS84 LLH</Text>
+                      <Stack gap={4}>
+                        <NumberInput size="xs" label="Latitude (deg)" value={manualLat} onChange={(v) => setManualLat(Number(v))} decimalScale={9} step={0.001} styles={{ label: { fontSize: '10px' } }} />
+                        <NumberInput size="xs" label="Longitude (deg)" value={manualLon} onChange={(v) => setManualLon(Number(v))} decimalScale={9} step={0.001} styles={{ label: { fontSize: '10px' } }} />
+                        <NumberInput size="xs" label="Height (m)" value={manualHeight} onChange={(v) => setManualHeight(Number(v))} decimalScale={4} step={0.1} styles={{ label: { fontSize: '10px' } }} />
+                      </Stack>
+                    </Box>
+                  )}
+                  {refMode === 'manual-xyz' && (
+                    <Box>
+                      <Text size="xs" c="dimmed" mb={4}>ECEF XYZ (m)</Text>
+                      <Stack gap={4}>
+                        <NumberInput size="xs" label="X (m)" value={manualX} onChange={(v) => setManualX(Number(v))} decimalScale={4} step={1} styles={{ label: { fontSize: '10px' } }} />
+                        <NumberInput size="xs" label="Y (m)" value={manualY} onChange={(v) => setManualY(Number(v))} decimalScale={4} step={1} styles={{ label: { fontSize: '10px' } }} />
+                        <NumberInput size="xs" label="Z (m)" value={manualZ} onChange={(v) => setManualZ(Number(v))} decimalScale={4} step={1} styles={{ label: { fontSize: '10px' } }} />
+                      </Stack>
+                    </Box>
+                  )}
+                  {referencePos && !isManual && (
+                    <Text size="xs" c="dimmed" style={{ fontSize: '10px' }}>
+                      {referencePos.lat.toFixed(8)}°, {referencePos.lon.toFixed(8)}°, {referencePos.height.toFixed(3)}m
+                    </Text>
+                  )}
+                </Stack>
+              </Popover.Dropdown>
+            </Popover>
+          )}
           <Badge size="xs" variant="light" color="gray">
-            {data.length.toLocaleString()} epochs
+            {epochs.length.toLocaleString()} epochs
           </Badge>
         </Group>
       </Group>
 
       {/* Visualization area */}
       <div style={{ flex: 1, minHeight: 0 }}>
-        {viewMode === 'map' ? (
-          <MapView data={data} height={vizHeight} />
-        ) : (
-          <ChartView data={data} height={vizHeight} metric={chartMetric} />
+        {viewMode === '2d' && (
+          <Plot2DView data={enuData} height={vizHeight} />
+        )}
+        {viewMode === 'enu' && (
+          <ChartView data={enuData} height={vizHeight} metric={chartMetric} />
+        )}
+        {viewMode === 'map' && (
+          <MapView data={epochs} height={vizHeight} />
         )}
       </div>
 
