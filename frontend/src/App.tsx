@@ -618,9 +618,15 @@ function StreamServerPanel({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Ref to track current process ID without causing useCallback re-creation
+  const processIdRef = useRef<string | null>(processId);
+  processIdRef.current = processId;
+
   // WebSocket connection for real-time logs
   const { isConnected, clearMessages } = useWebSocket({
     onMessage: useCallback((message: LogMessage) => {
+      // Only process messages for our str2str process
+      if (message.process_id !== processIdRef.current) return;
       if (message.type === 'log' && message.message) {
         setLogLines((prev) => [...prev.slice(-500), message.message!]);
       }
