@@ -13,7 +13,7 @@ import {
   Box,
   Switch,
 } from '@mantine/core';
-import { IconSettings, IconAdjustments } from '@tabler/icons-react';
+import { IconSettings, IconAdjustments, IconZoomReset } from '@tabler/icons-react';
 import { readFile } from '../../api/files';
 import { parsePosFile } from './posParser';
 import {
@@ -256,6 +256,19 @@ export function ResultViewer({
         </Group>
 
         <Group gap="xs">
+          {/* Reset zoom (ENU mode, visible when zoomed) */}
+          {viewMode === 'enu' && xRange && (
+            <ActionIcon
+              variant="subtle"
+              color="gray"
+              size="xs"
+              onClick={() => setXRange(null)}
+              title="Reset zoom"
+            >
+              <IconZoomReset size={14} />
+            </ActionIcon>
+          )}
+
           {/* Y-Axis settings (ENU mode only) */}
           {viewMode === 'enu' && (
             <Popover

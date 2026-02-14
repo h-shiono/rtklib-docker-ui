@@ -25,6 +25,13 @@ const METRIC_LABELS: Record<ChartMetric, string> = {
   ns: '# Satellites',
 };
 
+const METRIC_SHORT: Record<ChartMetric, string> = {
+  e: 'E',
+  n: 'N',
+  u: 'U',
+  ns: 'ns',
+};
+
 /** uPlot plugin to draw Q-flag colored points */
 function qColorPlugin(qValues: number[]): uPlot.Plugin {
   return {
@@ -48,6 +55,72 @@ function qColorPlugin(qValues: number[]): uPlot.Plugin {
           ctx.fill();
         }
         ctx.restore();
+      },
+    },
+  };
+}
+
+/** uPlot plugin for floating tooltip near the data point */
+function tooltipPlugin(metricKey: ChartMetric, isDark: boolean): uPlot.Plugin {
+  let tip: HTMLDivElement | null = null;
+
+  return {
+    hooks: {
+      init: (u: uPlot) => {
+        tip = document.createElement('div');
+        tip.style.position = 'absolute';
+        tip.style.pointerEvents = 'none';
+        tip.style.display = 'none';
+        tip.style.padding = '3px 6px';
+        tip.style.borderRadius = '4px';
+        tip.style.fontSize = '10px';
+        tip.style.fontFamily = 'monospace';
+        tip.style.zIndex = '100';
+        tip.style.whiteSpace = 'nowrap';
+        tip.style.backgroundColor = isDark ? 'rgba(30,30,30,0.9)' : 'rgba(255,255,255,0.92)';
+        tip.style.color = isDark ? '#ddd' : '#333';
+        tip.style.border = isDark ? '1px solid rgba(255,255,255,0.15)' : '1px solid rgba(0,0,0,0.12)';
+        tip.style.boxShadow = '0 2px 6px rgba(0,0,0,0.15)';
+        u.over.appendChild(tip);
+      },
+      setCursor: (u: uPlot) => {
+        if (!tip) return;
+        const idx = u.cursor.idx;
+        if (idx == null) {
+          tip.style.display = 'none';
+          return;
+        }
+
+        const xVal = u.data[0][idx];
+        const yVal = u.data[1][idx] as number;
+        if (xVal == null || yVal == null) {
+          tip.style.display = 'none';
+          return;
+        }
+
+        // Format time (UTC)
+        const d = new Date(xVal * 1000);
+        const hh = String(d.getUTCHours()).padStart(2, '0');
+        const mm = String(d.getUTCMinutes()).padStart(2, '0');
+        const ss = String(d.getUTCSeconds()).padStart(2, '0');
+
+        // Format value
+        const valStr = metricKey === 'ns' ? String(yVal) : yVal.toFixed(4);
+        tip.textContent = `${hh}:${mm}:${ss}  ${METRIC_SHORT[metricKey]}=${valStr}`;
+        tip.style.display = 'block';
+
+        // Position: near the data point, offset to top-right
+        const cx = Math.round(u.valToPos(xVal, 'x'));
+        const cy = Math.round(u.valToPos(yVal, 'y'));
+        const overW = u.over.clientWidth;
+
+        // Flip to left side if too close to right edge
+        const tipW = tip.offsetWidth || 100;
+        const left = cx + tipW + 12 > overW ? cx - tipW - 8 : cx + 8;
+        const top = Math.max(0, cy - 22);
+
+        tip.style.left = `${left}px`;
+        tip.style.top = `${top}px`;
       },
     },
   };
@@ -99,7 +172,11 @@ export function ChartView({
     const opts: uPlot.Options = {
       width,
       height: height - 8,
-      plugins: [qColorPlugin(plotData.qValues)],
+      plugins: [
+        qColorPlugin(plotData.qValues),
+        tooltipPlugin(metric, isDark),
+      ],
+      legend: { show: false },
       cursor: {
         drag: { x: true, y: false },
       },
