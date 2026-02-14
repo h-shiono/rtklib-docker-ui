@@ -125,8 +125,8 @@ function StationPositionInput({
               onChange({ ...value, values: [Number(val), value.values[1], value.values[2]] })
             }
             disabled={coordsDisabled || !isManualInput}
-            step={value.mode === 'xyz' ? 1 : 0.0001}
-            decimalScale={value.mode === 'xyz' ? 3 : 6}
+            step={value.mode === 'xyz' ? 0.0001 : 0.000000001}
+            decimalScale={value.mode === 'xyz' ? 4 : 9}
             hideControls
             styles={{ label: { fontSize: '10px' } }}
           />
@@ -138,8 +138,8 @@ function StationPositionInput({
               onChange({ ...value, values: [value.values[0], Number(val), value.values[2]] })
             }
             disabled={coordsDisabled || !isManualInput}
-            step={value.mode === 'xyz' ? 1 : 0.0001}
-            decimalScale={value.mode === 'xyz' ? 3 : 6}
+            step={value.mode === 'xyz' ? 0.0001 : 0.000000001}
+            decimalScale={value.mode === 'xyz' ? 4 : 9}
             hideControls
             styles={{ label: { fontSize: '10px' } }}
           />
@@ -151,8 +151,8 @@ function StationPositionInput({
               onChange({ ...value, values: [value.values[0], value.values[1], Number(val)] })
             }
             disabled={coordsDisabled || !isManualInput}
-            step={0.001}
-            decimalScale={3}
+            step={0.0001}
+            decimalScale={4}
             hideControls
             styles={{ label: { fontSize: '10px' } }}
           />
