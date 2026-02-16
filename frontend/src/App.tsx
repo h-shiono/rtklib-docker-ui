@@ -33,8 +33,10 @@ import {
   IconTestPipe,
   IconInfoCircle,
   IconFolderOpen,
+  IconChartBar,
 } from '@tabler/icons-react';
 import { TerminalOutput, StatusIndicator, StreamConfiguration, PostProcessingConfiguration, FileBrowserModal, TabbedTerminalOutput } from './components';
+import { ObsViewerModal } from './components/obsViewer';
 import type { ProcessStatus } from './components';
 import { useWebSocket } from './hooks';
 import type { LogMessage } from './hooks';
@@ -76,6 +78,7 @@ function PostProcessingPanel() {
   const [error, setError] = useState<string | null>(null);
   const [jobId, setJobId] = useState<string | null>(null);
   const [fileBrowserOpened, setFileBrowserOpened] = useState(false);
+  const [qcModalOpened, setQcModalOpened] = useState(false);
   const fileBrowserCallbackRef = useRef<((path: string) => void) | null>(null);
   const [progress, setProgress] = useState<{
     epoch: string;
@@ -449,6 +452,16 @@ function PostProcessingPanel() {
                   </ActionIcon>
                 </Group>
               </div>
+
+              <Button
+                variant="light"
+                size="xs"
+                leftSection={<IconChartBar size={14} />}
+                onClick={() => setQcModalOpened(true)}
+                disabled={!roverFile}
+              >
+                QC Preview
+              </Button>
             </Stack>
           </Card>
 
@@ -606,6 +619,12 @@ function PostProcessingPanel() {
       onClose={() => setFileBrowserOpened(false)}
       onSelect={handleFileBrowserSelect}
       title="Select File"
+    />
+    <ObsViewerModal
+      opened={qcModalOpened}
+      onClose={() => setQcModalOpened(false)}
+      obsFile={roverFile}
+      navFile={navFile || undefined}
     />
     </>
   );

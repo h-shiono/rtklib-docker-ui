@@ -13,6 +13,7 @@ dependencies = [
     "python-socketio>=5.11.0",
     "python-multipart>=0.0.18",
     "pydantic>=2.10.0",
+    "cssrlib>=1.2.1",
 ]
 
 [project.scripts]
