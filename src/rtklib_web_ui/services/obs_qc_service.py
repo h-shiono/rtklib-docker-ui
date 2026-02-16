@@ -118,26 +118,28 @@ def _auto_configure_signals(dec) -> None:
     but sig_tab (desired signals) is empty. Without configuring sig_tab,
     decode_obs() skips all satellites.
 
-    This function builds sig_tab from sig_map, registering all available signals.
+    We register exactly ONE signal per observation type (C/L/D/S) per constellation.
+    This ensures nsig is consistent across all constellations and the numpy
+    reshape in decode_obs() works correctly.
     """
-    from cssrlib.gnss import rSigRnx
+    from cssrlib.gnss import uTYP
 
     if not dec.sig_map:
         return
 
     sig_list = []
-    seen = set()  # Track (sys, typ, sig) to avoid duplicates
+    # Track which (sys, typ) combos we've already added
+    added: set[tuple] = set()
 
     for sys, signals in dec.sig_map.items():
         for _idx, rnx_sig in signals.items():
-            key = (rnx_sig.sys, rnx_sig.typ, rnx_sig.sig)
-            if key not in seen:
-                seen.add(key)
+            key = (rnx_sig.sys, rnx_sig.typ)
+            if key not in added:
+                added.add(key)
                 sig_list.append(rnx_sig)
 
     if sig_list:
         dec.setSignals(sig_list)
-        dec.autoSubstituteSignals()
 
 
 def analyze_obs(
