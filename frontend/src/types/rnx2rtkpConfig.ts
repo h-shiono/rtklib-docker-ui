@@ -224,6 +224,16 @@ export interface MiscConfig {
   rinexOptBase: string;
 }
 
+export interface TimeConfig {
+  startEnabled: boolean;
+  startDate: string; // "YYYY/MM/DD"
+  startTime: string; // "HH:MM:SS"
+  endEnabled: boolean;
+  endDate: string;   // "YYYY/MM/DD"
+  endTime: string;   // "HH:MM:SS"
+  interval: number;  // seconds, 0 = use all epochs
+}
+
 export interface Rnx2RtkpConfig {
   setting1: Setting1Config;
   setting2: Setting2Config;
@@ -233,6 +243,7 @@ export interface Rnx2RtkpConfig {
   basePosition: BasePositionConfig;
   files: FilesConfig;
   misc: MiscConfig;
+  time: TimeConfig;
 }
 
 export interface Rnx2RtkpInputFiles {
@@ -243,8 +254,8 @@ export interface Rnx2RtkpInputFiles {
 }
 
 export interface Rnx2RtkpTimeRange {
-  startTime?: string; // ISO format or empty
-  endTime?: string;
+  start_time?: string; // "YYYY/MM/DD HH:MM:SS" GPST format
+  end_time?: string;
   interval?: number; // seconds
 }
 
@@ -420,6 +431,16 @@ export const DEFAULT_MISC: MiscConfig = {
   rinexOptBase: '',
 };
 
+export const DEFAULT_TIME: TimeConfig = {
+  startEnabled: false,
+  startDate: '2000/01/01',
+  startTime: '00:00:00',
+  endEnabled: false,
+  endDate: '2000/01/01',
+  endTime: '00:00:00',
+  interval: 0,
+};
+
 export const DEFAULT_RNX2RTKP_CONFIG: Rnx2RtkpConfig = {
   setting1: DEFAULT_SETTING1,
   setting2: DEFAULT_SETTING2,
@@ -429,4 +450,5 @@ export const DEFAULT_RNX2RTKP_CONFIG: Rnx2RtkpConfig = {
   basePosition: DEFAULT_BASE_POSITION,
   files: DEFAULT_FILES,
   misc: DEFAULT_MISC,
+  time: DEFAULT_TIME,
 };

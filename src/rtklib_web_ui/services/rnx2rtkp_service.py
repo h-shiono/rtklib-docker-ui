@@ -263,7 +263,7 @@ class Rnx2RtkpTimeRange(BaseModel):
 
     start_time: Optional[str] = None
     end_time: Optional[str] = None
-    interval: Optional[int] = None
+    interval: Optional[float] = None
 
 
 class Rnx2RtkpJob(BaseModel):
@@ -523,14 +523,13 @@ class Rnx2RtkpService:
             conf_path = conf_file.name
 
         try:
-            # Build command
+            # Build command: options first, then input files
             cmd = [
                 self.rtklib_bin_path,
                 "-k",
                 conf_path,
                 "-o",
                 job.input_files.output_file,
-                job.input_files.rover_obs_file,
             ]
 
             # Add trace level via -x flag (conf file alone doesn't enable trace)
@@ -538,6 +537,18 @@ class Rnx2RtkpService:
             trace_level = _trace_levels.get(job.config.output.debug_trace)
             if trace_level:
                 cmd.extend(["-x", trace_level])
+
+            # Add time range flags
+            if job.time_range:
+                if job.time_range.start_time:
+                    cmd.extend(["-ts", job.time_range.start_time])
+                if job.time_range.end_time:
+                    cmd.extend(["-te", job.time_range.end_time])
+                if job.time_range.interval and job.time_range.interval > 0:
+                    cmd.extend(["-ti", str(job.time_range.interval)])
+
+            # Add input files (must come after options)
+            cmd.append(job.input_files.rover_obs_file)
 
             # Add base observation file if provided
             if job.input_files.base_obs_file:

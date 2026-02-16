@@ -295,6 +295,16 @@ function PostProcessingPanel() {
     try {
       const backendConfig = buildBackendConfig();
 
+      // Build time_range from config.time (only if any setting is enabled)
+      const t = config.time;
+      const timeRange = (t?.startEnabled || t?.endEnabled || (t?.interval && t.interval > 0))
+        ? {
+            start_time: t.startEnabled ? `${t.startDate} ${t.startTime}` : undefined,
+            end_time: t.endEnabled ? `${t.endDate} ${t.endTime}` : undefined,
+            interval: t.interval > 0 ? t.interval : undefined,
+          }
+        : undefined;
+
       const response = await rnx2rtkpApi.executeRnx2Rtkp({
         input_files: {
           rover_obs_file: roverFile,
@@ -303,6 +313,7 @@ function PostProcessingPanel() {
           output_file: outputFile,
         },
         config: backendConfig as any,
+        time_range: timeRange,
       });
 
       // Set ref synchronously BEFORE state update so WebSocket handler can
