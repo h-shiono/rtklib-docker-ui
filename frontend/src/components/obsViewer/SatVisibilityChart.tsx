@@ -5,11 +5,12 @@ import type { SatVisSegment } from '../../api/obsQc';
 interface SatVisibilityChartProps {
   visibility: SatVisSegment[];
   satellites: string[];
+  snr: number[][]; // [[time, sat_idx, snr, el, az], ...]
   height: number;
   constellationFilter: Set<string>;
 }
 
-// Constellation colors
+// Constellation colors (for satellite labels)
 const CONSTELLATION_COLORS: Record<string, string> = {
   G: '#4CAF50', // GPS - Green
   R: '#F44336', // GLONASS - Red
@@ -23,11 +24,23 @@ const CONSTELLATION_COLORS: Record<string, string> = {
 const ROW_HEIGHT = 16;
 const LABEL_WIDTH = 50;
 const TOP_MARGIN = 24;
-const BOTTOM_MARGIN = 24;
+const BOTTOM_MARGIN = 44; // Room for time axis + colorbar
+
+const SNR_MIN = 10;
+const SNR_MAX = 50;
+const QC_BLOCK_WIDTH = 30; // seconds (matches backend QC_INTERVAL)
+
+/** Map SNR value (dBHz) to HSL color: red(low) → yellow → green(high) */
+function snrToColor(snr: number): string {
+  const t = Math.max(0, Math.min(1, (snr - SNR_MIN) / (SNR_MAX - SNR_MIN)));
+  const hue = t * 120; // 0=red, 60=yellow, 120=green
+  return `hsl(${hue}, 85%, 45%)`;
+}
 
 export function SatVisibilityChart({
   visibility,
   satellites,
+  snr,
   height,
   constellationFilter,
 }: SatVisibilityChartProps) {
@@ -43,10 +56,30 @@ export function SatVisibilityChart({
     return satellites.filter((s) => constellationFilter.has(s[0]));
   }, [satellites, constellationFilter]);
 
+  // Map original sat index → filtered index
+  const satIdxToFiltered = useMemo(() => {
+    const map = new Map<number, number>();
+    let filteredIdx = 0;
+    satellites.forEach((s, origIdx) => {
+      if (constellationFilter.has(s[0])) {
+        map.set(origIdx, filteredIdx++);
+      }
+    });
+    return map;
+  }, [satellites, constellationFilter]);
+
   // Filter visibility segments
   const filteredVis = useMemo(() => {
     return visibility.filter((v) => constellationFilter.has(v.constellation));
   }, [visibility, constellationFilter]);
+
+  // Filter SNR data by constellation
+  const filteredSnr = useMemo(() => {
+    return snr.filter((row) => {
+      const satId = satellites[row[1]];
+      return satId && constellationFilter.has(satId[0]);
+    });
+  }, [snr, satellites, constellationFilter]);
 
   // Compute time range
   const timeRange = useMemo(() => {
@@ -82,6 +115,7 @@ export function SatVisibilityChart({
     const bgColor = isDark ? '#1a1b1e' : '#ffffff';
     const textColor = isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)';
     const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
+    const segmentBg = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
 
     // Clear
     ctx.fillStyle = bgColor;
@@ -117,12 +151,12 @@ export function SatVisibilityChart({
       ctx.lineTo(width, y);
       ctx.stroke();
 
-      // Label
+      // Label (colored by constellation)
       ctx.fillStyle = CONSTELLATION_COLORS[sid[0]] || textColor;
       ctx.fillText(sid, LABEL_WIDTH - 4, y + ROW_HEIGHT / 2);
     }
 
-    // Draw visibility bars
+    // Draw gray visibility segment bars (background — satellite presence)
     for (const seg of filteredVis) {
       const satIdx = filteredSats.indexOf(seg.sat_id);
       if (satIdx < 0) continue;
@@ -134,10 +168,29 @@ export function SatVisibilityChart({
       const y = TOP_MARGIN + satIdx * ROW_HEIGHT + 2;
       const barH = ROW_HEIGHT - 4;
 
-      ctx.fillStyle = CONSTELLATION_COLORS[seg.constellation] || '#888';
-      ctx.globalAlpha = 0.75;
+      ctx.fillStyle = segmentBg;
       ctx.fillRect(x1, y, Math.max(x2 - x1, 1), barH);
-      ctx.globalAlpha = 1.0;
+    }
+
+    // Draw SNR-colored blocks (per-epoch)
+    const blockWidthPx = Math.max(1, (QC_BLOCK_WIDTH / xSpan) * chartWidth);
+    for (const row of filteredSnr) {
+      const [t, satIdx, snrVal] = row;
+      const fIdx = satIdxToFiltered.get(satIdx);
+      if (fIdx === undefined) continue;
+
+      const x = toX(t);
+      if (x + blockWidthPx < LABEL_WIDTH || x > width) continue;
+
+      const clampedX = Math.max(x, LABEL_WIDTH);
+      const drawW = Math.min(x + blockWidthPx, width) - clampedX;
+      if (drawW <= 0) continue;
+
+      const y = TOP_MARGIN + fIdx * ROW_HEIGHT + 2;
+      const barH = ROW_HEIGHT - 4;
+
+      ctx.fillStyle = snrToColor(snrVal);
+      ctx.fillRect(clampedX, y, drawW, barH);
     }
 
     // Draw time axis
@@ -166,7 +219,43 @@ export function SatVisibilityChart({
       ctx.fillStyle = textColor;
       ctx.fillText(`${hh}:${mm}`, x, TOP_MARGIN + chartHeight + 4);
     }
-  }, [width, filteredSats, filteredVis, timeRange]);
+
+    // Draw colorbar legend
+    const legendY = TOP_MARGIN + chartHeight + 22;
+    const legendH = 10;
+    const legendLeft = LABEL_WIDTH + 40;
+    const legendRight = width - 40;
+    const legendW = legendRight - legendLeft;
+
+    if (legendW > 80) {
+      // Gradient bar
+      for (let px = 0; px < legendW; px++) {
+        const snrVal = SNR_MIN + (px / legendW) * (SNR_MAX - SNR_MIN);
+        ctx.fillStyle = snrToColor(snrVal);
+        ctx.fillRect(legendLeft + px, legendY, 1, legendH);
+      }
+
+      // Border
+      ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)';
+      ctx.lineWidth = 0.5;
+      ctx.strokeRect(legendLeft, legendY, legendW, legendH);
+
+      // Tick labels
+      ctx.fillStyle = textColor;
+      ctx.font = '9px monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      const tickValues = [10, 20, 30, 40, 50];
+      for (const tv of tickValues) {
+        const tx = legendLeft + ((tv - SNR_MIN) / (SNR_MAX - SNR_MIN)) * legendW;
+        ctx.fillText(`${tv}`, tx, legendY + legendH + 2);
+      }
+
+      // Unit label
+      ctx.textAlign = 'left';
+      ctx.fillText('dBHz', legendRight + 6, legendY + 1);
+    }
+  }, [width, filteredSats, filteredVis, filteredSnr, satIdxToFiltered, timeRange]);
 
   useEffect(() => {
     draw();

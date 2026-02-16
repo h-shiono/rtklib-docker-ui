@@ -8,6 +8,7 @@ import {
   Loader,
   SegmentedControl,
   Checkbox,
+  Select,
   Alert,
 } from '@mantine/core';
 import { IconInfoCircle } from '@tabler/icons-react';
@@ -35,6 +36,34 @@ const CONSTELLATION_OPTIONS = [
   { value: 'I', label: 'IRN', color: '#607D8B' },
 ];
 
+/** Map RINEX SNR signal codes to friendly labels */
+const SIGNAL_LABELS: Record<string, string> = {
+  S1C: 'L1 C/A',
+  S1S: 'L1 C/A',
+  S1W: 'L1 P(Y)',
+  S1X: 'L1 B+C',
+  S2C: 'L2 C/A',
+  S2D: 'L2 Semi-CL',
+  S2W: 'L2 P(Y)',
+  S2L: 'L2C(L)',
+  S2S: 'L2C(M)',
+  S2X: 'L2C',
+  S2P: 'L2 P',
+  S5I: 'L5 I',
+  S5Q: 'L5 Q',
+  S5X: 'L5 I+Q',
+  S6A: 'L6 A',
+  S6B: 'L6 B',
+  S6C: 'L6 C',
+  S6X: 'L6 B+C',
+  S7I: 'E5b I',
+  S7Q: 'E5b Q',
+  S7X: 'E5b I+Q',
+  S8I: 'E5 I',
+  S8Q: 'E5 Q',
+  S8X: 'E5 I+Q',
+};
+
 export function ObsViewerModal({
   opened,
   onClose,
@@ -48,39 +77,42 @@ export function ObsViewerModal({
   const [selectedConstellations, setSelectedConstellations] = useState<string[]>([
     'G', 'R', 'E', 'C', 'J',
   ]);
+  const [selectedSignal, setSelectedSignal] = useState<string | null>(null);
 
   const constellationFilter = useMemo(
     () => new Set(selectedConstellations),
     [selectedConstellations],
   );
 
-  // Fetch data when modal opens
+  // Fetch data when modal opens or signal changes
   useEffect(() => {
     if (!opened || !obsFile) return;
 
     let cancelled = false;
     setLoading(true);
     setError(null);
-    setData(null);
 
     analyzeObs({
       obs_file: obsFile,
       nav_file: navFile || undefined,
+      signal: selectedSignal || undefined,
     })
       .then((result) => {
         if (cancelled) return;
         setData(result);
 
-        // Auto-select constellations based on data
-        const foundConstellations = new Set<string>();
-        for (const sat of result.satellites) {
-          foundConstellations.add(sat[0]);
+        // Auto-select constellations on first load only
+        if (!selectedSignal) {
+          const foundConstellations = new Set<string>();
+          for (const sat of result.satellites) {
+            foundConstellations.add(sat[0]);
+          }
+          setSelectedConstellations(
+            CONSTELLATION_OPTIONS.filter((c) => foundConstellations.has(c.value)).map(
+              (c) => c.value,
+            ),
+          );
         }
-        setSelectedConstellations(
-          CONSTELLATION_OPTIONS.filter((c) => foundConstellations.has(c.value)).map(
-            (c) => c.value,
-          ),
-        );
       })
       .catch((err) => {
         if (cancelled) return;
@@ -93,7 +125,7 @@ export function ObsViewerModal({
     return () => {
       cancelled = true;
     };
-  }, [opened, obsFile, navFile]);
+  }, [opened, obsFile, navFile, selectedSignal]);
 
   // Available constellations from data
   const availableConstellations = useMemo(() => {
@@ -103,6 +135,15 @@ export function ObsViewerModal({
       found.add(sat[0]);
     }
     return CONSTELLATION_OPTIONS.filter((c) => found.has(c.value));
+  }, [data]);
+
+  // Signal dropdown options
+  const signalOptions = useMemo(() => {
+    if (!data) return [];
+    return data.signals.map((s) => ({
+      value: s,
+      label: SIGNAL_LABELS[s] ? `${s} (${SIGNAL_LABELS[s]})` : s,
+    }));
   }, [data]);
 
   const handleConstellationChange = useCallback((values: string[]) => {
@@ -122,7 +163,8 @@ export function ObsViewerModal({
         title: { fontWeight: 600, fontSize: '14px' },
       }}
     >
-      {loading && (
+      {/* Initial loading (no data yet) */}
+      {loading && !data && (
         <Stack align="center" justify="center" h={300} gap="xs">
           <Loader size="sm" color="gray" />
           <Text size="xs" c="dimmed">
@@ -142,7 +184,7 @@ export function ObsViewerModal({
         </Alert>
       )}
 
-      {data && !loading && (
+      {data && (
         <Stack gap="xs">
           {/* Header summary */}
           <Group gap="xs" wrap="wrap">
@@ -181,60 +223,95 @@ export function ObsViewerModal({
               ]}
             />
 
-            <Checkbox.Group
-              value={selectedConstellations}
-              onChange={handleConstellationChange}
-            >
-              <Group gap={6}>
-                {availableConstellations.map((c) => (
-                  <Checkbox
-                    key={c.value}
-                    value={c.value}
-                    label={
-                      <Text size="xs" style={{ color: c.color, fontSize: '10px' }}>
-                        {c.label}
-                      </Text>
-                    }
-                    size="xs"
-                    styles={{
-                      input: { cursor: 'pointer' },
-                      label: { paddingLeft: 4, cursor: 'pointer' },
-                    }}
-                  />
-                ))}
-              </Group>
-            </Checkbox.Group>
+            <Group gap="xs">
+              <Select
+                size="xs"
+                value={selectedSignal}
+                onChange={setSelectedSignal}
+                placeholder="Signal"
+                data={signalOptions}
+                clearable
+                w={160}
+                styles={{
+                  input: { fontSize: '11px' },
+                }}
+              />
+
+              <Checkbox.Group
+                value={selectedConstellations}
+                onChange={handleConstellationChange}
+              >
+                <Group gap={6}>
+                  {availableConstellations.map((c) => (
+                    <Checkbox
+                      key={c.value}
+                      value={c.value}
+                      label={
+                        <Text size="xs" style={{ color: c.color, fontSize: '10px' }}>
+                          {c.label}
+                        </Text>
+                      }
+                      size="xs"
+                      styles={{
+                        input: { cursor: 'pointer' },
+                        label: { paddingLeft: 4, cursor: 'pointer' },
+                      }}
+                    />
+                  ))}
+                </Group>
+              </Checkbox.Group>
+            </Group>
           </Group>
 
           {/* Visualization */}
-          {viewMode === 'visibility' && (
-            <SatVisibilityChart
-              visibility={data.visibility}
-              satellites={data.satellites}
-              height={vizHeight}
-              constellationFilter={constellationFilter}
-            />
-          )}
-          {viewMode === 'snr-time' && (
-            <SnrChart
-              snr={data.snr}
-              satellites={data.satellites}
-              height={vizHeight}
-              mode="time"
-              constellationFilter={constellationFilter}
-              hasElevation={data.has_elevation}
-            />
-          )}
-          {viewMode === 'snr-elevation' && (
-            <SnrChart
-              snr={data.snr}
-              satellites={data.satellites}
-              height={vizHeight}
-              mode="elevation"
-              constellationFilter={constellationFilter}
-              hasElevation={data.has_elevation}
-            />
-          )}
+          <div style={{ position: 'relative' }}>
+            {loading && (
+              <Stack
+                align="center"
+                justify="center"
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  zIndex: 10,
+                  backgroundColor: 'rgba(0,0,0,0.05)',
+                  borderRadius: 4,
+                }}
+              >
+                <Loader size="sm" color="gray" />
+              </Stack>
+            )}
+            <div style={{ opacity: loading ? 0.4 : 1, transition: 'opacity 0.2s' }}>
+              {viewMode === 'visibility' && (
+                <SatVisibilityChart
+                  visibility={data.visibility}
+                  satellites={data.satellites}
+                  snr={data.snr}
+                  height={vizHeight}
+                  constellationFilter={constellationFilter}
+                />
+              )}
+              {viewMode === 'snr-time' && (
+                <SnrChart
+                  snr={data.snr}
+                  satellites={data.satellites}
+                  height={vizHeight}
+                  mode="time"
+                  constellationFilter={constellationFilter}
+                  hasElevation={data.has_elevation}
+                />
+              )}
+              {viewMode === 'snr-elevation' && (
+                <SnrChart
+                  snr={data.snr}
+                  satellites={data.satellites}
+                  height={vizHeight}
+                  mode="elevation"
+                  constellationFilter={constellationFilter}
+                  hasElevation={data.has_elevation}
+                />
+              )}
+            </div>
+          </div>
         </Stack>
       )}
     </Modal>

@@ -98,22 +98,33 @@ class _VisTracker:
         self._last_time = t
 
 
-def _auto_configure_signals(dec) -> None:
+def _auto_configure_signals(dec, preferred_snr: str | None = None) -> None:
     """Register one signal per obs-type per constellation from sig_map.
 
     Must be called after decode_obsh() and before decode_obs().
     Uses exactly one signal per (sys, typ) pair to keep nsig consistent.
+    When preferred_snr is specified (e.g., "S1C"), prefer that SNR signal.
     """
+    from cssrlib.gnss import uTYP
+
     if not dec.sig_map:
         return
-    sig_list = []
-    added: set[tuple] = set()
+
+    # Group signals by (sys, typ)
+    groups: dict[tuple, list] = {}
     for _sys, signals in dec.sig_map.items():
         for _idx, rnx_sig in signals.items():
             key = (rnx_sig.sys, rnx_sig.typ)
-            if key not in added:
-                added.add(key)
-                sig_list.append(rnx_sig)
+            groups.setdefault(key, []).append(rnx_sig)
+
+    sig_list = []
+    for (_sys_id, typ), candidates in groups.items():
+        if typ == uTYP.S and preferred_snr:
+            match = next((s for s in candidates if str(s) == preferred_snr), None)
+            sig_list.append(match or candidates[0])
+        else:
+            sig_list.append(candidates[0])
+
     if sig_list:
         dec.setSignals(sig_list)
 
@@ -148,7 +159,7 @@ def analyze_obs(
             f"Failed to decode RINEX header (code={ret}). "
             "Only RINEX 3.x/4.x supported."
         )
-    _auto_configure_signals(dec)
+    _auto_configure_signals(dec, preferred_snr=signal)
 
     header = ObsHeaderInfo(
         rinex_version=str(getattr(dec, "ver", "")),
