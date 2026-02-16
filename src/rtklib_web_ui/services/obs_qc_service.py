@@ -142,7 +142,7 @@ def analyze_obs(
         raise ValueError(f"Failed to decode RINEX header (code={ret}). Only RINEX 3.x/4.x supported.")
 
     header = ObsHeaderInfo(
-        rinex_version=getattr(dec, "ver", ""),
+        rinex_version=str(getattr(dec, "ver", "")),
     )
 
     # Try to extract receiver/antenna info
