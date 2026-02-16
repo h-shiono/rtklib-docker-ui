@@ -111,6 +111,35 @@ class _VisTracker:
 # ──────────────────────────── Main Service ────────────────────────────
 
 
+def _auto_configure_signals(dec) -> None:
+    """Configure sig_tab from sig_map so decode_obs() includes all constellations.
+
+    After decode_obsh(), sig_map contains all signals found in the RINEX header,
+    but sig_tab (desired signals) is empty. Without configuring sig_tab,
+    decode_obs() skips all satellites.
+
+    This function builds sig_tab from sig_map, registering all available signals.
+    """
+    from cssrlib.gnss import rSigRnx
+
+    if not dec.sig_map:
+        return
+
+    sig_list = []
+    seen = set()  # Track (sys, typ, sig) to avoid duplicates
+
+    for sys, signals in dec.sig_map.items():
+        for _idx, rnx_sig in signals.items():
+            key = (rnx_sig.sys, rnx_sig.typ, rnx_sig.sig)
+            if key not in seen:
+                seen.add(key)
+                sig_list.append(rnx_sig)
+
+    if sig_list:
+        dec.setSignals(sig_list)
+        dec.autoSubstituteSignals()
+
+
 def analyze_obs(
     obs_file: str,
     nav_file: str | None = None,
@@ -140,6 +169,10 @@ def analyze_obs(
     ret = dec.decode_obsh(str(obs_path))
     if ret != 0:
         raise ValueError(f"Failed to decode RINEX header (code={ret}). Only RINEX 3.x/4.x supported.")
+
+    # Configure signals from header so decode_obs() includes all constellations.
+    # Without setSignals(), sig_tab is empty and all satellites are skipped.
+    _auto_configure_signals(dec)
 
     header = ObsHeaderInfo(
         rinex_version=str(getattr(dec, "ver", "")),
@@ -240,6 +273,7 @@ def analyze_obs(
     # Re-open file
     dec2 = rnxdec()
     dec2.decode_obsh(str(obs_path))
+    _auto_configure_signals(dec2)
     if nav and nav_file:
         dec2.decode_nav(str(Path(nav_file)), nav)
 
@@ -325,9 +359,17 @@ def analyze_obs(
                     end=end,
                 ))
 
-    # Discover available signals (basic list)
-    available_signals = ["S1C"]  # Default
-    # TODO: detect from RINEX header obs types
+    # Discover available SNR signals from header
+    available_signals = []
+    from cssrlib.gnss import uTYP as _uTYP
+    for sys, signals in dec.sig_map.items():
+        for _idx, rnx_sig in signals.items():
+            if rnx_sig.typ == _uTYP.S:
+                sig_str = str(rnx_sig)
+                if sig_str not in available_signals:
+                    available_signals.append(sig_str)
+    if not available_signals:
+        available_signals = ["S1C"]
 
     header.rinex_version = str(getattr(dec, 'ver', ''))
 
