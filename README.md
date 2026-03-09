@@ -7,6 +7,8 @@ A modern web-based user interface for [RTKLIB](https://github.com/tomojitakasu/R
 ![React](https://img.shields.io/badge/react-18+-blue.svg)
 ![RTKLIB](https://img.shields.io/badge/RTKLIB-2.4.3%20b34-green.svg)
 
+![RTKLIB Docker UI Dashboard](./docs/screenshot.png)
+
 ## Features
 
 ### GNSS Post-Processing (rnx2rtkp)
