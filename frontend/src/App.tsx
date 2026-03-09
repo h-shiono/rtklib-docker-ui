@@ -134,12 +134,8 @@ function PostProcessingPanel() {
         }
       }
     }, []),
-    onConnect: useCallback(() => {
-      console.log('WebSocket connected (Post-Processing)');
-    }, []),
-    onDisconnect: useCallback(() => {
-      console.log('WebSocket disconnected (Post-Processing)');
-    }, []),
+    onConnect: useCallback(() => {}, []),
+    onDisconnect: useCallback(() => {}, []),
   });
 
   // Convert frontend config to backend format (camelCase -> snake_case)

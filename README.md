@@ -21,7 +21,7 @@ A modern web-based user interface for [RTKLIB](https://github.com/tomojitakasu/R
 
 - **Intelligent Conditional Logic**: UI fields automatically enable/disable based on positioning mode and output format, mimicking the Windows RTKLIB GUI behavior
 
-- **SNR Mask Editor**: Visual 3x9 matrix editor for elevation-dependent SNR masks (L1/L2/L5 frequencies)
+- **SNR Mask Editor**: Visual 3×9 matrix editor for elevation-dependent SNR masks (L1/L2/L5 frequencies)
 
 - **Configuration Persistence**: Auto-save to browser localStorage with versioning
 
@@ -169,6 +169,7 @@ rtklib-docker-ui/
 | **v0.1.1** | RINEX converter (rtkconv) UI |
 | **v0.2.0** | Automated build & publish to GitHub Container Registry (ghcr.io) |
 | TBD | Enhanced plotting tools |
+| TBD | **Integration with next-generation optimized GNSS engines (C11/POSIX modernized forks)** |
 
 ## Testing
 
