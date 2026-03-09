@@ -1,15 +1,15 @@
-# RTKLIB Web UI
+# RTKLIB Docker UI
 
-A modern web-based user interface for [RTKLIB](https://github.com/tomojitakasu/RTKLIB) command-line tools, designed to provide Linux and macOS users with a GUI experience similar to the Windows version of RTKLIB, accessible through any web browser.
+A modern web-based user interface for [RTKLIB](https://github.com/tomojitakasu/RTKLIB) command-line tools, running entirely in a Docker container. No need to compile RTKLIB or worry about platform-specific dependencies — just `docker compose up` and start processing GNSS data from your browser.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.11+-blue.svg)
 ![React](https://img.shields.io/badge/react-18+-blue.svg)
 ![RTKLIB](https://img.shields.io/badge/RTKLIB-2.4.3%20b34-green.svg)
 
-## ✨ Features
+## Features
 
-### 🛰️ GNSS Post-Processing (rnx2rtkp)
+### GNSS Post-Processing (rnx2rtkp)
 - **Comprehensive Configuration UI**: 7-tabbed interface covering all rnx2rtkp parameters
   - Setting 1: Positioning modes (Single, DGPS, Kinematic, Static, Moving-Base, Fixed, PPP)
   - Setting 2: Ambiguity resolution strategies (GPS, GLONASS, BeiDou AR modes)
@@ -21,23 +21,33 @@ A modern web-based user interface for [RTKLIB](https://github.com/tomojitakasu/R
 
 - **Intelligent Conditional Logic**: UI fields automatically enable/disable based on positioning mode and output format, mimicking the Windows RTKLIB GUI behavior
 
-- **SNR Mask Editor**: Visual 3×9 matrix editor for elevation-dependent SNR masks (L1/L2/L5 frequencies)
+- **SNR Mask Editor**: Visual 3x9 matrix editor for elevation-dependent SNR masks (L1/L2/L5 frequencies)
 
 - **Configuration Persistence**: Auto-save to browser localStorage with versioning
 
-### 📡 Real-Time Stream Server (str2str)
+### Real-Time Stream Server (str2str)
 - **Stream Configuration**: Input/output stream setup with TCP, UDP, serial, and file support
 - **Visual Monitoring**: LED-like status indicators showing connection and data traffic
 - **Console Output**: Real-time log streaming via WebSocket
 - **Process Management**: Start, stop, and monitor stream server processes
 
-### 🎯 User Experience
+### Observation Data Viewer
+- **RINEX File Analysis**: Parse and visualize observation data quality
+- **Satellite Visibility Chart**: Time-series satellite visibility with signal strength visualization
+- **Signal Selection**: Multi-signal SNR comparison
+
+### User Experience
 - **Windows-Like Interface**: Familiar layout for users transitioning from RTKLIB Windows GUI
 - **Responsive Design**: Dense, dashboard-like scientific interface using Mantine UI
 - **File Browser**: Browse mounted workspace directory for RINEX and navigation files
-- **Configuration Import/Export**: Load and save RTKLIB `.conf` files (planned)
+- **Configuration Import/Export**: Load and save RTKLIB `.conf` files
 
-## 🚀 Getting Started
+### Docker Advantages
+- **Zero Build Hassle**: RTKLIB binaries are pre-compiled inside the container — no need to install build tools or manage dependencies on your host
+- **Cross-Platform**: Works identically on Linux and macOS
+- **Isolated Environment**: No system-level package conflicts; the container includes everything needed
+
+## Getting Started
 
 ### Prerequisites
 
@@ -48,8 +58,8 @@ A modern web-based user interface for [RTKLIB](https://github.com/tomojitakasu/R
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/rtklib-web-ui.git
-   cd rtklib-web-ui
+   git clone https://github.com/h-shiono/rtklib-docker-ui.git
+   cd rtklib-docker-ui
    ```
 
 2. **Prepare your workspace**
@@ -96,7 +106,7 @@ npm run dev
 
 The frontend dev server runs on `http://localhost:5173` and proxies API requests to the backend.
 
-## 🛠 Architecture
+## Architecture
 
 ### Technology Stack
 
@@ -122,7 +132,7 @@ The frontend dev server runs on `http://localhost:5173` and proxies API requests
 ### Project Structure
 
 ```
-rtklib-web-ui/
+rtklib-docker-ui/
 ├── src/
 │   └── rtklib_web_ui/          # Python backend package
 │       ├── main.py             # FastAPI entry point
@@ -147,11 +157,20 @@ rtklib-web-ui/
 
 2. **Conditional UI Logic**: Helper boolean pattern for clean, maintainable conditional enable/disable logic based on positioning modes.
 
-3. **Type Safety**: Strict TypeScript interfaces mirror Pydantic models, with automatic camelCase ↔ snake_case conversion.
+3. **Type Safety**: Strict TypeScript interfaces mirror Pydantic models, with automatic camelCase <-> snake_case conversion.
 
 4. **LocalStorage Versioning**: Configuration persistence uses versioned keys (e.g., `v12`) to prevent schema conflicts during updates.
 
-## 🧪 Testing
+## Roadmap
+
+| Version | Description |
+|---------|-------------|
+| **v0.1.0** (current) | Post-processing (rnx2rtkp) UI, stream server (str2str) UI, observation data viewer |
+| **v0.1.1** | RINEX converter (rtkconv) UI |
+| **v0.2.0** | Automated build & publish to GitHub Container Registry (ghcr.io) |
+| TBD | Enhanced plotting tools |
+
+## Testing
 
 ```bash
 # Backend tests
@@ -165,7 +184,7 @@ npm run test
 npm run test:e2e
 ```
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
 
@@ -185,37 +204,13 @@ Contributions are welcome! Please feel free to submit a Pull Request. For major 
    - Use conventional commits format: `feat:`, `fix:`, `docs:`, etc.
    - Be descriptive and reference issues when applicable
 
-## 📄 License
+## License
 
-This project is licensed under the MIT License - see below for details:
-
-```
-MIT License
-
-Copyright (c) 2024 RTKLIB Web UI Contributors
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
 **Note**: RTKLIB itself is distributed under the BSD 2-clause license. This project provides only a web interface wrapper and does not modify RTKLIB source code.
 
-## 🙏 Acknowledgements
+## Acknowledgements
 
 ### RTKLIB
 This project is built upon [RTKLIB](https://github.com/tomojitakasu/RTKLIB) by Tomoji Takasu, an open-source GNSS positioning software package. We are grateful for the incredible work of the RTKLIB community.
